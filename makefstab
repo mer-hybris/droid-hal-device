@@ -20,7 +20,14 @@ while (<STDIN>) {
       # transformation. This escaping is reversible.
       $unitname =~ s/^-//;
       $unitname =~ s/-$//;
-      open(UNIT, ">$unitname.unit") or die "Couldn't write to $unitname.unit\n";
+      open(UNIT, ">$unitname.mount") or die "Couldn't write to $unitname.unit\n";
+
+      $mnt_flagsandoptions =~ s/(context=.*)//;
+      $secontext = $1;
+      # tidy up in case we left leading,trailing or paired ,s
+      $mnt_flagsandoptions =~ s/,,/,/;
+      $mnt_flagsandoptions =~ s/^,//;
+      $mnt_flagsandoptions =~ s/,$//;
 
       print UNIT <<"END" ;
 [Unit]
@@ -32,6 +39,10 @@ What=$src
 Where=$mnt_point
 Type=$type
 Options=$mnt_flagsandoptions
+# Options had SELinux context option:  $secontext
+
+[Install]
+WantedBy=local-fs.target
 END
       print "Wrote $unitname.unit\n";
       close UNIT;
