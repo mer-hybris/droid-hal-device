@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+@mnt_skip = @ARGV;
+
+while (<STDIN>) {
+      next if /^\w*#/ or /^\w*$/;
+
+      my ($src, $mnt_point, $type, $mnt_flagsandoptions, $fs_mgr_flags) = split;
+
+      next if  grep( /^$mnt_point$/, @mnt_skip) ;
+
+      # For unit names reflecting paths
+      # Example: a device unit dev-sda.device == /dev/sda Given a
+      # path, "/" is replaced by "-",
+      ($unitname = $mnt_point) =~ tr(/)(-) ;
+      # and all unprintable characters and the "-" are replaced by
+      # C-style "\x20" escapes.
+      ###### FIXME - not implemented #####
+      # The initial and ending "/" is removed from all paths during
+      # transformation. This escaping is reversible.
+      $unitname =~ s/^-//;
+      $unitname =~ s/-$//;
+      open(UNIT, ">$unitname.unit") or die "Couldn't write to $unitname.unit\n";
+
+      print UNIT <<"END" ;
+[Unit]
+Description=Droid mount for $mnt_point
+Before=local-fs.target
+
+[Mount]
+What=$src
+Where=$mnt_point
+Type=$type
+Options=$mnt_flagsandoptions
+END
+      print "Wrote $unitname.unit\n";
+      close UNIT;
+    }
