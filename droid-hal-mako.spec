@@ -39,7 +39,7 @@ cd units
 # This is broken pending systemd > 191-2 so hack the generated unit files :(
 # See: https://bugzilla.redhat.com/show_bug.cgi?id=859297
 sed -i 's block/platform/msm_sdcc.1/by-name/modem mmcblk0p1 ' *mount
-sed -i 's block/platform/msm_sdcc.1/by-name/persist mmcblk0p2 ' *mount
+sed -i 's block/platform/msm_sdcc.1/by-name/persist mmcblk0p20 ' *mount
 
 
 %define units %(cd units;echo *)
