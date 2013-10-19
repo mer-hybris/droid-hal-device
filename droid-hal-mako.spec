@@ -1,6 +1,8 @@
 # device is the cyanogenmod codename for the device
 # eg mako = Nexus 4
 %define device mako
+# vendor is used in device/%vendor/%device/
+%define vendor lge
 Summary: 	Droid HAL package
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
@@ -8,8 +10,12 @@ Version: 	0.0.1
 Release: 	0
 Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
+Source2: 	usergroupgen.c
+Source3:        makeudev
 Group:		System
 #BuildArch:	noarch
+# To provide systemd services and udev rules
+Requires:       droid-system-packager
 BuildRequires:  systemd
 %systemd_requires
 
@@ -28,19 +34,27 @@ Summary: Development files for droid hal
 %setup -q
 
 %build
+echo Building uid scripts
+gcc -I system/core/include %{SOURCE2} -o ./usergengroup 
+./usergengroup add > droid-user-add.sh
+./usergengroup remove > droid-user-remove.sh
+
+echo Building udev rules
+rm -rf udev.rules
+mkdir udev.rules
+%{SOURCE3} system/core/rootdir/ueventd.rc system/core/rootdir/etc/ueventd.goldfish.rc device/%{vendor}/%{device}/ueventd.%{device}.rc > udev.rules/999-android-system.rules
+
 echo Building mount units
 rm -rf units
-mkdir units
-cd units
+mkdir -p units
 # Use the makefstab and tell it what mountpoints to skip. It will
 # generate .mount units which will be part of local-fs.target
-%{SOURCE1} /system /cache /data < ../device/lge/mako/fstab.mako 
+(cd units; %{SOURCE1} /system /cache /data ) < device/%{vendor}/%{device}/fstab.%{device}
 
 # This is broken pending systemd > 191-2 so hack the generated unit files :(
 # See: https://bugzilla.redhat.com/show_bug.cgi?id=859297
-sed -i 's block/platform/msm_sdcc.1/by-name/modem mmcblk0p1 ' *mount
-sed -i 's block/platform/msm_sdcc.1/by-name/persist mmcblk0p20 ' *mount
-
+sed -i 's block/platform/msm_sdcc.1/by-name/modem mmcblk0p1 ' units/*mount
+sed -i 's block/platform/msm_sdcc.1/by-name/persist mmcblk0p20 ' units/*mount
 
 %define units %(cd units;echo *)
 
@@ -49,9 +63,11 @@ echo install %units
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT/system
+mkdir -p $RPM_BUILD_ROOT/usr/lib/droid/
 mkdir -p $RPM_BUILD_ROOT/usr/lib/droid-devel/
 mkdir -p $RPM_BUILD_ROOT/etc/droid-init/
 mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
+mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 
 # Install
 cp -a out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
@@ -60,6 +76,13 @@ cp -a out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT/usr/lib/dro
 cp -a out/target/product/%{device}/symbols $RPM_BUILD_ROOT/usr/lib/droid-devel/
 
 cp -a units/* $RPM_BUILD_ROOT/%{_unitdir}
+
+# Install the udev rules and supporting script
+cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
+
+# droid user support
+install -D droid-user-add.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-add.sh
+install -D droid-user-remove.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-remove.sh
 
 # Remove cruft
 rm $RPM_BUILD_ROOT/fstab.*
@@ -76,11 +99,29 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 for u in %units; do
 %systemd_preun $u
 done
+# Only run this during final cleanup
+if [ $1 == 0 ]; then
+    echo purging old droid users and groups
+    /usr/lib/droid/droid-user-remove.sh.installed
+    true
+fi
 
 %post
 for u in %units; do
 %systemd_post $u
 done
+cd /usr/lib/droid
+# Upgrade: remove users using stored file, then add new ones
+if [ $1 == 2 ]; then
+    # Remove installed users (at this point droid-user-remove.sh
+    # refers to the new set of UIDs)
+    echo removing old droid users and groups
+    ./droid-user-remove.sh.installed
+fi
+# Now for both install/update add the users and force-store a removal file
+echo creating droid users and groups
+./droid-user-add.sh
+cp -f droid-user-remove.sh droid-user-remove.sh.installed
 
 %files
 %defattr(-,root,root,-)
@@ -96,6 +137,11 @@ done
 # This binary should probably move to /sbin/
 /charger
 %{_unitdir}
+/lib/udev/rules.d/*
+%{_libdir}/droid/droid-user-add.sh
+%{_libdir}/droid/droid-user-remove.sh
+# Created in %%post
+%ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 
 %files devel
 %defattr(-,root,root,-)
