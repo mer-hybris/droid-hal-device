@@ -16,6 +16,7 @@ Group:		System
 #BuildArch:	noarch
 # To provide systemd services and udev rules
 Requires:       droid-system-packager
+BuildRequires:  mer-kernel-checks
 BuildRequires:  systemd
 %systemd_requires
 
@@ -34,6 +35,9 @@ Summary: Development files for droid hal
 %setup -q
 
 %build
+echo Verifying kernel config
+mer_verify_kernel_config out/target/product/%{device}/obj/KERNEL_OBJ/.config
+
 echo Building uid scripts
 gcc -I system/core/include %{SOURCE2} -o ./usergengroup 
 ./usergengroup add > droid-user-add.sh
