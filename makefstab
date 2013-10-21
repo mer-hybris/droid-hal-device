@@ -20,7 +20,7 @@ while (<STDIN>) {
       # transformation. This escaping is reversible.
       $unitname =~ s/^-//;
       $unitname =~ s/-$//;
-      open(UNIT, ">$unitname.mount") or die "Couldn't write to $unitname.unit\n";
+      open(UNIT, ">$unitname.mount") or die "Couldn't write to $unitname.mount\n";
 
       $mnt_flagsandoptions =~ s/(context=.*)//;
       $secontext = $1;
