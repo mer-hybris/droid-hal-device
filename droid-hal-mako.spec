@@ -44,8 +44,8 @@ echo Building local tools
 make
 
 echo Building uid scripts
-./usergengroup add > droid-user-add.sh
-./usergengroup remove > droid-user-remove.sh
+./usergroupgen add > droid-user-add.sh
+./usergroupgen remove > droid-user-remove.sh
 
 echo Applying filesystem permissions
 # TODO: Extract release to ./system/
