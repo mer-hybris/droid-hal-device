@@ -63,10 +63,8 @@ mkdir -p units
 # generate .mount units which will be part of local-fs.target
 (cd units; %{SOURCE1} /system /cache /data ) < device/%{vendor}/%{device}/fstab.%{device}
 
-# This is broken pending systemd > 191-2 so hack the generated unit files :(
-# See: https://bugzilla.redhat.com/show_bug.cgi?id=859297
-sed -i 's block/platform/msm_sdcc.1/by-name/modem mmcblk0p1 ' units/*mount
-sed -i 's block/platform/msm_sdcc.1/by-name/persist mmcblk0p20 ' units/*mount
+echo Fixing up mount points
+./fixup-mountpoints
 
 %define units %(cd units;echo *)
 
