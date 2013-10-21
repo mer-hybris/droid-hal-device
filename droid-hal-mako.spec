@@ -3,6 +3,9 @@
 %define device mako
 # vendor is used in device/%vendor/%device/
 %define vendor lge
+# path to the android build directory (contains device/, out/, etc..)
+%define android_root ..
+
 Summary: 	Droid HAL package
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
@@ -38,10 +41,11 @@ Summary: Development files for droid hal
 
 %build
 echo Verifying kernel config
-mer_verify_kernel_config out/target/product/%{device}/obj/KERNEL_OBJ/.config
+mer_verify_kernel_config \
+    %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
 
 echo Building local tools
-make
+make ANDROID_ROOT=%{android_root}
 
 echo Building uid scripts
 ./usergroupgen add > droid-user-add.sh
@@ -50,7 +54,11 @@ echo Building uid scripts
 echo Building udev rules
 rm -rf udev.rules
 mkdir udev.rules
-%{SOURCE3} system/core/rootdir/ueventd.rc system/core/rootdir/etc/ueventd.goldfish.rc device/%{vendor}/%{device}/ueventd.%{device}.rc > udev.rules/999-android-system.rules
+%{SOURCE3} \
+    %{android_root}/system/core/rootdir/ueventd.rc \
+    %{android_root}/system/core/rootdir/etc/ueventd.goldfish.rc \
+    %{android_root}/device/%{vendor}/%{device}/ueventd.%{device}.rc \
+        > udev.rules/999-android-system.rules
 
 echo Building mount units
 rm -rf units
@@ -76,10 +84,10 @@ mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 
 # Install
-cp -a out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
-cp -a out/target/product/%{device}/system/. $RPM_BUILD_ROOT/system/.
-cp -a out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT/usr/lib/droid-devel/
-cp -a out/target/product/%{device}/symbols $RPM_BUILD_ROOT/usr/lib/droid-devel/
+cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
+cp -a %{android_root}/out/target/product/%{device}/system/. $RPM_BUILD_ROOT/system/.
+cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT/usr/lib/droid-devel/
+cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT/usr/lib/droid-devel/
 
 cp -a units/* $RPM_BUILD_ROOT/%{_unitdir}
 
