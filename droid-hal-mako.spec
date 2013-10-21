@@ -47,10 +47,6 @@ echo Building uid scripts
 ./usergroupgen add > droid-user-add.sh
 ./usergroupgen remove > droid-user-remove.sh
 
-echo Applying filesystem permissions
-# TODO: Extract release to ./system/
-#./apply-permissions -d system
-
 echo Building udev rules
 rm -rf udev.rules
 mkdir udev.rules
@@ -93,6 +89,9 @@ cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 # droid user support
 install -D droid-user-add.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-add.sh
 install -D droid-user-remove.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-remove.sh
+
+# droid permission fixer
+install -D apply-permissions $RPM_BUILD_ROOT/usr/lib/droid/apply-permissions
 
 # Remove cruft
 rm $RPM_BUILD_ROOT/fstab.*
@@ -150,6 +149,7 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 /lib/udev/rules.d/*
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
+%{_libdir}/droid/apply-permissions
 # Created in %%post
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 
