@@ -27,7 +27,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "private/android_filesystem_config.h"
+#include "android_filesystem_config.h"
 #include <stdio.h>
 #include <assert.h>
 

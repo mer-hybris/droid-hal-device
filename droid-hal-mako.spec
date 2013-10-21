@@ -12,6 +12,8 @@ Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
 Source2: 	usergroupgen.c
 Source3:        makeudev
+Source3:        apply-permissions.c
+Source4:        makefile
 Group:		System
 #BuildArch:	noarch
 # To provide systemd services and udev rules
@@ -38,10 +40,16 @@ Summary: Development files for droid hal
 echo Verifying kernel config
 mer_verify_kernel_config out/target/product/%{device}/obj/KERNEL_OBJ/.config
 
+echo Building local tools
+make
+
 echo Building uid scripts
-gcc -I system/core/include %{SOURCE2} -o ./usergengroup 
 ./usergengroup add > droid-user-add.sh
 ./usergengroup remove > droid-user-remove.sh
+
+echo Applying filesystem permissions
+# TODO: Extract release to ./system/
+#./apply-permissions -d system
 
 echo Building udev rules
 rm -rf udev.rules
