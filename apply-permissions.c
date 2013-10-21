@@ -44,18 +44,24 @@
 #include "android_filesystem_config.h"
 
 
-// Command line options
 struct context {
+    // Options
     int verbose;
     int debug;
     int simulate;
+
+    // Statistics
     struct {
         int dirs;
         int files;
     } count;
+
+    // Global state
+    char *base;
+    int strip;
 };
 
-// Closure for visiting each node in a directory tree walk
+// Callback for visiting each node in a directory tree walk
 typedef void (*visitor_t)(const char *path, struct stat *st, void *user_data);
 
 // Walk the tree at root, call visitor(path, user_data) for each node
@@ -87,7 +93,10 @@ void apply_android_perms(const char *filename, struct stat *st, void *user_data)
     const char *tuid = NULL;
     const char *tgid = NULL;
 
-    fs_config(filename, S_ISDIR(st->st_mode), &uid, &gid, &mode, &capa);
+    // Strip leading components, e.g. "../system/foo" -> "system/foo"
+    const char *filename_fs = filename + ctx->strip;
+
+    fs_config(filename_fs, S_ISDIR(st->st_mode), &uid, &gid, &mode, &capa);
 
     tuid = android_uid_name(uid);
     tgid = android_uid_name(gid);
@@ -111,7 +120,7 @@ void apply_android_perms(const char *filename, struct stat *st, void *user_data)
     }
 
     if (ctx->debug) {
-        fprintf(stderr, "%04o   %5d:%5d   %8s:%8s   %s\n", mode, uid, gid, tuid, tgid, filename);
+        fprintf(stderr, "%04o   %5d:%5d   %8s:%8s   %s\n", mode, uid, gid, tuid, tgid, filename_fs);
     }
 
     if (S_ISDIR(st->st_mode)) {
@@ -152,11 +161,28 @@ int main(int argc, char *argv[])
     }
 
     while (i < argc) {
-        walk(argv[i++], apply_android_perms, &ctx);
+        ctx.base = argv[i++];
+
+        // strip trailing slashes
+        char *last = ctx.base + strlen(ctx.base) - 1;
+        while (*last == '/') *last-- = '\0';
+
+        last = strrchr(ctx.base, '/');
+        if (last != NULL) {
+            // Number of characters to strip to get Android-relative
+            // path name, e.g. "../../something/system/foo" -> "system/foo"
+            //                  ^--------------^
+            //                     strip this
+            ctx.strip = last - ctx.base + 1;
+        }
+
+        walk(ctx.base, apply_android_perms, &ctx);
     }
 
-    fprintf(stderr, "Updated permissions of %d files and %d directories\n",
-            ctx.count.files, ctx.count.dirs);
+    if (ctx.verbose) {
+        fprintf(stderr, "Updated permissions of %d files and %d directories\n",
+                ctx.count.files, ctx.count.dirs);
+    }
 
     return 0;
 }
