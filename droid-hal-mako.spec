@@ -81,18 +81,18 @@ echo Fixing up mount points
 echo install %units
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
-mkdir -p $RPM_BUILD_ROOT/system
-mkdir -p $RPM_BUILD_ROOT/usr/lib/droid/
-mkdir -p $RPM_BUILD_ROOT/usr/lib/droid-devel/
+mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system
+mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
+mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 mkdir -p $RPM_BUILD_ROOT/etc/droid-init/
 mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 
 # Install
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
-cp -a %{android_root}/out/target/product/%{device}/system/. $RPM_BUILD_ROOT/system/.
-cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT/usr/lib/droid-devel/
-cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT/usr/lib/droid-devel/
+cp -a %{android_root}/out/target/product/%{device}/system/. $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
+cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
+cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 
 cp -a units/* $RPM_BUILD_ROOT/%{_unitdir}
 
@@ -100,11 +100,11 @@ cp -a units/* $RPM_BUILD_ROOT/%{_unitdir}
 cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 
 # droid user support
-install -D droid-user-add.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-add.sh
-install -D droid-user-remove.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-remove.sh
+install -D droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
+install -D droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
 # droid permission fixer
-install -D rpmsrc/apply-permissions $RPM_BUILD_ROOT/usr/lib/droid/apply-permissions
+install -D rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
 
 # Remove cruft
 rm $RPM_BUILD_ROOT/fstab.*
@@ -124,7 +124,7 @@ done
 # Only run this during final cleanup
 if [ $1 == 0 ]; then
     echo purging old droid users and groups
-    /usr/lib/droid/droid-user-remove.sh.installed
+    %{_libdir}/droid/droid-user-remove.sh.installed
     true
 fi
 
@@ -132,7 +132,7 @@ fi
 for u in %units; do
 %systemd_post $u
 done
-cd /usr/lib/droid
+cd %{_libdir}/droid
 # Upgrade: remove users using stored file, then add new ones
 if [ $1 == 2 ]; then
     # Remove installed users (at this point droid-user-remove.sh
@@ -148,7 +148,7 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 %files
 %defattr(-,root,root,-)
 # Standard droid paths
-/system/
+%{_libexecdir}/droid-hybris/system/
 /res
 /data
 /sbin/*
