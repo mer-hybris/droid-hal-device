@@ -4,7 +4,7 @@
 # vendor is used in device/%vendor/%device/
 %define vendor lge
 # path to the android build directory (contains device/, out/, etc..)
-%define android_root ..
+%define android_root .
 
 Summary: 	Droid HAL package
 License: 	BSD-3-Clause
@@ -15,8 +15,9 @@ Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
 Source2: 	usergroupgen.c
 Source3:        makeudev
-Source3:        apply-permissions.c
-Source4:        makefile
+Source4:        apply-permissions.c
+Source5:        makefile
+Source6:        fixup-mountpoints
 Group:		System
 #BuildArch:	noarch
 # To provide systemd services and udev rules
@@ -68,7 +69,7 @@ mkdir -p units
 (cd units; %{SOURCE1} /system /cache /data ) < device/%{vendor}/%{device}/fstab.%{device}
 
 echo Fixing up mount points
-./fixup-mountpoints
+%{SOURCE6}
 
 %define units %(cd units;echo *)
 
