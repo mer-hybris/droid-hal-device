@@ -46,11 +46,15 @@ mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
 
 echo Building local tools
-make ANDROID_ROOT=%{android_root}
+rm -rf rpmsrc
+mkdir rpmsrc
+cp %{SOURCE2} %{SOURCE4} rpmsrc/
+ANDROID_ROOT=$(readlink -e %{android_root})
+(cd rpmsrc; make ANDROID_ROOT=$ANDROID_ROOT -f %{SOURCE5})
 
 echo Building uid scripts
-./usergroupgen add > droid-user-add.sh
-./usergroupgen remove > droid-user-remove.sh
+rpmsrc/usergroupgen add > droid-user-add.sh
+rpmsrc/usergroupgen remove > droid-user-remove.sh
 
 echo Building udev rules
 rm -rf udev.rules
@@ -100,7 +104,7 @@ install -D droid-user-add.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-add.sh
 install -D droid-user-remove.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-remove.sh
 
 # droid permission fixer
-install -D apply-permissions $RPM_BUILD_ROOT/usr/lib/droid/apply-permissions
+install -D rpmsrc/apply-permissions $RPM_BUILD_ROOT/usr/lib/droid/apply-permissions
 
 # Remove cruft
 rm $RPM_BUILD_ROOT/fstab.*
