@@ -174,6 +174,9 @@ int main(int argc, char *argv[])
             //                  ^--------------^
             //                     strip this
             ctx.strip = last - ctx.base + 1;
+        } else {
+            // No slash in the path means we have a relative path like "system"
+            ctx.strip = 0;
         }
 
         walk(ctx.base, apply_android_perms, &ctx);
