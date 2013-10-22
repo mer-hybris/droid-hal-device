@@ -42,7 +42,10 @@
 #include <unistd.h>
 
 #include "android_filesystem_config.h"
-
+/* CM > 10.2 use capabilities - this checks that */
+#ifdef CAP_SETUID
+#define CM_USES_CAP 1
+#endif
 
 struct context {
     // Options
@@ -89,15 +92,20 @@ void apply_android_perms(const char *filename, struct stat *st, void *user_data)
     unsigned uid = 0;
     unsigned gid = 0;
     unsigned mode = 0;
+	#ifdef CM_USES_CAP
     uint64_t capa = 0;
+	#endif
     const char *tuid = NULL;
     const char *tgid = NULL;
 
     // Strip leading components, e.g. "../system/foo" -> "system/foo"
     const char *filename_fs = filename + ctx->strip;
 
+	#ifdef CM_USES_CAP
     fs_config(filename_fs, S_ISDIR(st->st_mode), &uid, &gid, &mode, &capa);
-
+	#else
+    fs_config(filename_fs, S_ISDIR(st->st_mode), &uid, &gid, &mode);
+	#endif
     tuid = android_uid_name(uid);
     tgid = android_uid_name(gid);
 
