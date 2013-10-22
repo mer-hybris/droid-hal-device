@@ -3,6 +3,9 @@
 %define device mako
 # vendor is used in device/%vendor/%device/
 %define vendor lge
+# path to the android build directory (contains device/, out/, etc..)
+%define android_root ..
+
 Summary: 	Droid HAL package
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
@@ -12,6 +15,8 @@ Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
 Source2: 	usergroupgen.c
 Source3:        makeudev
+Source3:        apply-permissions.c
+Source4:        makefile
 Group:		System
 #BuildArch:	noarch
 # To provide systemd services and udev rules
@@ -36,17 +41,24 @@ Summary: Development files for droid hal
 
 %build
 echo Verifying kernel config
-mer_verify_kernel_config out/target/product/%{device}/obj/KERNEL_OBJ/.config
+mer_verify_kernel_config \
+    %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
+
+echo Building local tools
+make ANDROID_ROOT=%{android_root}
 
 echo Building uid scripts
-gcc -I system/core/include %{SOURCE2} -o ./usergengroup 
-./usergengroup add > droid-user-add.sh
-./usergengroup remove > droid-user-remove.sh
+./usergroupgen add > droid-user-add.sh
+./usergroupgen remove > droid-user-remove.sh
 
 echo Building udev rules
 rm -rf udev.rules
 mkdir udev.rules
-%{SOURCE3} system/core/rootdir/ueventd.rc system/core/rootdir/etc/ueventd.goldfish.rc device/%{vendor}/%{device}/ueventd.%{device}.rc > udev.rules/999-android-system.rules
+%{SOURCE3} \
+    %{android_root}/system/core/rootdir/ueventd.rc \
+    %{android_root}/system/core/rootdir/etc/ueventd.goldfish.rc \
+    %{android_root}/device/%{vendor}/%{device}/ueventd.%{device}.rc \
+        > udev.rules/999-android-system.rules
 
 echo Building mount units
 rm -rf units
@@ -55,10 +67,8 @@ mkdir -p units
 # generate .mount units which will be part of local-fs.target
 (cd units; %{SOURCE1} /system /cache /data ) < device/%{vendor}/%{device}/fstab.%{device}
 
-# This is broken pending systemd > 191-2 so hack the generated unit files :(
-# See: https://bugzilla.redhat.com/show_bug.cgi?id=859297
-sed -i 's block/platform/msm_sdcc.1/by-name/modem mmcblk0p1 ' units/*mount
-sed -i 's block/platform/msm_sdcc.1/by-name/persist mmcblk0p20 ' units/*mount
+echo Fixing up mount points
+./fixup-mountpoints
 
 %define units %(cd units;echo *)
 
@@ -74,10 +84,10 @@ mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 
 # Install
-cp -a out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
-cp -a out/target/product/%{device}/system/. $RPM_BUILD_ROOT/system/.
-cp -a out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT/usr/lib/droid-devel/
-cp -a out/target/product/%{device}/symbols $RPM_BUILD_ROOT/usr/lib/droid-devel/
+cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
+cp -a %{android_root}/out/target/product/%{device}/system/. $RPM_BUILD_ROOT/system/.
+cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT/usr/lib/droid-devel/
+cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT/usr/lib/droid-devel/
 
 cp -a units/* $RPM_BUILD_ROOT/%{_unitdir}
 
@@ -87,6 +97,9 @@ cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 # droid user support
 install -D droid-user-add.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-add.sh
 install -D droid-user-remove.sh $RPM_BUILD_ROOT/usr/lib/droid/droid-user-remove.sh
+
+# droid permission fixer
+install -D apply-permissions $RPM_BUILD_ROOT/usr/lib/droid/apply-permissions
 
 # Remove cruft
 rm $RPM_BUILD_ROOT/fstab.*
@@ -144,6 +157,7 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 /lib/udev/rules.d/*
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
+%{_libdir}/droid/apply-permissions
 # Created in %%post
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 

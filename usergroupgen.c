@@ -27,45 +27,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "private/android_filesystem_config.h"
+#include "android_filesystem_config.h"
 #include <stdio.h>
-#include <assert.h>
-
-int do_group(int add)
-{
-	int i;
-	for (i = 0; i < android_id_count; i++)
-		if (android_ids[i].aid != 0)
-			if (add == 1)
-				printf("groupadd -g %i %s\n", android_ids[i].aid,
-					   android_ids[i].name);
-			else
-				printf("groupdel %s\n", android_ids[i].name);
-}
 
 int main(int argc, char *argv[])
 {
-	int i;
-	int add = 1;
-	if (argc == 2 && strcmp("remove", argv[1]) == 0)
-		add = 0;
-	printf("#!/bin/sh\n");
-	/* Add groups before users */
-	if (add == 1)
-		do_group(add);
+    if (argc != 2 || (strcmp(argv[1], "remove") != 0 &&
+                      strcmp(argv[1], "add") != 0)) {
+        fprintf(stderr, "Usage: %s [add|remove]\n", argv[0]);
+        return 1;
+    }
 
-	for (i = 0; i < android_id_count; i++)
-		if (android_ids[i].aid != 0)
-			if (add == 1)
-				printf("useradd -M -N -s /sbin/nologin -d / -u %i -g %i %s\n",
-					   android_ids[i].aid, android_ids[i].aid,
-					   android_ids[i].name);
-			else
-				printf("userdel -f %s\n", android_ids[i].name);
-	
-	/* Remove groups after users */
-	if (add == 0)
-		do_group(add);
+    int add = (strcmp(argv[1], "add") == 0);
 
-	return 0;
+    printf("#!/bin/sh\n");
+    for (int i = 0; i < android_id_count; i++) {
+        if (android_ids[i].aid == 0) {
+            /* Skip creating/removing the root user */
+            continue;
+        } else if (add) {
+            /* Add groups before users */
+            printf("groupadd -g %i %s\n", android_ids[i].aid,
+                    android_ids[i].name);
+            printf("useradd -M -N -s /sbin/nologin -d / -u %i -g %i %s\n",
+                    android_ids[i].aid, android_ids[i].aid,
+                    android_ids[i].name);
+        } else {
+            /* Remove groups after users */
+            printf("userdel -f %s\n", android_ids[i].name);
+            printf("groupdel %s\n", android_ids[i].name);
+        }
+    }
+
+    return 0;
 }
