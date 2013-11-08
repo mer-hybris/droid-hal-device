@@ -73,7 +73,8 @@ rm -rf units
 mkdir -p units
 # Use the makefstab and tell it what mountpoints to skip. It will
 # generate .mount units which will be part of local-fs.target
-(cd units; %{SOURCE1} /cache /data ) < device/%{vendor}/%{device}/fstab.%{device}
+# skip /cache /data and /system - won't touch them (yet)
+(cd units; %{SOURCE1} /cache /data /system ) < device/%{vendor}/%{device}/fstab.%{device}
 
 echo Fixing up mount points
 %{SOURCE6}
