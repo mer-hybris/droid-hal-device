@@ -110,7 +110,11 @@ cp -a units/* $RPM_BUILD_ROOT/%{_unitdir}
 # Install the udev rules and supporting script
 cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 
-# droid user support
+# droid user support This may be better done by passing a list of
+# users/groups and running 'ensure_usergroups_exist newlist oldlist'
+# which would preserve oldlist in %post and delete any users no longer
+# needed (unlikely!). This avoids the transient removal of uids and
+# group issues
 install -D droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
 install -D droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
@@ -159,6 +163,9 @@ fi
 echo creating droid users and groups
 ./droid-user-add.sh
 cp -f droid-user-remove.sh droid-user-remove.sh.installed
+
+# HACK : Now ensure default user is in graphics group
+groupadd-user graphics
 
 %files
 %defattr(-,root,root,-)
