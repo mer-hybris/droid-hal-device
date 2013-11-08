@@ -85,6 +85,7 @@ echo Fixing up mount points
 echo install %units
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
+mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
@@ -98,6 +99,11 @@ cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
 cp -a %{android_root}/out/target/product/%{device}/system/. $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
+
+# If this ever becomes unmanageable then
+# grep -l dev/alog %{android_root}/out/target/product/%{device}/system/lib/*
+# libdsyscalls.so and libc.so are blacklisted
+ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
 
 cp -a units/* $RPM_BUILD_ROOT/%{_unitdir}
 
@@ -156,8 +162,10 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 
 %files
 %defattr(-,root,root,-)
-# Standard droid paths
+# hybris and /dev/alog/ libraries
 %{_libexecdir}/droid-hybris/system/
+# just /dev/alog/ libraries (for trying to run pure android apps)
+%{_libexecdir}/droid-hybris/lib-dev-alog/.
 /res
 /data
 /sbin/*
