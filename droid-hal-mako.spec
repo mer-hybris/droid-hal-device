@@ -18,6 +18,7 @@ Source3:        makeudev
 Source4:        apply-permissions.c
 Source5:        makefile
 Source6:        fixup-mountpoints
+Source7:        compositor_mako-cm10.1.conf
 Group:		System
 #BuildArch:	noarch
 # To provide systemd services and udev rules
@@ -87,6 +88,7 @@ mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 mkdir -p $RPM_BUILD_ROOT/etc/droid-init/
 mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
+mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor
 
 # Install
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
@@ -117,6 +119,10 @@ mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 # Rename any symlinks to droid's /init 
 find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "ln -s" ./droid-hal-init {} \;
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
+
+# To set the environment for Qt/hybris (note this is a bit lipstick specific)
+cp %{SOURCE7} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor/mako-cm10.1.conf
+
 %preun
 for u in %units; do
 %systemd_preun $u
@@ -165,8 +171,8 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 %{_libdir}/droid/apply-permissions
 # Created in %%post
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
+%{_sharedstatedir}/environment/compositor/mako-cm10.1.conf
 
 %files devel
 %defattr(-,root,root,-)
 %{_libdir}/droid-devel/
-
