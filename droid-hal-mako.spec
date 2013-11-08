@@ -6,7 +6,7 @@
 # path to the android build directory (contains device/, out/, etc..)
 %define android_root .
 
-Summary: 	Droid HAL package
+Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
 Version: 	0.0.1
@@ -33,10 +33,12 @@ BuildRequires:  systemd
 %package devel
 Group:	Development/Tools
 Requires: %{name} = %{version}-%{release}
+Provides: droid-hal-devel
 Summary: Development files for droid hal
 
 %description devel
-%{summary}.
+Device specific droid headers for %{device}.
+Needed by libhybris
 
 %prep
 %setup -q
