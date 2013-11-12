@@ -19,6 +19,7 @@ Source4:        apply-permissions.c
 Source5:        makefile
 Source6:        fixup-mountpoints
 Source7:        compositor_mako-cm10.1.conf
+Source8:        hybris.conf
 Group:		System
 #BuildArch:	noarch
 # To provide systemd services and udev rules
@@ -93,6 +94,7 @@ mkdir -p $RPM_BUILD_ROOT/etc/droid-init/
 mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor
+mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo
 
 # Install
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
@@ -135,6 +137,7 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 
 # To set the environment for Qt/hybris (note this is a bit lipstick specific)
 cp %{SOURCE7} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor/mako-cm10.1.conf
+cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 %preun
 for u in %units; do
@@ -190,6 +193,7 @@ groupadd-user graphics
 # Created in %%post
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 %{_sharedstatedir}/environment/compositor/mako-cm10.1.conf
+%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 %files devel
 %defattr(-,root,root,-)
