@@ -80,7 +80,6 @@ rm -rf udev.rules
 mkdir udev.rules
 %{SOURCE3} \
     %{android_root}/system/core/rootdir/ueventd.rc \
-    %{android_root}/system/core/rootdir/etc/ueventd.goldfish.rc \
     %{android_root}/device/%{vendor}/%{device}/ueventd.%{device}.rc \
         > udev.rules/999-android-system.rules
 

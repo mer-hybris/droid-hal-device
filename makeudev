@@ -46,6 +46,7 @@ while (<>) {
   # However udev builtins only operate on /dev nodes (AFAICT)
   # Matching is done on events without the /sys/ (which is a userspace
   # convention) but chmod/chown needs the /sys
+  # FIXME: consider replacing chmod/chown with an all-in-one to avoid extra exec()s
   if (m{^/sys/}) {
     print "# sys rule\n";
     s{^/sys/}{};
