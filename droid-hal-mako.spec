@@ -159,6 +159,9 @@ cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 # Add the oneshot
 cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
 
+# This ghost file must exist in the installroot
+touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
+
 %preun
 for u in %units; do
 %systemd_preun $u
