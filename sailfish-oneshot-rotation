@@ -1,0 +1,4 @@
+#!/bin/bash
+# Set the rotation to match the framebuffer rotation for mako
+echo Setting rotation
+/usr/bin/gconftool-2 -s -t int /desktop/jolla/components/screen_rotation_angle 0

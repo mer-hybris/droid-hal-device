@@ -22,13 +22,17 @@ Source5:        makefile
 Source6:        fixup-mountpoints
 Source7:        compositor_mako-cm10.1.conf
 Source8:        hybris.conf
+Source9:        sailfish-oneshot-rotation
 Group:		System
 #BuildArch:	noarch
 # To provide systemd services and udev rules
 Requires:       droid-system-packager
+# Note that oneshot is not in mer-core (yet)
+BuildRequires:  oneshot
 BuildRequires:  mer-kernel-checks
 BuildRequires:  systemd
 %systemd_requires
+%{_oneshot_requires_post}
 
 %description
 %{summary}.
@@ -42,6 +46,15 @@ Summary: Development files for droid hal
 %description devel
 Device specific droid headers for %{device}.
 Needed by libhybris
+
+%package -n droid-hal-sailfish-config
+Group:	System
+Requires: %{name} = %{version}-%{release}
+Requires: oneshot
+Summary: Per device configuration for sailfish
+
+%description -n droid-hal-sailfish-config
+Configure sailfish eg naturally landscape devices like mako
 
 %prep
 %setup -q
@@ -98,6 +111,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo
+mkdir -p $RPM_BUILD_ROOT/%{_oneshotdir}
 
 # Install
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
@@ -142,6 +156,9 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 cp %{SOURCE7} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor/mako-cm10.1.conf
 cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
+# Add the oneshot
+cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
+
 %preun
 for u in %units; do
 %systemd_preun $u
@@ -173,6 +190,13 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 # HACK : Now ensure default user is in graphics group
 groupadd-user graphics
 
+%post -n droid-hal-sailfish-config
+
+if [ "$1" -eq 1 ]; then
+    echo Adding oneshot
+    %{_bindir}/add-oneshot --user oneshot-rotation
+fi
+
 %files
 %defattr(-,root,root,-)
 # hybris and /dev/alog/ libraries
@@ -201,3 +225,7 @@ groupadd-user graphics
 %files devel
 %defattr(-,root,root,-)
 %{_libdir}/droid-devel/
+
+%files -n droid-hal-sailfish-config
+%defattr(-,root,root,-)
+%attr(755,root,root) %{_oneshotdir}/oneshot-rotation
