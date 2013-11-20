@@ -6,11 +6,13 @@
 # path to the android build directory (contains device/, out/, etc..)
 %define android_root .
 
+
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
 Version: 	0.0.1
 Release: 	0
+Provides:       droid-hal
 Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
 Source2: 	usergroupgen.c
