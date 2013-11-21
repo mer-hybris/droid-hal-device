@@ -47,13 +47,14 @@ Summary: Development files for droid hal
 Device specific droid headers for %{device}.
 Needed by libhybris
 
-%package -n droid-hal-sailfish-config
+%package sailfish-config
+Provides: droid-hal-sailfish-config
 Group:	System
 Requires: %{name} = %{version}-%{release}
 Requires: oneshot
 Summary: Per device configuration for sailfish
 
-%description -n droid-hal-sailfish-config
+%description sailfish-config
 Configure sailfish eg naturally landscape devices like mako
 
 %prep
@@ -192,7 +193,7 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 # HACK : Now ensure default user is in graphics group
 groupadd-user graphics
 
-%post -n droid-hal-sailfish-config
+%post sailfish-config
 
 if [ "$1" -eq 1 ]; then
     echo Adding oneshot
@@ -228,6 +229,6 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/droid-devel/
 
-%files -n droid-hal-sailfish-config
+%files sailfish-config
 %defattr(-,root,root,-)
 %attr(755,root,root) %{_oneshotdir}/oneshot-rotation
