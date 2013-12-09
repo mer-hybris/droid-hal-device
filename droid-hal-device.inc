@@ -1,11 +1,9 @@
-# device is the cyanogenmod codename for the device
-# eg mako = Nexus 4
-%define device mako
-# vendor is used in device/%vendor/%device/
-%define vendor lge
-# path to the android build directory (contains device/, out/, etc..)
-%define android_root .
+# This file should be %included into a device specific spec file
+# where macros are defined:
+# device: should be the CM codename 
+# vendor: determine the directory used for ./device/<vendor>/<device>
 
+%define android_root .
 
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
@@ -23,6 +21,11 @@ Source6:        fixup-mountpoints
 Source7:        compositor_mako-cm10.1.conf
 Source8:        hybris.conf
 Source9:        sailfish-oneshot-rotation
+Source10:       droid-hal-device.inc
+# Allow device specific sources to be defined
+# Reserve Source50 onwards
+%dhd_sources
+
 Group:		System
 #BuildArch:	noarch
 # To provide systemd services and udev rules
@@ -79,9 +82,10 @@ rpmsrc/usergroupgen remove > droid-user-remove.sh
 echo Building udev rules
 rm -rf udev.rules
 mkdir udev.rules
+# Device specific ueventd rules is the "not goldfish" one
 %{SOURCE3} \
-    %{android_root}/system/core/rootdir/ueventd.rc \
-    %{android_root}/device/%{vendor}/%{device}/ueventd.%{device}.rc \
+    %{android_root}/out/target/product/%{device}/root/ueventd.rc \
+    $(ls %{android_root}/out/target/product/%{device}/root/ueventd.*.rc | grep -v .goldfish.rc) \
         > udev.rules/999-android-system.rules
 
 echo Building mount units
@@ -89,9 +93,8 @@ rm -rf units
 mkdir -p units
 # Use the makefstab and tell it what mountpoints to skip. It will
 # generate .mount units which will be part of local-fs.target
-# skip /cache /data and /system - won't touch them (yet)
-#(cd units; %{SOURCE1} /cache /data /system ) < %{android_root}/device/%{vendor}/%{device}/fstab.%{device}
-(cd units; %{SOURCE1} /cache /data  ) < %{android_root}/device/%{vendor}/%{device}/fstab.%{device}
+# skip /cache and /data - won't touch them (yet)
+cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd units; %{SOURCE1} /cache /data  )
 
 echo Fixing up mount points
 %{SOURCE6}
@@ -142,11 +145,13 @@ install -D rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permis
 
 # Remove cruft
 rm $RPM_BUILD_ROOT/fstab.*
-rmdir $RPM_BUILD_ROOT/{proc,sys,dev}
+rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy $RPM_BUILD_ROOT/{file,property,seapp}_contexts
+rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 
 # Relocate rc files and other things left in / where possible
 # mv $RPM_BUILD_ROOT/*rc $RPM_BUILD_ROOT/etc/droid-init/
 # Name this so droid-system-packager's droid-hal-startup.sh can find it
+mkdir -p $RPM_BUILD_ROOT/sbin
 mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 # Rename any symlinks to droid's /init 
 find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "ln -s" ./droid-hal-init {} \;
@@ -206,15 +211,12 @@ fi
 %{_libexecdir}/droid-hybris/system/
 # just /dev/alog/ libraries (for trying to run pure android apps)
 %{_libexecdir}/droid-hybris/lib-dev-alog/.
-/res
-/data
 /sbin/*
 # move the .rc files to %%{_sysconfdir}/droid-init if possible
 %attr(644, root, root) /*.rc
 # Can this move?
 %attr(644, root, root) /default.prop
 # This binary should probably move to /sbin/
-/charger
 %{_unitdir}
 /lib/udev/rules.d/*
 %{_libdir}/droid/droid-user-add.sh
