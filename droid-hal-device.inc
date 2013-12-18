@@ -22,9 +22,11 @@ Source7:        compositor_mako-cm10.1.conf
 Source8:        hybris.conf
 Source9:        sailfish-oneshot-rotation
 Source10:       droid-hal-device.inc
-# Allow device specific sources to be defined
+# This is copied from libhybris and should be kept in-sync:
+Source11:	extract-headers.sh
+# Allow device specific sources to be defined using dhd_sources
 # Reserve Source50 onwards
-%dhd_sources
+%{?dhd_sources}
 
 Group:		System
 #BuildArch:	noarch
@@ -109,8 +111,7 @@ mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
-mkdir -p $RPM_BUILD_ROOT/etc/droid-init/
-mkdir -p $RPM_BUILD_ROOT/%{_unitdir}
+mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo
@@ -121,6 +122,20 @@ cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
 cp -a %{android_root}/out/target/product/%{device}/system/. $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
+
+# Run extract-headers.sh
+echo "Extracting headers for hybris"
+%SOURCE11 . $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/ > /dev/null
+# Add config into the default android-config.h
+echo Making $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new
+sed '/CONFIG GOES HERE/,$d' $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h > $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new
+cat <<EOF >> $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new
+/* Added by Droid HAL packaging for %{device} */
+%{?android_config}
+EOF
+sed '0,/CONFIG GOES HERE/d' $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h >> $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new
+
+mv $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h
 
 # If this ever becomes unmanageable then
 # grep -l dev/alog %{android_root}/out/target/product/%{device}/system/lib/*
@@ -145,11 +160,9 @@ install -D rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permis
 
 # Remove cruft
 rm $RPM_BUILD_ROOT/fstab.*
-rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy $RPM_BUILD_ROOT/{file,property,seapp}_contexts
+rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,property,seapp}_contexts
 rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 
-# Relocate rc files and other things left in / where possible
-# mv $RPM_BUILD_ROOT/*rc $RPM_BUILD_ROOT/etc/droid-init/
 # Name this so droid-system-packager's droid-hal-startup.sh can find it
 mkdir -p $RPM_BUILD_ROOT/sbin
 mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
@@ -212,7 +225,6 @@ fi
 # just /dev/alog/ libraries (for trying to run pure android apps)
 %{_libexecdir}/droid-hybris/lib-dev-alog/.
 /sbin/*
-# move the .rc files to %%{_sysconfdir}/droid-init if possible
 %attr(644, root, root) /*.rc
 # Can this move?
 %attr(644, root, root) /default.prop

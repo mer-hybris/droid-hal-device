@@ -4,6 +4,8 @@
 # vendor is used in device/%vendor/%device/
 %define vendor samsung
 
-%define dhd_sources %{nil}
+%define android_config \
+#define EXYNOS4_ENHANCEMENTS 1\
+%{nil}
 
 %include rpm/droid-hal-device.inc
