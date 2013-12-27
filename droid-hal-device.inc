@@ -66,9 +66,11 @@ Configure sailfish eg naturally landscape devices like mako
 %setup -q
 
 %build
+%if %{without mer_verify_kernel_config}
 echo Verifying kernel config
 mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
+%endif
 
 echo Building local tools
 rm -rf rpmsrc
