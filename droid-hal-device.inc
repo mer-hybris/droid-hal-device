@@ -220,27 +220,29 @@ fi
 
 %files
 %defattr(-,root,root,-)
-# hybris and /dev/alog/ libraries
-%{_libexecdir}/droid-hybris/system/
-# just /dev/alog/ libraries (for trying to run pure android apps)
-%{_libexecdir}/droid-hybris/lib-dev-alog/.
 /sbin/*
-%attr(644, root, root) /*.rc
-# Can this move?
-%attr(644, root, root) /default.prop
 # This binary should probably move to /sbin/
-%{_unitdir}
-/lib/udev/rules.d/*
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
 %{_libdir}/droid/apply-permissions
 # Created in %%post
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
+# Non executable files
+%defattr(644,root,root,-)
+%{_unitdir}
+# hybris and /dev/alog/ libraries
+%{_libexecdir}/droid-hybris/system/
+# just /dev/alog/ libraries (for trying to run pure android apps)
+%{_libexecdir}/droid-hybris/lib-dev-alog/.
+/lib/udev/rules.d/*
+# Droid config droppings
+/*.rc
+/default.prop
 %{_sharedstatedir}/environment/compositor/mako-cm10.1.conf
 %{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 %files devel
-%defattr(-,root,root,-)
+%defattr(644,root,root,-)
 %{_libdir}/droid-devel/
 
 %files sailfish-config
