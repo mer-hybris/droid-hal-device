@@ -4,5 +4,5 @@
 # vendor is used in device/%vendor/%device/
 %define vendor lge
 
-%include droid-hal-device.inc
+%include rpm/droid-hal-device.inc
 
