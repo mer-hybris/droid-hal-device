@@ -210,8 +210,13 @@ echo creating droid users and groups
 ./droid-user-add.sh
 cp -f droid-user-remove.sh droid-user-remove.sh.installed
 
-# HACK : Now ensure default user is in graphics group
-groupadd-user graphics
+# Now ensure default user has access to various subsystems this HA provides
+# These are the default android ones:
+/usr/bin/groupadd-user graphics
+/usr/bin/groupadd-user system
+/usr/bin/groupadd-user input
+/usr/bin/groupadd-user camera
+# To add additional groups define a HA config macro like android_config
 
 %post sailfish-config
 
