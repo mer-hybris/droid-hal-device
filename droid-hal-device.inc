@@ -8,7 +8,7 @@
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
-Version: 	0.0.1
+Version: 	0.0.2
 Release: 	0
 Provides:       droid-hal
 Source0: 	%{name}-%{version}.tar.bz2
@@ -126,18 +126,23 @@ cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 
 # Run extract-headers.sh
+HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
 echo "Extracting headers for hybris"
-%SOURCE11 . $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/ > /dev/null
-# Add config into the default android-config.h
-echo Making $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new
-sed '/CONFIG GOES HERE/,$d' $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h > $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new
-cat <<EOF >> $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new
+%SOURCE11 . $HDRS/ -p %{_libdir}/droid-devel/droid-headers > /dev/null
+
+# Add our config into the default android-config.h
+echo Making new $HDRS/android-config.h
+sed '/CONFIG GOES HERE/,$d' $HDRS/android-config.h > $HDRS/android-config.h.new
+cat <<EOF >> $HDRS/android-config.h.new
 /* Added by Droid HAL packaging for %{device} */
 %{?android_config}
 EOF
-sed '0,/CONFIG GOES HERE/d' $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h >> $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new
+sed '0,/CONFIG GOES HERE/d' $HDRS/android-config.h >> $HDRS/android-config.h.new
+mv $HDRS/android-config.h.new $HDRS/android-config.h
 
-mv $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h.new $RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers/android-config.h
+# Move the pkgconfig .pc to the correct location
+mkdir -p $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
+mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 
 # If this ever becomes unmanageable then
 # grep -l dev/alog %{android_root}/out/target/product/%{device}/system/lib/*
@@ -251,6 +256,7 @@ fi
 %files devel
 %defattr(644,root,root,-)
 %{_libdir}/droid-devel/
+%{_libdir}/pkgconfig/*pc
 
 %files sailfish-config
 %defattr(-,root,root,-)
