@@ -29,6 +29,16 @@ OBS Project Setup:
         <arch>armv8el</arch>
     </repository>
 
+   # Also put the following items into "Project Config" to make sure
+   # OBS prefers the libhybris versions over mesa llvmpipe (in Mer):
+
+    Prefer: libhybris-libGLESv2
+    Prefer: libhybris-libGLESv2-devel
+    Prefer: libhybris-libEGL
+    Prefer: libhybris-libEGL-devel
+    Prefer: libhybris-libwayland-egl-devel
+    Prefer: libhybris-libwayland-egl
+
 Uploading to OBS:
 
    # Make sure OSC is configured correctly with https://api.merproject.org
