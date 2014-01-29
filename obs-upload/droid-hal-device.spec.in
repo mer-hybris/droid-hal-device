@@ -1,0 +1,12 @@
+Summary: Droid HAL Binary RPM Upload for %DEVICE%
+License: BSD
+Name: droid-hal-%DEVICE%
+Version: %VERSION%
+Release: %RELEASE%
+Provides: droid-hal
+Provides: droid-hal-device
+BuildArch: %ARCH%
+Group: System
+
+%description
+Binary-only RPM upload of Droid HAL for %DEVICE%.

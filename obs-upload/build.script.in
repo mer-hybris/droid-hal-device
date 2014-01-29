@@ -1,0 +1,8 @@
+#!/bin/bash
+# Build script for droid-hal-%DEVICE%
+# Package version %VERSION%-%RELEASE% (%ARCH%)
+
+TARGET=~/rpmbuild/RPMS/%ARCH%/
+
+mkdir -p $TARGET
+cp ~/rpmbuild/SOURCES/droid-hal-%DEVICE%-*.rpm $TARGET
