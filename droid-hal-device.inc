@@ -103,10 +103,9 @@ cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd units; %{SOU
 echo Fixing up mount points
 %{SOURCE6}
 
-%define units %(cd units;echo *)
 
 %install
-echo install %units
+echo install %(cd units;echo *)
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
@@ -188,7 +187,7 @@ cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
 
 %preun
-for u in %units; do
+for u in %(cd units;echo *); do
 %systemd_preun $u
 done
 # Only run this during final cleanup
@@ -199,7 +198,7 @@ if [ $1 == 0 ]; then
 fi
 
 %post
-for u in %units; do
+for u in %(cd units;echo *); do
 %systemd_post $u
 done
 cd %{_libdir}/droid
