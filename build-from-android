@@ -1,0 +1,55 @@
+#!/bin/sh
+# droid-hal-device build script from Android tree
+# Copyright (c) 2014 Jolla Ltd.
+# Contact: Thomas Perl <thomas.perl@jolla.com>
+
+if [ ! -d out ]; then
+    echo "Run this script in the Android build tree (containing out/)"
+    exit 1
+fi
+
+# Available products
+PRODUCTS=$(for d in out/target/product/*; do echo "$(basename $d) "; done)
+
+if [ ! -z "$1" ]; then
+    # use "rpm/build-from-android <device>" to select a device
+    DEVICE=$1
+elif [ -z "$PRODUCTS" ]; then
+    echo "No device files found in out/target/product/ - exiting"
+    exit 2
+elif [ $(echo $PRODUCTS | wc -w) != 1 ]; then
+    echo "More than one product found:"
+    echo ""
+    echo "    $PRODUCTS"
+    echo ""
+    echo "Use $0 <device> to build for that device"
+    exit 3
+else
+    DEVICE=$(echo $PRODUCTS | tr -d ' ')
+fi
+
+SPECFILE=rpm/droid-hal-${DEVICE}.spec
+if [ ! -f "$SPECFILE" ]; then
+    echo "Cannot find $SPECFILE, available spec files:"
+    for f in rpm/droid-hal-*.spec; do
+        echo "    $f"
+    done
+    exit 4
+fi
+
+SOURCEDIR=out/target/product/$DEVICE
+if [ ! -d "$SOURCEDIR" ]; then
+    echo "Cannot find $SOURCEDIR, available directories:"
+    for d in out/target/product/*; do
+        echo "    $d"
+    done
+    exit 4
+fi
+
+if ! which mb2 >/dev/null 2>&1; then
+    echo "Required tool 'mb2' not found"
+    exit 5
+fi
+
+echo "Building for $DEVICE using mb2"
+mb2 -s $SPECFILE build
