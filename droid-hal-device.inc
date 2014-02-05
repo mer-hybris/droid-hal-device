@@ -127,7 +127,7 @@ cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_lib
 # Run extract-headers.sh
 HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
 echo "Extracting headers for hybris"
-%SOURCE11 . $HDRS/ -p %{_libdir}/droid-devel/droid-headers > /dev/null
+%SOURCE11 -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
 
 # Add our config into the default android-config.h
 echo Making new $HDRS/android-config.h
