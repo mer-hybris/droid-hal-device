@@ -291,11 +291,13 @@ fi
 %{_libdir}/droid/apply-permissions
 # Created in %%post
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
+# droid binaries
+%{_libexecdir}/droid-hybris/system/bin/
 # Non executable files
 %defattr(644,root,root,-)
 %{_unitdir}
 # hybris and /dev/alog/ libraries
-%{_libexecdir}/droid-hybris/system/
+%{_libexecdir}/droid-hybris/system/lib/
 # just /dev/alog/ libraries (for trying to run pure android apps)
 %{_libexecdir}/droid-hybris/lib-dev-alog/.
 /lib/udev/rules.d/*
