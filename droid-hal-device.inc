@@ -46,7 +46,7 @@ BuildRequires:  systemd
 Group:	Development/Tools
 Requires: %{name} = %{version}-%{release}
 Provides: droid-hal-devel
-Summary: Development files for droid hal
+Summary: Development files for droid-hal device: %{device}
 
 %description devel
 Device specific droid headers for %{device}.
@@ -55,12 +55,47 @@ Needed by libhybris
 %package sailfish-config
 Provides: droid-hal-sailfish-config
 Group:	System
+BuildArch:	noarch
 Requires: %{name} = %{version}-%{release}
 Requires: oneshot
-Summary: Per device configuration for sailfish
+Summary: Per device configuration for sailfish for droid-hal device: %{device}
 
 %description sailfish-config
 Configure sailfish eg naturally landscape devices like mako
+
+%package kernel
+Provides: droid-hal-kernel
+Group:	System
+Summary: Kernel for droid-hal device: %{device}
+
+%description kernel
+Just the kernel - mainly useful if you want to make a custom img
+
+%package kernel-modules
+Provides: droid-hal-kernel-modules
+Group:	System
+Summary: Kernel modules for droid-hal device: %{device}
+
+%description kernel-modules
+Just the kernel modules
+
+%package img-boot
+Provides: droid-hal-img-boot
+Group:	System
+BuildArch:	noarch
+Summary: Boot img for droid-hal device: %{device}
+
+%description img-boot
+The boot.img for device
+
+%package img-recovery
+Provides: droid-hal-img-recovery
+Group:	System
+BuildArch:	noarch
+Summary: Recovery image for droid-hal device: %{device}
+
+%description img-recovery
+The recovery.img for device
 
 %prep
 %setup -q
@@ -117,6 +152,13 @@ mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo
 mkdir -p $RPM_BUILD_ROOT/%{_oneshotdir}
+
+mkdir -p $RPM_BUILD_ROOT%{_libdir}/modules/
+mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
+
+mkdir -p $RPM_BUILD_ROOT/img
+mkdir -p $RPM_BUILD_ROOT/boot
+mkdir -p $RPM_BUILD_ROOT/system/lib/modules
 
 # Install
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
@@ -185,6 +227,17 @@ cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
 
 # This ghost file must exist in the installroot
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
+
+# Kernel and module installation; to
+# /boot and modules to /lib as normal
+cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot
+cp -a out/target/product/%{device}/system/lib/modules $RPM_BUILD_ROOT/system/lib/modules
+
+
+# Images are installed to /img - they'll probably be unpacked using
+# rpm2cpio mostly anyhow
+cp out/target/product/%{device}/hybris/hybris-boot.img $RPM_BUILD_ROOT/img/
+cp out/target/product/%{device}/hybris/hybris-recovery.img $RPM_BUILD_ROOT/img/
 
 %preun
 for u in %(cd units;echo *); do
@@ -260,3 +313,19 @@ fi
 %files sailfish-config
 %defattr(-,root,root,-)
 %attr(755,root,root) %{_oneshotdir}/oneshot-rotation
+
+%files kernel
+%defattr(644,root,root,-)
+/boot/kernel
+
+%files kernel-modules
+%defattr(644,root,root,-)
+/system/lib/modules
+
+%files img-boot
+%defattr(644,root,root,-)
+/img/hybris-boot.img
+
+%files img-recovery
+%defattr(644,root,root,-)
+/img/hybris-recovery.img
