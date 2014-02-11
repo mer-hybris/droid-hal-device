@@ -1,0 +1,8 @@
+SUBSYSTEM!="sound", GOTO="tegra_rt5640_end"
+ACTION!="change", GOTO="tegra_rt5640_end"
+KERNEL!="card*", GOTO="tegra_rt5640_end"
+
+ATTRS{id}=="tegrart5640", ENV{PULSE_PROFILE_SET}="tegra3-grouper.conf"
+
+LABEL="tegra_rt5640_end"
+
