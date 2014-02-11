@@ -133,7 +133,7 @@ mkdir -p units
 # Use the makefstab and tell it what mountpoints to skip. It will
 # generate .mount units which will be part of local-fs.target
 # skip /cache and /data - won't touch them (yet)
-cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd units; %{SOURCE1} /cache /data  )
+cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd units; %{SOURCE1} /boot /cache /data /misc /recovery /staging /storage/usbdisk )
 
 echo Fixing up mount points
 DEVICE=%{device} %{SOURCE6}
