@@ -236,8 +236,8 @@ cp -a out/target/product/%{device}/system/lib/modules $RPM_BUILD_ROOT/system/lib
 
 # Images are installed to /img - they'll probably be unpacked using
 # rpm2cpio mostly anyhow
-cp out/target/product/%{device}/hybris/hybris-boot.img $RPM_BUILD_ROOT/img/
-cp out/target/product/%{device}/hybris/hybris-recovery.img $RPM_BUILD_ROOT/img/
+cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/img/
+cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/img/
 
 %preun
 for u in %(cd units;echo *); do
