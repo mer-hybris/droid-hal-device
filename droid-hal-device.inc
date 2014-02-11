@@ -18,7 +18,7 @@ Source3:        makeudev
 Source4:        apply-permissions.c
 Source5:        makefile
 Source6:        fixup-mountpoints
-Source7:        compositor_mako-cm10.1.conf
+Source7:        device-%{vendor}-%{device}-configs
 Source8:        hybris.conf
 Source9:        sailfish-oneshot-rotation
 Source10:       droid-hal-device.inc
@@ -136,7 +136,7 @@ mkdir -p units
 cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd units; %{SOURCE1} /cache /data  )
 
 echo Fixing up mount points
-%{SOURCE6}
+DEVICE=%{device} %{SOURCE6}
 
 
 %install
@@ -219,7 +219,7 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # To set the environment for Qt/hybris (note this is a bit lipstick specific)
-cp %{SOURCE7} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor/mako-cm10.1.conf
+cp -R %{SOURCE7}/* $RPM_BUILD_ROOT/
 cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 # Add the oneshot
@@ -285,6 +285,8 @@ fi
 %files
 %defattr(-,root,root,-)
 /sbin/*
+/usr/sbin/*
+/lib/systemd/system/*.service
 # This binary should probably move to /sbin/
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
@@ -296,6 +298,8 @@ fi
 # Non executable files
 %defattr(644,root,root,-)
 %{_unitdir}
+%{_sysconfdir}/*
+%{_datadir}/*
 # hybris and /dev/alog/ libraries
 %{_libexecdir}/droid-hybris/system/lib/
 # just /dev/alog/ libraries (for trying to run pure android apps)
@@ -304,7 +308,7 @@ fi
 # Droid config droppings
 /*.rc
 /default.prop
-%{_sharedstatedir}/environment/compositor/mako-cm10.1.conf
+%{_sharedstatedir}/environment/compositor/droid-hal-device.conf
 %{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 %files devel
