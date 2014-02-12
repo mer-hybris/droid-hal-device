@@ -115,8 +115,8 @@ ANDROID_ROOT=$(readlink -e %{android_root})
 (cd rpmsrc; make ANDROID_ROOT=$ANDROID_ROOT -f %{SOURCE5})
 
 echo Building uid scripts
-rpmsrc/usergroupgen add > droid-user-add.sh
-rpmsrc/usergroupgen remove > droid-user-remove.sh
+rpmsrc/usergroupgen add > rpmsrc/droid-user-add.sh
+rpmsrc/usergroupgen remove > rpmsrc/droid-user-remove.sh
 
 echo Building udev rules
 rm -rf udev.rules
@@ -138,9 +138,10 @@ cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd units; %{SOU
 echo Fixing up mount points
 DEVICE=%{device} %{SOURCE6}
 
+echo "$(cd units; echo *)" > units/mount-units.txt
 
 %install
-echo install %(cd units;echo *)
+echo install %(cat units/mount-units.txt)
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
@@ -190,7 +191,7 @@ mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 # libdsyscalls.so and libc.so are blacklisted
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
 
-cp -a units/* $RPM_BUILD_ROOT/%{_unitdir}
+cp -a units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install the udev rules and supporting script
 cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
@@ -200,11 +201,14 @@ cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 # which would preserve oldlist in %post and delete any users no longer
 # needed (unlikely!). This avoids the transient removal of uids and
 # group issues
-install -D droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
-install -D droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
+install -D rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
+install -D rpmsrc/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
 # droid permission fixer
 install -D rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
+
+# the list of mount units
+install -D units/mount-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/mount-units.txt
 
 # Remove cruft
 rm $RPM_BUILD_ROOT/fstab.*
@@ -240,7 +244,7 @@ cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/img/
 cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/img/
 
 %preun
-for u in %(cd units;echo *); do
+for u in $(cat %{_libdir}/droid/mount-units.txt); do
 %systemd_preun $u
 done
 # Only run this during final cleanup
@@ -251,7 +255,7 @@ if [ $1 == 0 ]; then
 fi
 
 %post
-for u in %(cd units;echo *); do
+for u in $(cat %{_libdir}/droid/mount-units.txt); do
 %systemd_post $u
 done
 cd %{_libdir}/droid
@@ -291,6 +295,7 @@ fi
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
 %{_libdir}/droid/apply-permissions
+%{_libdir}/droid/mount-units.txt
 # Created in %%post
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 # droid binaries
