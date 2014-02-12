@@ -115,8 +115,8 @@ ANDROID_ROOT=$(readlink -e %{android_root})
 (cd rpmsrc; make ANDROID_ROOT=$ANDROID_ROOT -f %{SOURCE5})
 
 echo Building uid scripts
-rpmsrc/usergroupgen add > droid-user-add.sh
-rpmsrc/usergroupgen remove > droid-user-remove.sh
+rpmsrc/usergroupgen add > rpmsrc/droid-user-add.sh
+rpmsrc/usergroupgen remove > rpmsrc/droid-user-remove.sh
 
 echo Building udev rules
 rm -rf udev.rules
@@ -201,8 +201,8 @@ cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 # which would preserve oldlist in %post and delete any users no longer
 # needed (unlikely!). This avoids the transient removal of uids and
 # group issues
-install -D droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
-install -D droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
+install -D rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
+install -D rpmsrc/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
 # droid permission fixer
 install -D rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
