@@ -8,7 +8,7 @@
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
-Version: 	0.0.2
+Version: 	0.0.3
 Release: 	0
 Provides:       droid-hal
 Source0: 	%{name}-%{version}.tar.bz2
@@ -161,6 +161,9 @@ mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/system/lib/modules
 
 # Install
+cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BUILD_ROOT/boot
+cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
+
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
 cp -a %{android_root}/out/target/product/%{device}/system/. $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
@@ -234,10 +237,10 @@ cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot
 cp -a out/target/product/%{device}/system/lib/modules $RPM_BUILD_ROOT/system/lib/modules
 
 
-# Images are installed to /img - they'll probably be unpacked using
+# Images are installed to /boot - they'll probably be unpacked using
 # rpm2cpio mostly anyhow
-cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/img/
-cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/img/
+cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/boot/
+cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 
 %preun
 for u in %(cd units;echo *); do
@@ -330,8 +333,11 @@ fi
 
 %files img-boot
 %defattr(644,root,root,-)
-/img/hybris-boot.img
+/boot/hybris-boot.img
+/boot/hybris-updater-script
+/boot/hybris-updater-unpack.sh
 
 %files img-recovery
 %defattr(644,root,root,-)
-/img/hybris-recovery.img
+/boot/hybris-recovery.img
+
