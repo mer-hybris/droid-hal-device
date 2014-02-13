@@ -141,7 +141,7 @@ DEVICE=%{device} %{SOURCE6}
 echo "$(cd units; echo *)" > units/mount-units.txt
 
 %install
-echo install %(cat units/mount-units.txt)
+echo install $(cat units/mount-units.txt)
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
