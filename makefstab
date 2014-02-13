@@ -9,6 +9,11 @@ while (<STDIN>) {
 
       next if  grep( /^$mnt_point$/, @mnt_skip) ;
 
+      # emmc doesn't work. It may be nice to generate these in a
+      # disabled state.
+      next if $type =~ /emmc/ ;
+
+      # From: http://www.freedesktop.org/software/systemd/man/systemd.unit.html :
       # For unit names reflecting paths
       # Example: a device unit dev-sda.device == /dev/sda Given a
       # path, "/" is replaced by "-",
