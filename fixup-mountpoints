@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 # Fix up mount points in unit files
 # FIXME: Right now, this is mako-specific
 
 # This is broken pending systemd > 191-2 so hack the generated unit files :(
 # See: https://bugzilla.redhat.com/show_bug.cgi?id=859297
 
-if [[ x"$DEVICE" = x"mako" ]]; then
+if [[ "$DEVICE" = "mako" ]]; then
   sed -i \
       -e 's block/platform/msm_sdcc.1/by-name/modem mmcblk0p1 ' \
       -e 's block/platform/msm_sdcc.1/by-name/persist mmcblk0p20 ' \
@@ -14,7 +14,7 @@ if [[ x"$DEVICE" = x"mako" ]]; then
 fi
 
 ## asus/grouper
-if [[ x"$DEVICE" = x"grouper" ]]; then
+if [[ "$DEVICE" = "grouper" ]]; then
   sed -i \
       -e 's block/platform/sdhci-tegra.3/by-name/APP mmcblk0p3 ' \
       -e 's block/platform/sdhci-tegra.3/by-name/CAC mmcblk0p4 ' \
@@ -26,7 +26,7 @@ if [[ x"$DEVICE" = x"grouper" ]]; then
 fi
 
 ## asus/tilapia
-if [[ x"$DEVICE" = x"tilapia" ]]; then
+if [[ "$DEVICE" = "tilapia" ]]; then
   sed -i \
       -e 's block/platform/sdhci-tegra.3/by-name/APP mmcblk0p3 ' \
       -e 's block/platform/sdhci-tegra.3/by-name/CAC mmcblk0p5 ' \
@@ -37,3 +37,9 @@ if [[ x"$DEVICE" = x"tilapia" ]]; then
       units/*.mount
 fi
 
+## Galaxy s3/i9305
+if [[ "$DEVICE" = "i9305" ]]; then
+  sed -i \
+      -e 's /block/ / ' \
+      units/*.mount
+fi
