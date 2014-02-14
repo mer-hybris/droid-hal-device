@@ -292,8 +292,6 @@ fi
 %files
 %defattr(-,root,root,-)
 /sbin/*
-/usr/sbin/*
-/lib/systemd/system/*.service
 # This binary should probably move to /sbin/
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
