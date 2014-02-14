@@ -226,6 +226,7 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # To set the environment for Qt/hybris (note this is a bit lipstick specific)
+(cd %{SOURCE7}; find -type f -print ) | sed 's/^.//' > rpmsrc/conf.files
 cp -R %{SOURCE7}/* $RPM_BUILD_ROOT/
 cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
@@ -289,7 +290,7 @@ if [ "$1" -eq 1 ]; then
     %{_bindir}/add-oneshot --user oneshot-rotation
 fi
 
-%files
+%files -f rpmsrc/conf.files
 %defattr(-,root,root,-)
 /sbin/*
 # This binary should probably move to /sbin/
@@ -304,8 +305,6 @@ fi
 # Non executable files
 %defattr(644,root,root,-)
 %{_unitdir}
-%{_sysconfdir}/*
-%{_datadir}/*
 # hybris and /dev/alog/ libraries
 %{_libexecdir}/droid-hybris/system/lib/
 # just /dev/alog/ libraries (for trying to run pure android apps)
