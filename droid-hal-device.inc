@@ -82,7 +82,6 @@ Just the kernel modules
 %package img-boot
 Provides: droid-hal-img-boot
 Group:	System
-BuildArch:	noarch
 Summary: Boot img for droid-hal device: %{device}
 
 %description img-boot
@@ -162,11 +161,12 @@ mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/system/lib/modules
 
 # Install
+cp -a %{android_root}/out/target/product/%{device}/system/bin/updater $RPM_BUILD_ROOT/boot/update-binary
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BUILD_ROOT/boot
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
 
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
-cp -a %{android_root}/out/target/product/%{device}/system/. $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
+cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 
@@ -337,6 +337,7 @@ fi
 %files img-boot
 %defattr(644,root,root,-)
 /boot/hybris-boot.img
+/boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
 
