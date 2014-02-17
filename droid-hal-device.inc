@@ -17,7 +17,6 @@ Source2: 	usergroupgen.c
 Source3:        makeudev
 Source4:        apply-permissions.c
 Source5:        makefile
-Source6:        fixup-mountpoints
 Source7:        device-%{vendor}-%{device}-configs
 Source8:        hybris.conf
 Source9:        sailfish-oneshot-rotation
@@ -136,7 +135,7 @@ mkdir -p units
 cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd units; %{SOURCE1} /boot /cache /data /misc /recovery /staging /storage/usbdisk )
 
 echo Fixing up mount points
-DEVICE=%{device} %{SOURCE6}
+hybris/hybris-boot/fixup-mountpoints %{device} units/*
 
 echo "$(cd units; echo *)" > units/mount-units.txt
 
