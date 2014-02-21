@@ -23,6 +23,7 @@ Source9:        sailfish-oneshot-rotation
 Source10:       droid-hal-device.inc
 # This is copied from libhybris and should be kept in-sync:
 Source11:	extract-headers.sh
+Source12:       init-debug
 # Allow device specific sources to be defined using dhd_sources
 # Reserve Source50 onwards
 %{?dhd_sources}
@@ -198,6 +199,9 @@ cp -a units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
 # Install the udev rules and supporting script
 cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 
+# Install init-debug which will provide usb access and non-blocking telnet
+cp -a %{SOURCE12} $RPM_BUILD_ROOT/
+
 # droid user support This may be better done by passing a list of
 # users/groups and running 'ensure_usergroups_exist newlist oldlist'
 # which would preserve oldlist in %post and delete any users no longer
@@ -298,6 +302,8 @@ fi
 %{_libdir}/droid/apply-permissions
 %{_libdir}/droid/mount-units.txt
 # Created in %%post
+# init-debug
+%attr(755,root,root) /init-debug
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
