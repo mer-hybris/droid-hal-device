@@ -38,6 +38,8 @@ BuildRequires:  mer-kernel-checks
 BuildRequires:  systemd
 %systemd_requires
 %{_oneshot_requires_post}
+# Should be removed when usb-moded is fixed and android-usb.services removed
+Conflicts: usb-moded
 
 %description
 %{summary}.
@@ -95,6 +97,44 @@ Summary: Recovery image for droid-hal device: %{device}
 
 %description img-recovery
 The recovery.img for device
+
+%package pulseaudio-settings
+Summary:    PulseAudio settings for %{device} hw
+Requires:   pulseaudio >= 4.0
+Requires:   pulseaudio-modules-nemo-parameters >= 4.0.11
+Requires:   pulseaudio-modules-nemo-stream-restore >= 4.0.11
+Requires:   pulseaudio-modules-nemo-mainvolume >= 4.0.11
+Requires:   pulseaudio-modules-droid >= 4.0.6
+Requires:   pulseaudio-policy-enforcement >= 4.0.8
+Provides:   pulseaudio-settings
+
+%description pulseaudio-settings
+%{summary}.
+
+%package policy-settings
+Summary:    Policy settings for %{device} hw
+Requires:   ohm >= 1.1.16
+Requires:   ohm-plugins-misc
+Requires:   ohm-plugins-dbus
+Requires:   ohm-plugin-telephony
+Requires:   ohm-plugin-signaling
+Requires:   ohm-plugin-media
+Requires:   ohm-plugin-accessories
+Requires:   ohm-plugin-resolver
+Requires:   ohm-plugin-ruleengine
+Requires:   ohm-plugin-profile
+Requires:   pulseaudio-modules-nemo-common >= 4.0.11
+Requires:   pulseaudio-policy-enforcement >= 4.0.8
+Requires:   policy-settings-common >= 0.2.0
+Obsoletes:  ohm-config <= 1.1.15
+# ohm-configs-default should not be installed ever, thus no version
+# specification defined here.
+Obsoletes:  ohm-configs-default
+Provides:   ohm-configs > 1.1.15
+Provides:   policy-settings
+
+%description policy-settings
+%{summary}.
 
 %prep
 %setup -q
@@ -353,4 +393,10 @@ fi
 %files img-recovery
 %defattr(644,root,root,-)
 /boot/hybris-recovery.img
+
+%files pulseaudio-settings
+%defattr(644,root,root,-)
+
+%files policy-settings
+%defattr(644,root,root,-)
 
