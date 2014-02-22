@@ -158,7 +158,7 @@ mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 
 mkdir -p $RPM_BUILD_ROOT/img
 mkdir -p $RPM_BUILD_ROOT/boot
-mkdir -p $RPM_BUILD_ROOT/system/lib/modules
+mkdir -p $RPM_BUILD_ROOT/lib/modules
 
 # Install
 cp -a %{android_root}/out/target/product/%{device}/system/bin/updater $RPM_BUILD_ROOT/boot/update-binary
@@ -241,9 +241,14 @@ touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
 
 # Kernel and module installation; to
 # /boot and modules to /lib as normal
-cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot
-cp -a out/target/product/%{device}/system/lib/modules $RPM_BUILD_ROOT/system/lib/modules
-
+KERNEL_RELEASE=$(cat out/target/product/%{device}/obj/KERNEL_OBJ/include/config/kernel.release)
+cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$KERNEL_RELEASE
+MOD_DIR=$RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE
+mkdir -p $MOD_DIR
+cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/.
+cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/.
+cp -a out/target/product/%{device}/obj/KERNEL_OBJ/modules.builtin $MOD_DIR/.
+cp -a out/target/product/%{device}/obj/KERNEL_OBJ/modules.order $MOD_DIR/.
 
 # Images are installed to /boot - they'll probably be unpacked using
 # rpm2cpio mostly anyhow
@@ -332,11 +337,11 @@ fi
 
 %files kernel
 %defattr(644,root,root,-)
-/boot/kernel
+/boot/kernel*
 
 %files kernel-modules
 %defattr(644,root,root,-)
-/system/lib/modules
+/lib/modules
 
 %files img-boot
 %defattr(644,root,root,-)
