@@ -8,7 +8,7 @@
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
-Version: 	0.0.3
+Version: 	0.0.5
 Release: 	0
 Provides:       droid-hal
 Source0: 	%{name}-%{version}.tar.bz2
