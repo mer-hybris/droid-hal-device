@@ -269,7 +269,7 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # To set the environment for Qt/hybris (note this is a bit lipstick specific)
-(cd %{SOURCE7}; find -type f -print ) | sed 's/^.//' > rpmsrc/conf.files
+(cd %{SOURCE7}; find . \( -type f -or -type l \) -print ) | sed 's/^.//' > rpmsrc/conf.files
 cp -R %{SOURCE7}/* $RPM_BUILD_ROOT/
 cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
