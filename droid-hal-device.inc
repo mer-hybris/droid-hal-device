@@ -23,6 +23,7 @@ Source9:        sailfish-oneshot-rotation
 Source10:       droid-hal-device.inc
 # This is copied from libhybris and should be kept in-sync:
 Source11:	extract-headers.sh
+Source12:       init-debug
 # Allow device specific sources to be defined using dhd_sources
 # Reserve Source50 onwards
 %{?dhd_sources}
@@ -157,7 +158,7 @@ mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 
 mkdir -p $RPM_BUILD_ROOT/img
 mkdir -p $RPM_BUILD_ROOT/boot
-mkdir -p $RPM_BUILD_ROOT/system/lib/modules
+mkdir -p $RPM_BUILD_ROOT/lib/modules
 
 # Install
 cp -a %{android_root}/out/target/product/%{device}/system/bin/updater $RPM_BUILD_ROOT/boot/update-binary
@@ -198,6 +199,9 @@ cp -a units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
 # Install the udev rules and supporting script
 cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 
+# Install init-debug which will provide usb access and non-blocking telnet
+cp -a %{SOURCE12} $RPM_BUILD_ROOT/
+
 # droid user support This may be better done by passing a list of
 # users/groups and running 'ensure_usergroups_exist newlist oldlist'
 # which would preserve oldlist in %post and delete any users no longer
@@ -237,9 +241,14 @@ touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
 
 # Kernel and module installation; to
 # /boot and modules to /lib as normal
-cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot
-cp -a out/target/product/%{device}/system/lib/modules $RPM_BUILD_ROOT/system/lib/modules
-
+KERNEL_RELEASE=$(cat out/target/product/%{device}/obj/KERNEL_OBJ/include/config/kernel.release)
+cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$KERNEL_RELEASE
+MOD_DIR=$RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE
+mkdir -p $MOD_DIR
+cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/.
+cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/.
+cp -a out/target/product/%{device}/obj/KERNEL_OBJ/modules.builtin $MOD_DIR/.
+cp -a out/target/product/%{device}/obj/KERNEL_OBJ/modules.order $MOD_DIR/.
 
 # Images are installed to /boot - they'll probably be unpacked using
 # rpm2cpio mostly anyhow
@@ -298,6 +307,8 @@ fi
 %{_libdir}/droid/apply-permissions
 %{_libdir}/droid/mount-units.txt
 # Created in %%post
+# init-debug
+%attr(755,root,root) /init-debug
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
@@ -326,11 +337,11 @@ fi
 
 %files kernel
 %defattr(644,root,root,-)
-/boot/kernel
+/boot/kernel*
 
 %files kernel-modules
 %defattr(644,root,root,-)
-/system/lib/modules
+/lib/modules
 
 %files img-boot
 %defattr(644,root,root,-)
