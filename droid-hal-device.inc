@@ -346,6 +346,13 @@ if [ "$1" -eq 1 ]; then
     %{_bindir}/add-oneshot --user oneshot-rotation
 fi
 
+%post kernel-modules
+# This runs on the device at install or in mic chroot at img build
+# in chroot the kernel version is not known.
+for ver in $(cd /lib/modules; echo *); do
+  depmod $ver
+done
+
 %files -f rpmsrc/conf.files
 %defattr(-,root,root,-)
 /sbin/*
