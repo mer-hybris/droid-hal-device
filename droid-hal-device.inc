@@ -24,7 +24,9 @@ Source10:       droid-hal-device.inc
 # This is copied from libhybris and should be kept in-sync:
 Source11:	extract-headers.sh
 Source12:       init-debug
+# This is not copied from libhybris and should not be kept in-sync:
 Source13:       device-configs-all
+Source14:       droid.kmap
 # Allow device specific sources to be defined using dhd_sources
 # Reserve Source50 onwards
 %{?dhd_sources}
@@ -37,6 +39,7 @@ Requires:       droid-system-packager
 BuildRequires:  oneshot
 BuildRequires:  mer-kernel-checks
 BuildRequires:  systemd
+BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 %systemd_requires
 %{_oneshot_requires_post}
 # Should be removed when usb-moded is fixed and android-usb.services removed
@@ -281,6 +284,10 @@ done
 
 cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
+# Keyboard map file
+/usr/lib/qt5/bin/kmap2qmap %{SOURCE14} droid.qmap
+cp droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
+
 # Add the oneshot
 cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
 
@@ -380,6 +387,7 @@ done
 /default.prop
 %{_sharedstatedir}/environment/compositor/droid-hal-device.conf
 %{_sharedstatedir}/environment/nemo/99-hybris.conf
+%{_datadir}/qt5/keymaps/droid.qmap
 
 %files devel
 %defattr(644,root,root,-)
