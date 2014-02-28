@@ -24,6 +24,7 @@ Source10:       droid-hal-device.inc
 # This is copied from libhybris and should be kept in-sync:
 Source11:	extract-headers.sh
 Source12:       init-debug
+Source13:       device-configs-all
 # Allow device specific sources to be defined using dhd_sources
 # Reserve Source50 onwards
 %{?dhd_sources}
@@ -269,8 +270,15 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # To set the environment for Qt/hybris (note this is a bit lipstick specific)
-(cd %{SOURCE7}; find . \( -type f -or -type l \) -print ) | sed 's/^.//' > rpmsrc/conf.files
-cp -R %{SOURCE7}/* $RPM_BUILD_ROOT/
+echo -n "" > rpmsrc/conf.files
+# Install files from device-configs-all (if any)
+for config_dir in %{SOURCE7} %{SOURCE13}; do
+    if [ -d $config_dir ]; then
+        (cd $config_dir; find . \( -type f -or -type l \) -print ) | sed 's/^.//' >> rpmsrc/conf.files
+        cp -R $config_dir/* $RPM_BUILD_ROOT/
+    fi
+done
+
 cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 # Add the oneshot
