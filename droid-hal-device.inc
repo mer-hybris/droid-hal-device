@@ -8,7 +8,7 @@
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
-Version: 	0.0.3
+Version: 	0.0.5
 Release: 	0
 Provides:       droid-hal
 Source0: 	%{name}-%{version}.tar.bz2
@@ -24,6 +24,7 @@ Source10:       droid-hal-device.inc
 # This is copied from libhybris and should be kept in-sync:
 Source11:	extract-headers.sh
 Source12:       init-debug
+Source13:       device-configs-all
 # Allow device specific sources to be defined using dhd_sources
 # Reserve Source50 onwards
 %{?dhd_sources}
@@ -38,6 +39,8 @@ BuildRequires:  mer-kernel-checks
 BuildRequires:  systemd
 %systemd_requires
 %{_oneshot_requires_post}
+# Should be removed when usb-moded is fixed and android-usb.services removed
+Conflicts: usb-moded
 
 %description
 %{summary}.
@@ -95,6 +98,44 @@ Summary: Recovery image for droid-hal device: %{device}
 
 %description img-recovery
 The recovery.img for device
+
+%package pulseaudio-settings
+Summary:    PulseAudio settings for %{device} hw
+Requires:   pulseaudio >= 4.0
+Requires:   pulseaudio-modules-nemo-parameters >= 4.0.11
+Requires:   pulseaudio-modules-nemo-stream-restore >= 4.0.11
+Requires:   pulseaudio-modules-nemo-mainvolume >= 4.0.11
+Requires:   pulseaudio-modules-droid >= 4.0.6
+Requires:   pulseaudio-policy-enforcement >= 4.0.8
+Provides:   pulseaudio-settings
+
+%description pulseaudio-settings
+%{summary}.
+
+%package policy-settings
+Summary:    Policy settings for %{device} hw
+Requires:   ohm >= 1.1.16
+Requires:   ohm-plugins-misc
+Requires:   ohm-plugins-dbus
+Requires:   ohm-plugin-telephony
+Requires:   ohm-plugin-signaling
+Requires:   ohm-plugin-media
+Requires:   ohm-plugin-accessories
+Requires:   ohm-plugin-resolver
+Requires:   ohm-plugin-ruleengine
+Requires:   ohm-plugin-profile
+Requires:   pulseaudio-modules-nemo-common >= 4.0.11
+Requires:   pulseaudio-policy-enforcement >= 4.0.8
+Requires:   policy-settings-common >= 0.2.0
+Obsoletes:  ohm-config <= 1.1.15
+# ohm-configs-default should not be installed ever, thus no version
+# specification defined here.
+Obsoletes:  ohm-configs-default
+Provides:   ohm-configs > 1.1.15
+Provides:   policy-settings
+
+%description policy-settings
+%{summary}.
 
 %prep
 %setup -q
@@ -229,8 +270,15 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # To set the environment for Qt/hybris (note this is a bit lipstick specific)
-(cd %{SOURCE7}; find -type f -print ) | sed 's/^.//' > rpmsrc/conf.files
-cp -R %{SOURCE7}/* $RPM_BUILD_ROOT/
+echo -n "" > rpmsrc/conf.files
+# Install files from device-configs-all (if any)
+for config_dir in %{SOURCE7} %{SOURCE13}; do
+    if [ -d $config_dir ]; then
+        (cd $config_dir; find . \( -type f -or -type l \) -print ) | sed 's/^.//' >> rpmsrc/conf.files
+        cp -R $config_dir/* $RPM_BUILD_ROOT/
+    fi
+done
+
 cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 # Add the oneshot
@@ -353,4 +401,10 @@ fi
 %files img-recovery
 %defattr(644,root,root,-)
 /boot/hybris-recovery.img
+
+%files pulseaudio-settings
+%defattr(644,root,root,-)
+
+%files policy-settings
+%defattr(644,root,root,-)
 
