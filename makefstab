@@ -37,7 +37,7 @@ while (<STDIN>) {
       print UNIT <<"END" ;
 [Unit]
 Description=Droid mount for $mnt_point
-Before=local-fs.target
+Before=local-fs.target systemd-modules-load.service
 
 [Mount]
 What=$src
