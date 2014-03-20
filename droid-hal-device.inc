@@ -287,6 +287,7 @@ cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 # Keyboard map file
 /usr/lib/qt5/bin/kmap2qmap %{SOURCE14} droid.qmap
+mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
 cp droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 
 # Add the oneshot
