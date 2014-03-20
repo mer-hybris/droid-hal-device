@@ -4,12 +4,13 @@
 # vendor: determine the directory used for ./device/<vendor>/<device>
 
 %define android_root .
+%define rel_date %(date +'%%y%%m%%d%%H%%M')
 
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
 Version: 	0.0.6
-Release: 	0
+Release: 	%{rel_date}
 Provides:       droid-hal
 Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
