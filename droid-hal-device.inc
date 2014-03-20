@@ -4,12 +4,13 @@
 # vendor: determine the directory used for ./device/<vendor>/<device>
 
 %define android_root .
+%define rel_date %(date +'%%y%%m%%d%%H%%M')
 
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
 Version: 	0.0.6
-Release: 	0
+Release: 	%{rel_date}
 Provides:       droid-hal
 Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
@@ -286,6 +287,7 @@ cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 # Keyboard map file
 /usr/lib/qt5/bin/kmap2qmap %{SOURCE14} droid.qmap
+mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
 cp droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 
 # Add the oneshot
