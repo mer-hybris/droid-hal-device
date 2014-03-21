@@ -5,6 +5,8 @@ Before=network.target start-user-session@USER.service bluetooth.service ofono.se
 Conflicts=shutdown.target actdead.target
 
 [Service]
+Type=oneshot
+RemainAfterExit=yes
 ExecStart=/bin/sh /usr/bin/droid/droid-wlan-fwreload.sh
 
 [Install]
