@@ -4,7 +4,7 @@
 # vendor: determine the directory used for ./device/<vendor>/<device>
 
 %define android_root .
-%define rel_date %(date +'%%y%%m%%d%%H%%M')
+%define rel_date %(date +'%%Y%%m%%d%%H%%M')
 
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
