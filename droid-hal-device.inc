@@ -49,6 +49,7 @@ Conflicts: usb-moded
 %description
 %{summary}.
 
+################
 %package devel
 Group:	Development/Tools
 Requires: %{name} = %{version}-%{release}
@@ -59,6 +60,7 @@ Summary: Development files for droid-hal device: %{device}
 Device specific droid headers for %{device}.
 Needed by libhybris
 
+################
 %package sailfish-config
 Provides: droid-hal-sailfish-config
 Group:	System
@@ -70,6 +72,7 @@ Summary: Per device configuration for sailfish for droid-hal device: %{device}
 %description sailfish-config
 Configure sailfish eg naturally landscape devices like mako
 
+################
 %package kernel
 Provides: droid-hal-kernel
 Group:	System
@@ -78,6 +81,7 @@ Summary: Kernel for droid-hal device: %{device}
 %description kernel
 Just the kernel - mainly useful if you want to make a custom img
 
+################
 %package kernel-modules
 Provides: droid-hal-kernel-modules
 Group:	System
@@ -86,6 +90,7 @@ Summary: Kernel modules for droid-hal device: %{device}
 %description kernel-modules
 Just the kernel modules
 
+################
 %package img-boot
 Provides: droid-hal-img-boot
 Group:	System
@@ -94,6 +99,7 @@ Summary: Boot img for droid-hal device: %{device}
 %description img-boot
 The boot.img for device
 
+################
 %package img-recovery
 Provides: droid-hal-img-recovery
 Group:	System
@@ -103,6 +109,7 @@ Summary: Recovery image for droid-hal device: %{device}
 %description img-recovery
 The recovery.img for device
 
+################
 %package pulseaudio-settings
 Summary:    PulseAudio settings for %{device} hw
 Requires:   pulseaudio >= 4.0
@@ -116,6 +123,7 @@ Provides:   pulseaudio-settings
 %description pulseaudio-settings
 %{summary}.
 
+################
 %package policy-settings
 Summary:    Policy settings for %{device} hw
 Requires:   ohm >= 1.1.16
@@ -140,6 +148,9 @@ Provides:   policy-settings
 
 %description policy-settings
 %{summary}.
+
+################################################################
+# Begin prep/build section
 
 %prep
 %setup -q
@@ -184,6 +195,7 @@ hybris/hybris-boot/fixup-mountpoints %{device} units/*
 
 echo "$(cd units; echo *)" > units/mount-units.txt
 
+################
 %install
 echo install $(cat units/mount-units.txt)
 rm -rf $RPM_BUILD_ROOT
@@ -312,6 +324,9 @@ cp -a out/target/product/%{device}/obj/KERNEL_OBJ/modules.order $MOD_DIR/. || tr
 cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/boot/
 cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 
+################################################################
+# Begin pre/post section
+
 %preun
 for u in $(cat %{_libdir}/droid/mount-units.txt); do
 %systemd_preun $u
@@ -361,6 +376,9 @@ fi
 for ver in $(cd /lib/modules; echo *); do
   depmod $ver
 done
+
+################################################################
+# Begin files section
 
 %files -f rpmsrc/conf.files
 %defattr(-,root,root,-)
