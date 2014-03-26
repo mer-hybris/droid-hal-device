@@ -185,37 +185,34 @@ mer_verify_kernel_config \
 %endif
 
 echo Building local tools
-rm -rf rpmsrc
-mkdir rpmsrc
-cp %{SOURCE2} %{SOURCE4} rpmsrc/
+mkdir tmp/rpmsrc
+cp %{SOURCE2} %{SOURCE4} tmp/rpmsrc/
 ANDROID_ROOT=$(readlink -e %{android_root})
-(cd rpmsrc; make ANDROID_ROOT=$ANDROID_ROOT -f %{SOURCE5})
+(cd tmp/rpmsrc; make ANDROID_ROOT=$ANDROID_ROOT -f %{SOURCE5})
 
 echo Building uid scripts
-rpmsrc/usergroupgen add > rpmsrc/droid-user-add.sh
-rpmsrc/usergroupgen remove > rpmsrc/droid-user-remove.sh
+tmp/rpmsrc/usergroupgen add > tmp/rpmsrc/droid-user-add.sh
+tmp/rpmsrc/usergroupgen remove > tmp/rpmsrc/droid-user-remove.sh
 
 echo Building udev rules
-rm -rf udev.rules
-mkdir udev.rules
+mkdir tmp/udev.rules
 # Device specific ueventd rules is the "not goldfish" one
 %{SOURCE3} \
     %{android_root}/out/target/product/%{device}/root/ueventd.rc \
     $(ls %{android_root}/out/target/product/%{device}/root/ueventd.*.rc | grep -v .goldfish.rc) \
-        > udev.rules/999-android-system.rules
+        > tmp/udev.rules/999-android-system.rules
 
 echo Building mount units
-rm -rf units
-mkdir -p units
+mkdir tmp/units
 # Use the makefstab and tell it what mountpoints to skip. It will
 # generate .mount units which will be part of local-fs.target
 # skip /cache and /data - won't touch them (yet)
-cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd units; %{SOURCE1} /boot /cache /data /misc /recovery /staging /storage/usbdisk )
+cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd tmp/units; %{SOURCE1} /boot /cache /data /misc /recovery /staging /storage/usbdisk )
 
 echo Fixing up mount points
-hybris/hybris-boot/fixup-mountpoints %{device} units/*
+hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
 
-echo "$(cd units; echo *)" > units/mount-units.txt
+echo "$(cd tmp/units; echo *)" > tmp/units/mount-units.txt
 
 echo Creating hw-release
 # based on http://www.freedesktop.org/software/systemd/man/os-release.html
@@ -232,7 +229,7 @@ EOF
 
 ################
 %install
-echo install $(cat units/mount-units.txt)
+echo install $(cat tmp/units/mount-units.txt)
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
@@ -287,10 +284,10 @@ mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 # libdsyscalls.so and libc.so are blacklisted
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
 
-cp -a units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
+cp -a tmp/units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install the udev rules and supporting script
-cp -a udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
+cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 
 # Install init-debug which will provide usb access and non-blocking telnet
 cp -a %{SOURCE12} $RPM_BUILD_ROOT/
@@ -300,14 +297,14 @@ cp -a %{SOURCE12} $RPM_BUILD_ROOT/
 # which would preserve oldlist in %post and delete any users no longer
 # needed (unlikely!). This avoids the transient removal of uids and
 # group issues
-install -D rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
-install -D rpmsrc/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
+install -D tmp/rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
+install -D tmp/rpmsrc/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
 # droid permission fixer
-install -D rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
+install -D tmp/rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
 
 # the list of mount units
-install -D units/mount-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/mount-units.txt
+install -D tmp/units/mount-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/mount-units.txt
 
 # Remove cruft
 rm $RPM_BUILD_ROOT/fstab.*
@@ -322,11 +319,11 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # To set the environment for Qt/hybris (note this is a bit lipstick specific)
-echo -n "" > rpmsrc/conf.files
+echo -n "" > tmp/rpmsrc/conf.files
 # Install files from device-configs-all (if any)
 for config_dir in %{SOURCE7} %{SOURCE13}; do
     if [ -d $config_dir ]; then
-        (cd $config_dir; find . \( -type f -or -type l \) -print ) | sed 's/^.//' >> rpmsrc/conf.files
+        (cd $config_dir; find . \( -type f -or -type l \) -print ) | sed 's/^.//' >> tmp/rpmsrc/conf.files
         cp -R $config_dir/* $RPM_BUILD_ROOT/
     fi
 done
@@ -422,7 +419,7 @@ done
 ################################################################
 # Begin files section
 
-%files -f rpmsrc/conf.files
+%files -f tmp/rpmsrc/conf.files
 %defattr(-,root,root,-)
 /sbin/*
 # This binary should probably move to /sbin/
