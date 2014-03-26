@@ -6,6 +6,23 @@
 %define android_root .
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
 
+# Support build info extracted from OBS builds too
+%if 0%{?_obs_build_project:1}
+%define _build_flavour %(echo %{_obs_build_project} | awk -F : '{if (NF == 3) print $3; else if (NF == 2) print strdevel; else print strunknown}' strdevel=devel strunknown=unknown)
+%else
+%define _build_flavour unknown
+%endif
+
+%define _obs_build_count %(echo %{release} | awk -F . '{if (NF >= 3) print $3; else print $1 }')
+%define _obs_commit_count %(echo %{release} | awk -F . '{if (NF >= 2) print $2; else print $1 }')
+
+%if %{_build_flavour} == release
+%define _version_appendix (%{_target_cpu})
+%else
+%define _version_appendix (%{_target_cpu},%{_build_flavour})
+%endif
+
+
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
@@ -156,6 +173,11 @@ Provides:   policy-settings
 %setup -q
 
 %build
+
+# Make a tmp location for built installables
+rm -rf tmp
+mkdir tmp
+
 %if %{without mer_verify_kernel_config}
 echo Verifying kernel config
 mer_verify_kernel_config \
@@ -195,6 +217,19 @@ hybris/hybris-boot/fixup-mountpoints %{device} units/*
 
 echo "$(cd units; echo *)" > units/mount-units.txt
 
+echo Creating hw-release
+# based on http://www.freedesktop.org/software/systemd/man/os-release.html
+cat > tmp/hw-release <<EOF
+MER_HA_DEVICE=%{device}
+MER_HA_VENDOR=%{vendor}
+MER_HA_VERSION="%{version}.%{_obs_build_count} %{_version_appendix}"
+MER_HA_VERSION_ID=%{version}.%{_obs_build_count}
+MER_HA_PRETTY_NAME="%{device} %{version}.%{_obs_build_count} %{_version_appendix}"
+MER_HA_SAILFISH_BUILD=%{_obs_build_count}
+MER_HA_SAILFISH_FLAVOUR=%{_build_flavour}
+MER_HA_HOME_URL="https://sailfishos.org/"
+EOF
+
 ################
 %install
 echo install $(cat units/mount-units.txt)
@@ -209,6 +244,7 @@ mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo
 mkdir -p $RPM_BUILD_ROOT/%{_oneshotdir}
+mkdir -p $RPM_BUILD_ROOT//%{_sysconfdir}/os-release.d
 
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/modules/
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
@@ -301,6 +337,12 @@ cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 /usr/lib/qt5/bin/kmap2qmap %{SOURCE14} droid.qmap
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
 cp droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
+
+# hw-release
+cp tmp/hw-release %{buildroot}/%{_sysconfdir}/os-release.d/hw-release
+# for compatibility until we process all os-release.d/* into os-release
+ln -s os-release.d/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
+
 
 # Add the oneshot
 cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
@@ -408,6 +450,9 @@ done
 %{_sharedstatedir}/environment/compositor/droid-hal-device.conf
 %{_sharedstatedir}/environment/nemo/99-hybris.conf
 %{_datadir}/qt5/keymaps/droid.qmap
+# Hardware and build info
+%config %{_sysconfdir}/hw-release
+%config %{_sysconfdir}/os-release.d/hw-release
 
 %files devel
 %defattr(644,root,root,-)
