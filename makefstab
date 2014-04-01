@@ -3,7 +3,7 @@
 @mnt_skip = @ARGV;
 
 while (<STDIN>) {
-      next if /^\w*#/ or /^\w*$/;
+      next if /^\s*#/ or /^\s*$/;
 
       my ($src, $mnt_point, $type, $mnt_flagsandoptions, $fs_mgr_flags) = split;
 
