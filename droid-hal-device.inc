@@ -101,6 +101,7 @@ Just the kernel - mainly useful if you want to make a custom img
 ################
 %package kernel-modules
 Provides: droid-hal-kernel-modules
+Requires: kmod
 Group:	System
 Summary: Kernel modules for droid-hal device: %{device}
 
@@ -413,7 +414,7 @@ fi
 # This runs on the device at install or in mic chroot at img build
 # in chroot the kernel version is not known.
 for ver in $(cd /lib/modules; echo *); do
-  depmod $ver
+  /sbin/depmod $ver
 done
 
 ################################################################
