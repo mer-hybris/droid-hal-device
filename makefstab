@@ -27,7 +27,7 @@ while (<STDIN>) {
       $unitname =~ s/-$//;
       open(UNIT, ">$unitname.mount") or die "Couldn't write to $unitname.mount\n";
 
-      $mnt_flagsandoptions =~ s/(context=.*)//;
+      $mnt_flagsandoptions =~ s/(context=[^,]*)//;
       $secontext = $1;
       # tidy up in case we left leading,trailing or paired ,s
       $mnt_flagsandoptions =~ s/,,/,/;
