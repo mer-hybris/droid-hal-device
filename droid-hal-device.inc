@@ -207,8 +207,12 @@ echo Building mount units
 mkdir tmp/units
 # Use the makefstab and tell it what mountpoints to skip. It will
 # generate .mount units which will be part of local-fs.target
-# skip /cache and /data - won't touch them (yet)
-cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd tmp/units; %{SOURCE1} /boot /cache /data /misc /recovery /staging /storage/usbdisk )
+# skip various mounts which are not wanted (This is just in case they creep in)
+# First handle stupid spec quoting rules to get some args for makefstab
+shopt -s nullglob
+FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc)"
+shopt -u nullglob
+%{SOURCE1} --files $FSTAB_FILES  --skip /boot /cache /data /misc /recovery /staging /storage/usbdisk --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
@@ -308,7 +312,7 @@ install -D tmp/rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-pe
 install -D tmp/units/mount-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/mount-units.txt
 
 # Remove cruft
-rm $RPM_BUILD_ROOT/fstab.*
+rm -f $RPM_BUILD_ROOT/fstab.*
 rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,property,seapp}_contexts
 rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 
