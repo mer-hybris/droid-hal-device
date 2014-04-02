@@ -232,6 +232,9 @@ MER_HA_SAILFISH_FLAVOUR=%{_build_flavour}
 MER_HA_HOME_URL="https://sailfishos.org/"
 EOF
 
+# Grab a snapshot of the git state from repo
+./.repo/repo/repo manifest -r -o tmp/manifest.xml
+
 ################
 %install
 echo install $(cat tmp/units/mount-units.txt)
@@ -265,8 +268,12 @@ cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_R
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 
-# Run extract-headers.sh
 HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
+
+# Store the 'as built' manifest
+cp tmp/manifest.xml $HDRS/repo-manifest.xml
+
+# Run extract-headers.sh
 echo "Extracting headers for hybris"
 %SOURCE11 -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
 
