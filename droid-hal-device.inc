@@ -246,13 +246,15 @@ mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
+mkdir -p $RPM_BUILD_ROOT/etc/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo
 mkdir -p $RPM_BUILD_ROOT/%{_oneshotdir}
-mkdir -p $RPM_BUILD_ROOT//%{_sysconfdir}/os-release.d
+mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/os-release.d
 
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/modules/
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
+mkdir -p $RPM_BUILD_ROOT/%{_bindir}/droid
 
 mkdir -p $RPM_BUILD_ROOT/img
 mkdir -p $RPM_BUILD_ROOT/boot
@@ -269,6 +271,7 @@ cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 
 HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
+mkdir -p $HDRS
 
 # Store the 'as built' manifest
 cp tmp/manifest.xml $HDRS/repo-manifest.xml
@@ -297,9 +300,13 @@ mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
 
 cp -a tmp/units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
+cp -a rpm/dsp/systemd/* $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install the udev rules and supporting script
 cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
+cp rpm/dsp/udev/platform-device $RPM_BUILD_ROOT/lib/udev/
+cp rpm/dsp/udev/droid-system.rules $RPM_BUILD_ROOT/lib/udev/rules.d/998-droid-system.rules
+ln -s /dev/null $RPM_BUILD_ROOT/etc/udev/rules.d/60-persistent-v4l.rules 
 
 # Install init-debug which will provide usb access and non-blocking telnet
 cp -a %{SOURCE12} $RPM_BUILD_ROOT/
@@ -311,6 +318,9 @@ cp -a %{SOURCE12} $RPM_BUILD_ROOT/
 # group issues
 install -D tmp/rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
 install -D tmp/rpmsrc/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
+
+# Add the dsp support binaries
+cp rpm/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
 
 # droid permission fixer
 install -D tmp/rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
@@ -434,6 +444,9 @@ done
 %files -f tmp/rpmsrc/conf.files
 %defattr(-,root,root,-)
 /sbin/*
+%{_bindir}/droid/droid-init-done.sh
+%{_bindir}/droid/kill-cgroup.sh
+%{_bindir}/droid/droid-hal-startup.sh
 # This binary should probably move to /sbin/
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
@@ -445,6 +458,7 @@ done
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
+
 # Non executable files
 %defattr(644,root,root,-)
 %{_unitdir}
@@ -453,6 +467,7 @@ done
 # just /dev/alog/ libraries (for trying to run pure android apps)
 %{_libexecdir}/droid-hybris/lib-dev-alog/.
 /lib/udev/rules.d/*
+/lib/udev/platform-device
 # Droid config droppings
 /*.rc
 /default.prop
@@ -462,6 +477,9 @@ done
 # Hardware and build info
 %config %{_sysconfdir}/hw-release
 %config %{_sysconfdir}/os-release.d/hw-release
+# Disabling v4l.rules
+%{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
+
 
 %files devel
 %defattr(644,root,root,-)

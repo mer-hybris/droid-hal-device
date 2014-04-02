@@ -115,6 +115,10 @@ Type=$type
 Options=$mnt_flagsandoptions
 # Options had SELinux context option:  $secontext
 
+# Default is 90 which makes mount period too long in case of
+# errors so drop it down a notch.
+TimeoutSec=10
+
 [Install]
 WantedBy=local-fs.target
 
