@@ -67,7 +67,7 @@ Conflicts: usb-moded
 ################
 %package devel
 Group:	Development/Tools
-Requires: %{name} = %{version}-%{release}
+# Requires: %{name} = %{version}-%{release}
 Provides: droid-hal-devel
 Summary: Development files for droid-hal device: %{device}
 
