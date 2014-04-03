@@ -51,8 +51,6 @@ Source14:       droid.kmap
 
 Group:		System
 #BuildArch:	noarch
-# To provide systemd services and udev rules
-Requires:       droid-system-packager
 # Note that oneshot is not in mer-core (yet)
 BuildRequires:  oneshot
 BuildRequires:  mer-kernel-checks
