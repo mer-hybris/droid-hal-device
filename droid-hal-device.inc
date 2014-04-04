@@ -220,6 +220,8 @@ echo "$(cd tmp/units; echo *)" > tmp/units/mount-units.txt
 echo Creating hw-release
 # based on http://www.freedesktop.org/software/systemd/man/os-release.html
 cat > tmp/hw-release <<EOF
+# This file is copied as both hw-release for use in the os-release file
+# and hw-release.vars for use at build time
 MER_HA_DEVICE=%{device}
 MER_HA_VENDOR=%{vendor}
 MER_HA_VERSION="%{version}.%{_obs_build_count} %{_version_appendix}"
@@ -359,7 +361,8 @@ cp droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 cp tmp/hw-release %{buildroot}/%{_sysconfdir}/os-release.d/hw-release
 # for compatibility until we process all os-release.d/* into os-release
 ln -s os-release.d/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
-
+# for use in the -devel package
+cp tmp/hw-release %{buildroot}/{_libdir}/droid-devel/hw-release.vars
 
 # Add the oneshot
 cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
