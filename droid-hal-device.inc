@@ -266,6 +266,10 @@ cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BU
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
 
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
+
+# Now remove the mount commands from any .rc files as they're included in .mount unit files now
+sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
+
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
@@ -330,6 +334,7 @@ install -D tmp/units/mount-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/mount-units
 
 # Remove cruft
 rm -f $RPM_BUILD_ROOT/fstab.*
+rm -f $RPM_BUILD_ROOT/*goldfish*
 rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,property,seapp}_contexts
 rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 
