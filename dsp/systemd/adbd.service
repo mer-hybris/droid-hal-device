@@ -1,0 +1,5 @@
+[Unit]
+Description=Android Debug Bridge Daemon
+[Service]
+Environment=PATH=/sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin
+ExecStart=/sbin/adbd

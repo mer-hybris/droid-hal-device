@@ -1,0 +1,12 @@
+[Unit]
+Description=Load and save battery aging data
+After=droid-hal-init.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/system/bin/battery_monitor
+ExecStop=/system/bin/battery_shutdown
+
+[Install]
+WantedBy=basic.target

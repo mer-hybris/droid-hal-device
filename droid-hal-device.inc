@@ -51,8 +51,6 @@ Source14:       droid.kmap
 
 Group:		System
 #BuildArch:	noarch
-# To provide systemd services and udev rules
-Requires:       droid-system-packager
 # Note that oneshot is not in mer-core (yet)
 BuildRequires:  oneshot
 BuildRequires:  mer-kernel-checks
@@ -69,7 +67,7 @@ Conflicts: usb-moded
 ################
 %package devel
 Group:	Development/Tools
-Requires: %{name} = %{version}-%{release}
+# Requires: %{name} = %{version}-%{release}
 Provides: droid-hal-devel
 Summary: Development files for droid-hal device: %{device}
 
@@ -207,8 +205,12 @@ echo Building mount units
 mkdir tmp/units
 # Use the makefstab and tell it what mountpoints to skip. It will
 # generate .mount units which will be part of local-fs.target
-# skip /cache and /data - won't touch them (yet)
-cat %{android_root}/out/target/product/%{device}/root/fstab.* | (cd tmp/units; %{SOURCE1} /boot /cache /data /misc /recovery /staging /storage/usbdisk )
+# skip various mounts which are not wanted (This is just in case they creep in)
+# First handle stupid spec quoting rules to get some args for makefstab
+shopt -s nullglob
+FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc)"
+shopt -u nullglob
+%{SOURCE1} --files $FSTAB_FILES  --skip /boot /cache /data /misc /recovery /staging /storage/usbdisk --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
@@ -218,6 +220,8 @@ echo "$(cd tmp/units; echo *)" > tmp/units/mount-units.txt
 echo Creating hw-release
 # based on http://www.freedesktop.org/software/systemd/man/os-release.html
 cat > tmp/hw-release <<EOF
+# This file is copied as both hw-release for use in the os-release file
+# and hw-release.vars for use at build time
 MER_HA_DEVICE=%{device}
 MER_HA_VENDOR=%{vendor}
 MER_HA_VERSION="%{version}.%{_obs_build_count} %{_version_appendix}"
@@ -227,6 +231,9 @@ MER_HA_SAILFISH_BUILD=%{_obs_build_count}
 MER_HA_SAILFISH_FLAVOUR=%{_build_flavour}
 MER_HA_HOME_URL="https://sailfishos.org/"
 EOF
+
+# Grab a snapshot of the git state from repo
+./.repo/repo/repo manifest -r -o tmp/manifest.xml
 
 ################
 %install
@@ -239,13 +246,15 @@ mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
+mkdir -p $RPM_BUILD_ROOT/etc/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor
 mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo
 mkdir -p $RPM_BUILD_ROOT/%{_oneshotdir}
-mkdir -p $RPM_BUILD_ROOT//%{_sysconfdir}/os-release.d
+mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/os-release.d
 
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/modules/
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
+mkdir -p $RPM_BUILD_ROOT/%{_bindir}/droid
 
 mkdir -p $RPM_BUILD_ROOT/img
 mkdir -p $RPM_BUILD_ROOT/boot
@@ -257,12 +266,21 @@ cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BU
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
 
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
+
+# Now remove the mount commands from any .rc files as they're included in .mount unit files now
+sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
+
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 
-# Run extract-headers.sh
 HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
+mkdir -p $HDRS
+
+# Store the 'as built' manifest
+cp tmp/manifest.xml $HDRS/repo-manifest.xml
+
+# Run extract-headers.sh
 echo "Extracting headers for hybris"
 %SOURCE11 -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
 
@@ -286,9 +304,13 @@ mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
 
 cp -a tmp/units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
+cp -a rpm/dsp/systemd/* $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install the udev rules and supporting script
 cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
+cp rpm/dsp/udev/platform-device $RPM_BUILD_ROOT/lib/udev/
+cp rpm/dsp/udev/droid-system.rules $RPM_BUILD_ROOT/lib/udev/rules.d/998-droid-system.rules
+ln -s /dev/null $RPM_BUILD_ROOT/etc/udev/rules.d/60-persistent-v4l.rules 
 
 # Install init-debug which will provide usb access and non-blocking telnet
 cp -a %{SOURCE12} $RPM_BUILD_ROOT/
@@ -301,6 +323,9 @@ cp -a %{SOURCE12} $RPM_BUILD_ROOT/
 install -D tmp/rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
 install -D tmp/rpmsrc/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
+# Add the dsp support binaries
+cp rpm/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
+
 # droid permission fixer
 install -D tmp/rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
 
@@ -308,7 +333,8 @@ install -D tmp/rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-pe
 install -D tmp/units/mount-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/mount-units.txt
 
 # Remove cruft
-rm $RPM_BUILD_ROOT/fstab.*
+rm -f $RPM_BUILD_ROOT/fstab.*
+rm -f $RPM_BUILD_ROOT/*goldfish*
 rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,property,seapp}_contexts
 rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 
@@ -340,7 +366,8 @@ cp droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 cp tmp/hw-release %{buildroot}/%{_sysconfdir}/os-release.d/hw-release
 # for compatibility until we process all os-release.d/* into os-release
 ln -s os-release.d/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
-
+# for use in the -devel package
+cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
 # Add the oneshot
 cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
@@ -423,6 +450,9 @@ done
 %files -f tmp/rpmsrc/conf.files
 %defattr(-,root,root,-)
 /sbin/*
+%{_bindir}/droid/droid-init-done.sh
+%{_bindir}/droid/kill-cgroup.sh
+%{_bindir}/droid/droid-hal-startup.sh
 # This binary should probably move to /sbin/
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
@@ -434,6 +464,7 @@ done
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
+
 # Non executable files
 %defattr(644,root,root,-)
 %{_unitdir}
@@ -442,6 +473,7 @@ done
 # just /dev/alog/ libraries (for trying to run pure android apps)
 %{_libexecdir}/droid-hybris/lib-dev-alog/.
 /lib/udev/rules.d/*
+/lib/udev/platform-device
 # Droid config droppings
 /*.rc
 /default.prop
@@ -451,6 +483,9 @@ done
 # Hardware and build info
 %config %{_sysconfdir}/hw-release
 %config %{_sysconfdir}/os-release.d/hw-release
+# Disabling v4l.rules
+%{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
+
 
 %files devel
 %defattr(644,root,root,-)
