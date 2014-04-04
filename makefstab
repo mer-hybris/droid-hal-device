@@ -25,7 +25,6 @@ while (@ARGV) {
   }
 }
 
-@mnt_skip = @ARGV;
 for my $file (@files) {
   open(FILE, "<$file") or die "Can't read from $file\n";
   next if $file =~ /goldfish/;
@@ -37,7 +36,7 @@ for my $file (@files) {
     my ($cmd, $src, $mnt_point, $type, $mnt_flagsandoptions, $fs_mgr_flags);
 
     if (basename($file) =~ /.rc$/ ) {	# mount commands from rc files
-      next unless /^\s*mount/;
+      next unless /^\s*mount\s+/;
       my $tmpopts;
       ($cmd, $type, $src, $mnt_point, $tmpopts) = split(" ", $_, 5);
       $tmpopts ||= ""; # hush in case there are no options
@@ -69,8 +68,7 @@ for my $file (@files) {
     # droid init.c converts mtd@xxxx to /dev/block/mtdblock%d using
     # mtd_name_to_number(xxxx) and loop@xxxx to a loopback mount on
     # file xxxx (I think)
-
-    next if  grep( /^$mnt_point$/, @mnt_skip) ;
+    next if  grep( /^$mnt_point$/, @skip) ;
 
     # emmc doesn't work. It may be nice to generate these in a
     # disabled state.
