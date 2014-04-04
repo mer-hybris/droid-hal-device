@@ -362,7 +362,7 @@ cp tmp/hw-release %{buildroot}/%{_sysconfdir}/os-release.d/hw-release
 # for compatibility until we process all os-release.d/* into os-release
 ln -s os-release.d/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
 # for use in the -devel package
-cp tmp/hw-release %{buildroot}/{_libdir}/droid-devel/hw-release.vars
+cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
 # Add the oneshot
 cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
