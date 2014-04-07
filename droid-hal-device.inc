@@ -215,8 +215,6 @@ shopt -u nullglob
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
 
-echo "$(cd tmp/units; echo *)" > tmp/units/mount-units.txt
-
 echo Creating hw-release
 # based on http://www.freedesktop.org/software/systemd/man/os-release.html
 cat > tmp/hw-release <<EOF
@@ -237,7 +235,7 @@ EOF
 
 ################
 %install
-echo install $(cat tmp/units/mount-units.txt)
+echo install $(cat tmp/units/all-units.txt)
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
@@ -329,9 +327,6 @@ cp rpm/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
 # droid permission fixer
 install -D tmp/rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
 
-# the list of mount units
-install -D tmp/units/mount-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/mount-units.txt
-
 # Remove cruft
 rm -f $RPM_BUILD_ROOT/fstab.*
 rm -f $RPM_BUILD_ROOT/*goldfish*
@@ -391,11 +386,17 @@ cp -a out/target/product/%{device}/obj/KERNEL_OBJ/modules.order $MOD_DIR/. || tr
 cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/boot/
 cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 
+
+# Everything is installed; get a list of the units we installed to
+# allow the systemd_post to work... and then install that:
+echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
+install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
+
 ################################################################
 # Begin pre/post section
 
 %preun
-for u in $(cat %{_libdir}/droid/mount-units.txt); do
+for u in $(cat %{_libdir}/droid/all-units.txt); do
 %systemd_preun $u
 done
 # Only run this during final cleanup
@@ -406,7 +407,7 @@ if [ $1 == 0 ]; then
 fi
 
 %post
-for u in $(cat %{_libdir}/droid/mount-units.txt); do
+for u in $(cat %{_libdir}/droid/all-units.txt); do
 %systemd_post $u
 done
 cd %{_libdir}/droid
@@ -457,7 +458,7 @@ done
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
 %{_libdir}/droid/apply-permissions
-%{_libdir}/droid/mount-units.txt
+%{_libdir}/droid/all-units.txt
 # Created in %%post
 # init-debug
 %attr(755,root,root) /init-debug
