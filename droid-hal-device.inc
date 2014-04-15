@@ -218,7 +218,7 @@ hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
 echo Creating hw-release
 # based on http://www.freedesktop.org/software/systemd/man/os-release.html
 cat > tmp/hw-release <<EOF
-# This file is copied as both hw-release for use in the os-release file
+# This file is copied as both hw-release (analogous to os-release)
 # and hw-release.vars for use at build time
 MER_HA_DEVICE=%{device}
 MER_HA_VENDOR=%{vendor}
@@ -358,9 +358,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
 cp droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 
 # hw-release
-cp tmp/hw-release %{buildroot}/%{_sysconfdir}/os-release.d/hw-release
-# for compatibility until we process all os-release.d/* into os-release
-ln -s os-release.d/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
+cp tmp/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
 # for use in the -devel package
 cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
@@ -483,7 +481,6 @@ done
 %{_datadir}/qt5/keymaps/droid.qmap
 # Hardware and build info
 %config %{_sysconfdir}/hw-release
-%config %{_sysconfdir}/os-release.d/hw-release
 # Disabling v4l.rules
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
 
