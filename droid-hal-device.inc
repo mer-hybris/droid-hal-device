@@ -165,6 +165,14 @@ Provides:   policy-settings
 %description policy-settings
 %{summary}.
 
+################
+%package -n %{device}-kickstart-configuration
+Summary:    Kickstart configuration for %{device}
+Requires:   ssu-kickstart-configuration-jolla
+
+%description -n %{device}-kickstart-configuration
+%{summary}.
+
 ################################################################
 # Begin prep/build section
 
@@ -352,6 +360,10 @@ done
 
 cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
+# Copy kickstart packs (for %{device}-kickstart-configuration)
+mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
+cp kickstart/pack/package-droid-updater $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/
+
 # Keyboard map file
 /usr/lib/qt5/bin/kmap2qmap %{SOURCE14} droid.qmap
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
@@ -519,3 +531,6 @@ done
 %files policy-settings
 %defattr(644,root,root,-)
 
+%files -n ${device}-kickstart-configuration
+%defattr(644,root,root-)
+%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
