@@ -8,5 +8,9 @@
 # vendor is used in device/%vendor/%device/
 %define vendor asus
 
+# Manufacturer and device name to be shown in UI
+%define vendor_pretty Asus
+%define device_pretty Nexus 7 (2012)
+
 %include rpm/droid-hal-device.inc
 

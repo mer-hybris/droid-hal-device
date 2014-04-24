@@ -2,6 +2,8 @@
 # where macros are defined:
 # device: should be the CM codename 
 # vendor: determine the directory used for ./device/<vendor>/<device>
+# device_pretty: User-visible model name of the device
+# vendor_pretty: User-visible manufacturer name of the device
 
 %define android_root .
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
@@ -22,6 +24,7 @@
 %define _version_appendix (%{_target_cpu},%{_build_flavour})
 %endif
 
+%define board_mapping_file %{_datadir}/ssu/board-mappings.d/05-%{vendor}-%{device}.ini
 
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
@@ -360,6 +363,14 @@ done
 
 cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
+# SSU board mapping for hardware adaptation
+sed -e 's|%DEVICE%|%{device}|g' \
+    -e 's|%VENDOR%|%{vendor}|g' \
+    -e "s|%DEVICE_PRETTY%|%{device_pretty}|g" \
+    -e "s|%VENDOR_PRETTY%|%{vendor_pretty}|g" \
+    -e "s|%ARCH%|%{__isa_name}|g" \
+    ssu/board-mappings.d/05-sfa.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
+
 # Copy kickstart packs (for %{device}-kickstart-configuration)
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
 cp kickstart/pack/package-droid-updater $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/
@@ -469,6 +480,7 @@ done
 %{_libdir}/droid/droid-user-remove.sh
 %{_libdir}/droid/apply-permissions
 %{_libdir}/droid/all-units.txt
+%{board_mapping_file}
 # Created in %%post
 # init-debug
 %attr(755,root,root) /init-debug
