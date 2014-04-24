@@ -6,7 +6,7 @@ prettyModel=%DEVICE_PRETTY%
 deviceManufacturer=%VENDOR_PRETTY%
 deviceDesignation=%DEVICE%
 adaptation-repos=%DEVICE%
-img-arch=armv7hl
+img-arch=%ARCH%
 img-type=loop
 
 [var-%DEVICE%]
