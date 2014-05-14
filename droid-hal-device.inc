@@ -41,7 +41,7 @@ Source4:        apply-permissions.c
 Source5:        makefile
 Source7:        device-%{vendor}-%{device}-configs
 Source8:        hybris.conf
-Source9:        sailfish-oneshot-rotation
+Source9:        dconf/screen-rotation.txt
 Source10:       droid-hal-device.inc
 # This is copied from libhybris and should be kept in-sync:
 Source11:	extract-headers.sh
@@ -49,6 +49,7 @@ Source12:       init-debug
 # This is not copied from libhybris and should not be kept in-sync:
 Source13:       device-configs-all
 Source14:       droid.kmap
+Source15:       dconf/locks-screen-rotation.txt
 # Allow device specific sources to be defined using dhd_sources
 # Reserve Source50 onwards
 %{?dhd_sources}
@@ -86,6 +87,7 @@ Group:	System
 BuildArch:	noarch
 Requires: %{name} = %{version}-%{release}
 Requires: oneshot
+Requires: dconf
 Summary: Per device configuration for sailfish for droid-hal device: %{device}
 
 %description sailfish-config
@@ -387,8 +389,9 @@ cp tmp/hw-release %{buildroot}/%{_sysconfdir}/hw-release
 # for use in the -devel package
 cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
-# Add the oneshot
-cp %{SOURCE9} $RPM_BUILD_ROOT/%{_oneshotdir}/oneshot-rotation
+# Screen rotation dconf configuration
+cp %{SOURCE9} $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
+cp %{SOURCE15} $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
 
 # This ghost file must exist in the installroot
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
@@ -456,10 +459,7 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 
 %post sailfish-config
 
-if [ "$1" -eq 1 ]; then
-    echo Adding oneshot
-    %{_bindir}/add-oneshot --user oneshot-rotation
-fi
+%{_bindir}/add-oneshot dconf-update
 
 %post kernel-modules
 # This runs on the device at install or in mic chroot at img build
@@ -518,7 +518,8 @@ done
 
 %files sailfish-config
 %defattr(-,root,root,-)
-%attr(755,root,root) %{_oneshotdir}/oneshot-rotation
+%{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
+%{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
 
 %files kernel
 %defattr(644,root,root,-)

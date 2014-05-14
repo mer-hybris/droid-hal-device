@@ -1,0 +1,2 @@
+[desktop/jolla/components]
+screen_rotation_angle=0
