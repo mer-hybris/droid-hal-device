@@ -386,6 +386,7 @@ sed -e 's|%DEVICE%|%{device}|g' \
 # Copy kickstart packs (for %{device}-kickstart-configuration)
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
 cp rpm/kickstart/pack/package-droid-updater $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/
+sed -e 's|@DEVICE@|%{device}|g' $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
 
 # Keyboard map file
 /usr/lib/qt5/bin/kmap2qmap %{SOURCE14} tmp/droid.qmap
