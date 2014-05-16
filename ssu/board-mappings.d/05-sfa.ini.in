@@ -7,7 +7,7 @@ deviceManufacturer=%VENDOR_PRETTY%
 deviceDesignation=%DEVICE%
 adaptation-repos=%DEVICE%
 img-arch=%ARCH%
-img-type=loop
+img-type=fs
 
 [var-%DEVICE%]
 vendor=%VENDOR%
