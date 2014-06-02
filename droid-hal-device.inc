@@ -173,6 +173,7 @@ Provides:   policy-settings
 %package kickstart-configuration
 Summary:    Kickstart configuration for %{device}
 Requires:   ssu-kickstart-configuration-jolla
+Provides:   droid-hal-kickstart-configuration
 
 %description kickstart-configuration
 %{summary}.
