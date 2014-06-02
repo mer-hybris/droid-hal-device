@@ -178,14 +178,6 @@ Requires:   ssu-kickstart-configuration-jolla
 %{summary}.
 
 ################################################################
-%package -n ssu-kickstarts-%{device}
-Summary:    Kickstarts for %{device}
-Provides:   image-configurations
-
-%description -n ssu-kickstarts-%{device}
-%{summary}.
-
-################################################################
 # Begin prep/build section
 
 %prep
@@ -564,8 +556,3 @@ done
 %files patterns
 %defattr(-,root,root,-)
 %{_datadir}/package-groups/*.xml
-
-%files -n ssu-kickstarts-%{device}
-%defattr(-,root,root,-)
-%{_datadir}/kickstarts/*.ks
-
