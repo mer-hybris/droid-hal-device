@@ -59,6 +59,7 @@ BuildRequires:  oneshot
 BuildRequires:  mer-kernel-checks
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
+BuildRequires:  repomd-pattern-builder
 %systemd_requires
 %{_oneshot_requires_post}
 # Should be removed when usb-moded is fixed and android-usb.services removed
@@ -176,6 +177,14 @@ Requires:   ssu-kickstart-configuration-jolla
 Provides:   droid-hal-kickstart-configuration
 
 %description kickstart-configuration
+%{summary}.
+
+################################################################
+%package patterns
+Summary:    Repository patterns for %{device} hw
+Provides:   package-groups
+
+%description patterns
 %{summary}.
 
 ################################################################
@@ -421,6 +430,9 @@ cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
 install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
 
+for pattern in common hybris %{device}; do
+    /usr/bin/repomd-pattern-builder.py --patternxml -p ./rpm/patterns/$pattern -o %{buildroot}/usr/share/package-groups/ --version=%{version} --release=%{release}
+done
 ################################################################
 # Begin pre/post section
 
