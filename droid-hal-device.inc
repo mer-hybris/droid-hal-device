@@ -41,7 +41,6 @@ Source4:        apply-permissions.c
 Source5:        makefile
 Source7:        device-%{vendor}-%{device}-configs
 Source8:        hybris.conf
-Source9:        dconf/screen-rotation.txt
 Source10:       droid-hal-device.inc
 # This is copied from libhybris and should be kept in-sync:
 Source11:	extract-headers.sh
@@ -49,7 +48,6 @@ Source12:       init-debug
 # This is not copied from libhybris and should not be kept in-sync:
 Source13:       device-configs-all
 Source14:       droid.kmap
-Source15:       dconf/locks-screen-rotation.txt
 # Allow device specific sources to be defined using dhd_sources
 # Reserve Source50 onwards
 %{?dhd_sources}
@@ -61,6 +59,7 @@ BuildRequires:  oneshot
 BuildRequires:  mer-kernel-checks
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
+BuildRequires:  repomd-pattern-builder
 %systemd_requires
 %{_oneshot_requires_post}
 # Should be removed when usb-moded is fixed and android-usb.services removed
@@ -175,8 +174,17 @@ Provides:   policy-settings
 %package kickstart-configuration
 Summary:    Kickstart configuration for %{device}
 Requires:   ssu-kickstart-configuration-jolla
+Provides:   droid-hal-kickstart-configuration
 
 %description kickstart-configuration
+%{summary}.
+
+################################################################
+%package patterns
+Summary:    Repository patterns for %{device} hw
+Provides:   package-groups
+
+%description patterns
 %{summary}.
 
 ################################################################
@@ -373,11 +381,14 @@ sed -e 's|%DEVICE%|%{device}|g' \
     -e "s|%DEVICE_PRETTY%|%{device_pretty}|g" \
     -e "s|%VENDOR_PRETTY%|%{vendor_pretty}|g" \
     -e "s|%ARCH%|%{__isa_name}|g" \
-    rpm/ssu/board-mappings.d/05-sfa.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
+    rpm/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
 
 # Copy kickstart packs (for %{device}-kickstart-configuration)
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
-cp rpm/kickstart/pack/package-droid-updater $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/
+sed -e 's|@DEVICE@|%{device}|g' rpm/kickstart/pack/package-droid-updater > $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
+# and attachments
+mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment
+cp rpm/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment/%{device}
 
 # Keyboard map file
 /usr/lib/qt5/bin/kmap2qmap %{SOURCE14} tmp/droid.qmap
@@ -390,8 +401,9 @@ cp tmp/hw-release %{buildroot}/%{_sysconfdir}/hw-release
 cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
 # Screen rotation dconf configuration
-cp %{SOURCE9} $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
-cp %{SOURCE15} $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
+mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks
+cp rpm/dconf/screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
+cp rpm/dconf/locks-screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
 
 # This ghost file must exist in the installroot
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
@@ -418,6 +430,9 @@ cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
 install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
 
+for pattern in common hybris %{device}; do
+    /usr/bin/repomd-pattern-builder.py --patternxml -p ./rpm/patterns/$pattern -o %{buildroot}/usr/share/package-groups/ --version=%{version} --release=%{release}
+done
 ################################################################
 # Begin pre/post section
 
@@ -549,4 +564,8 @@ done
 %files kickstart-configuration
 %defattr(644,root,root-)
 %{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
+%{_datadir}/ssu/kickstart/attachment/%{device}
 
+%files patterns
+%defattr(-,root,root,-)
+%{_datadir}/package-groups/*.xml
