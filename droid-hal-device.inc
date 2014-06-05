@@ -381,7 +381,7 @@ sed -e 's|%DEVICE%|%{device}|g' \
     -e "s|%DEVICE_PRETTY%|%{device_pretty}|g" \
     -e "s|%VENDOR_PRETTY%|%{vendor_pretty}|g" \
     -e "s|%ARCH%|%{__isa_name}|g" \
-    rpm/ssu/board-mappings.d/05-sfa.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
+    rpm/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
 
 # Copy kickstart packs (for %{device}-kickstart-configuration)
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
