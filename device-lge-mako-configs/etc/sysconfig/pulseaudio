@@ -1,0 +1,1 @@
+CONFIG="-n --file=/etc/pulse/arm_qct_apq8064_mako.pa"
