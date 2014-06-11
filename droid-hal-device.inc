@@ -328,8 +328,6 @@ cp -a rpm/dsp/systemd/* $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install the udev rules and supporting script
 cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
-cp rpm/dsp/udev/platform-device $RPM_BUILD_ROOT/lib/udev/
-cp rpm/dsp/udev/droid-system.rules $RPM_BUILD_ROOT/lib/udev/rules.d/998-droid-system.rules
 ln -s /dev/null $RPM_BUILD_ROOT/etc/udev/rules.d/60-persistent-v4l.rules 
 
 # Install init-debug which will provide usb access and non-blocking telnet
