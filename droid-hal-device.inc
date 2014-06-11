@@ -232,7 +232,7 @@ mkdir tmp/units
 shopt -s nullglob
 FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc)"
 shopt -u nullglob
-%{SOURCE1} --files $FSTAB_FILES  --skip /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/kernel/config --outputdir tmp/units
+%{SOURCE1} --files $FSTAB_FILES  --skip /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
