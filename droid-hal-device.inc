@@ -328,8 +328,6 @@ cp -a rpm/dsp/systemd/* $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install the udev rules and supporting script
 cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
-cp rpm/dsp/udev/platform-device $RPM_BUILD_ROOT/lib/udev/
-cp rpm/dsp/udev/droid-system.rules $RPM_BUILD_ROOT/lib/udev/rules.d/998-droid-system.rules
 ln -s /dev/null $RPM_BUILD_ROOT/etc/udev/rules.d/60-persistent-v4l.rules 
 
 # Install init-debug which will provide usb access and non-blocking telnet
@@ -364,8 +362,8 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 
 # To set the environment for Qt/hybris (note this is a bit lipstick specific)
 echo -n "" > tmp/rpmsrc/conf.files
-# Install files from device-configs-all (if any)
-for config_dir in %{SOURCE7} %{SOURCE13}; do
+# Prefer files from device-$VENDOR-$DEVICE-configs over device-configs-all
+for config_dir in %{SOURCE13} %{SOURCE7}; do
     if [ -d $config_dir ]; then
         (cd $config_dir; find . \( -type f -or -type l \) -print ) | sed 's/^.//' >> tmp/rpmsrc/conf.files
         cp -R $config_dir/* $RPM_BUILD_ROOT/
