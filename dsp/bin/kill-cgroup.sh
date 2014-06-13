@@ -31,13 +31,44 @@
 [ -z "$1" ] && echo "Need cgroup path" && exit 1
 CGROUP=$1
 [ ! -f /sys/fs/cgroup/systemd/$CGROUP/cgroup.procs ] && echo "No such cgroup: $1" && exit 1
-PIDS=$(cat /sys/fs/cgroup/systemd/$CGROUP/cgroup.procs)
-for pid in $PIDS; do
-    [ -d /proc/$pid ] && kill $pid
-done
+
+get_pids() {
+    # Get list of running pids in this cgroup
+    # return list $PIDS and $NUM_PIDS
+    PIDS=$(cat /sys/fs/cgroup/systemd/$CGROUP/cgroup.procs)
+    NUM_PIDS=$(echo $PIDS | wc -w)
+}
+
+kill_pids() {
+    # Kill pids using signal $1
+    for pid in $PIDS; do
+         [ -d /proc/$pid ] && kill -$1 $pid
+    done
+}
+
+# ============== main() ===============
+
+get_pids
+PREV_NUM_PIDS=$NUM_PIDS
+kill_pids TERM
 sleep 1
-# Make second loop and hard kill any remaining
-for pid in $PIDS; do
-    [ -d /proc/$pid ] && kill -KILL $pid
+WAIT=1
+get_pids
+MAX_WAIT=5
+while [ $NUM_PIDS -gt 0 -a $WAIT -lt $MAX_WAIT ]; do
+    if [ $NUM_PIDS -lt $PREV_NUM_PIDS ]; then
+        # Number of running processes is getting smaller
+        # Wait a little bit more
+        sleep 1
+     else
+        # Number of pids is not gettting smaller
+        break
+    fi
+    let WAIT=$WAIT+1
+    PREV_NUM_PIDS=$NUM_PIDS
+    get_pids
 done
+# If anyone left, hard kill them all
+[ $NUM_PIDS -gt 0 ] && kill_pids KILL
 exit 0
+
