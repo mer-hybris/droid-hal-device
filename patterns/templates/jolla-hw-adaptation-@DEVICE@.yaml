@@ -16,10 +16,10 @@ Requires:
 - qt5-qpa-hwcomposer-plugin
 - qtscenegraph-adaptation
 
-- gstreamer0.10-droidcamsrc
-- gstreamer0.10-omx
-- gstreamer0.10-droideglsink
-- nemo-qtmultimedia-plugins-gstvideotexturebackend
+#- gstreamer0.10-droidcamsrc
+#- gstreamer0.10-omx
+#- gstreamer0.10-droideglsink
+#- nemo-qtmultimedia-plugins-gstvideotexturebackend
 
 # This will do good after sensors start to work:
 #- mce-plugin-libhybris
