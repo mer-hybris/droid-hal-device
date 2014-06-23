@@ -3,24 +3,22 @@
 # Copyright (c) 2014 Jolla Ltd.
 # Contact: Simonas Leleiva <simonas.leleiva@jollamobile.com>
 
-usage() {
-    echo "Usage: $0 VENDOR DEVICE"
+if [ -z $DEVICE ]; then
+    echo 'Error: $DEVICE is undefined. Please run hadk'
     exit 1
-}
+fi
 
-[ $# -lt 2 ] && usage;
-
-VENDOR=$1
-DEVICE=$2
 ROOTFS_DIR=device-$VENDOR-$DEVICE-configs
 PATTERNS_DIR=patterns
 PATTERNS_DEVICE_DIR=$PATTERNS_DIR/$DEVICE
 PATTERNS_TEMPLATES_DIR=$PATTERNS_DIR/templates
 
-if [ ! -d $PATTERNS_TEMPLATES_DIR ]; then
-    echo $0: launch this script from the top-dir of the droid-hal-device
+if [ ! -d rpm/$PATTERNS_TEMPLATES_DIR ]; then
+    echo $0: launch this script from the $ANDROID_ROOT directory
     exit 1
 fi
+
+cd rpm/
 
 if [ -e $ROOTFS_DIR ]; then
     read -p "Device $DEVICE appears to be already created. Re-generate patterns? [Y/n] " -n 1 -r
@@ -49,4 +47,6 @@ EOF
     sed -e 's|@DEVICE@|'$DEVICE'|g' $PATTERNS_TEMPLATES_DIR/$pattern-@DEVICE@.yaml >>$PATTERNS_FILE
     echo $PATTERNS_FILE
 done
+
+cd ..
 
