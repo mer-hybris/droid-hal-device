@@ -12,6 +12,7 @@ Requires:
 - droid-hal-hammerhead-pulseaudio-settings
 - droid-hal-hammerhead-policy-settings
 - droid-hal-hammerhead-kernel-modules
+- droid-hal-hammerhead-preinit-plugin
 
 # These need to be per-device due to differing backends (fbdev, eglfs, hwc, ..?)
 - qt5-qtwayland-wayland_egl

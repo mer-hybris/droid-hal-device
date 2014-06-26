@@ -12,6 +12,7 @@ Requires:
 - droid-hal-grouper-pulseaudio-settings
 - droid-hal-grouper-policy-settings
 - droid-hal-grouper-kernel-modules
+- droid-hal-grouper-preinit-plugin
 
 # These need to be per-device due to differing backends (fbdev, eglfs, hwc, ..?)
 - qt5-qtwayland-wayland_egl

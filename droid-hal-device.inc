@@ -179,6 +179,15 @@ Provides:   droid-hal-kickstart-configuration
 %description kickstart-configuration
 %{summary}.
 
+################
+
+%package preinit-plugin
+Summary:    Preinit plugins for %{device}
+Provides:   preinit-plugins
+
+%description preinit-plugin
+%{summary}.
+
 ################################################################
 %package patterns
 Summary:    Repository patterns for %{device} hw
@@ -279,6 +288,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_bindir}/droid
 mkdir -p $RPM_BUILD_ROOT/img
 mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/lib/modules
+mkdir -p $RPM_BUILD_ROOT%{_libdir}/startup/preinit
 
 # Install
 cp -a %{android_root}/out/target/product/%{device}/system/bin/updater $RPM_BUILD_ROOT/boot/update-binary
@@ -343,6 +353,10 @@ install -D tmp/rpmsrc/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid
 
 # Add the dsp support binaries
 cp rpm/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
+
+# Preinit plugins
+install -m 0744 rpm/dsp/preinit/* $RPM_BUILD_ROOT%{_libdir}/startup/preinit/
+ln -s /bin/false $RPM_BUILD_ROOT%{_libdir}/startup/preinit/is_total_erase_supported
 
 # droid permission fixer
 install -D tmp/rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
@@ -567,3 +581,8 @@ done
 %files patterns
 %defattr(-,root,root,-)
 %{_datadir}/package-groups/*.xml
+
+%files preinit-plugin
+%defattr(-,root,root,-)
+%{_libdir}/startup/preinit/*
+
