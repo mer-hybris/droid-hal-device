@@ -12,6 +12,7 @@ Requires:
 - droid-hal-mako-pulseaudio-settings
 - droid-hal-mako-policy-settings
 - droid-hal-mako-kernel-modules
+- droid-hal-mako-preinit-plugin
 
 # These need to be per-device due to differing backends (fbdev, eglfs, hwc, ..?)
 - qt5-qtwayland-wayland_egl

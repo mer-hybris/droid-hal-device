@@ -10,6 +10,7 @@ Requires:
 - droid-hal-@DEVICE@-pulseaudio-settings
 - droid-hal-@DEVICE@-policy-settings
 - droid-hal-@DEVICE@-kernel-modules
+- droid-hal-@DEVICE@-preinit-plugin
 
 # These need to be per-device due to differing backends (fbdev, eglfs, hwc, ..?)
 - qt5-qtwayland-wayland_egl
