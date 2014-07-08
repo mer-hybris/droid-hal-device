@@ -1,0 +1,28 @@
+# Feel free to disable non-critical HA parts during devel by commenting out
+# Generated in hadk by executing: cd ; rpm/helpers/add_new_device.sh
+Description: Pattern with packages for the generic Hybris HW Adaptation
+Name: jolla-hw-adaptation-hybris
+Requires:
+- libhybris
+- libhybris-libEGL
+- libhybris-libGLESv1
+- libhybris-libGLESv2
+- libhybris-libOpenCL
+- libhybris-libOpenVG
+- libhybris-libcamera
+- libhybris-libhardware
+- libhybris-libis
+- libhybris-libnfc
+- libhybris-libsf
+- libhybris-libsync
+- libhybris-libui
+- libhybris-libwayland-egl
+- libhybris-tests
+- libhybris-libvibrator
+
+- hybris-libsensorfw-qt5
+
+- qt5-plugin-generic-evdev
+
+Summary: Jolla HW Adaptation Hybris
+
