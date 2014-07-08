@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # droid-hal device add script
 # Copyright (c) 2014 Jolla Ltd.
 # Contact: Simonas Leleiva <simonas.leleiva@jollamobile.com>
