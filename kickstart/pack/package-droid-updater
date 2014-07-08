@@ -18,7 +18,7 @@ fi
 IMG_SIZE=$(du -h $GEN_IMG_BASE.tar.bz2 | cut -f1)
 
 # Output filenames
-DST_IMG_BASE=$ID-$DEVICE-$SAILFISH_FLAVOUR-$VERSION_ID
+DST_IMG_BASE=$ID-$DEVICE-$SAILFISH_FLAVOUR-$VERSION_ID@EXTRA_NAME@
 DST_IMG=$DST_IMG_BASE.tar.bz2
 
 # Copy boot image, updater scripts and updater binary into updater .zip tree.
