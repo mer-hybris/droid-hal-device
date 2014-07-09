@@ -41,9 +41,10 @@ mkdir -p $PATTERNS_DEVICE_DIR
 for pattern in $(find $PATTERNS_DIR/{common,hybris,templates} -name *.yaml); do
     PATTERNS_FILE=$(echo $PATTERNS_DEVICE_DIR/$(basename $pattern) | sed -e "s|@DEVICE@|$DEVICE|g")
     echo $PATTERNS_FILE
-    cat <<EOF >$PATTERNS_FILE
+    cat <<'EOF' >$PATTERNS_FILE
 # Feel free to disable non-critical HA parts during devel by commenting out
 # Generated in hadk by executing: cd $ANDROID_ROOT; rpm/helpers/add_new_device.sh
+
 EOF
     sed -e 's|@DEVICE@|'$DEVICE'|g' $pattern >>$PATTERNS_FILE
 done
