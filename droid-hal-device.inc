@@ -62,8 +62,6 @@ BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  repomd-pattern-builder
 %systemd_requires
 %{_oneshot_requires_post}
-# Should be removed when usb-moded is fixed and android-usb.services removed
-Conflicts: usb-moded
 
 %description
 %{summary}.
