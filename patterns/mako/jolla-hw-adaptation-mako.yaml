@@ -32,7 +32,8 @@ Requires:
 - usb-moded
 - usb-moded-pc-suite-mode-android
 - usb-moded-defaults-android
-- jolla-rnd-device
+# this is not available in public repos yet:
+#- jolla-rnd-device
 
 Summary: Jolla HW Adaptation mako
 
