@@ -28,11 +28,15 @@ Requires:
 # This will do good after sensors start to work:
 #- mce-plugin-libhybris
 
-# enables mode selector upon plugging USB cable:
-- usb-moded
-- usb-moded-pc-suite-mode-android
-- usb-moded-defaults-android
-- jolla-rnd-device
+# 2014-07-19 tmp disabling usb-moded as it fails to provide connectivity
+# if UI is not up (due to the unavailable jolla-rnd-device), which is not
+# suitable for hammerhead being in a state of active hwc development
+## enables mode selector upon plugging USB cable:
+#- usb-moded
+#- usb-moded-pc-suite-mode-android
+#- usb-moded-defaults-android
+## this is not available in public repos yet:
+##- jolla-rnd-device
 
 Summary: Jolla HW Adaptation hammerhead
 
