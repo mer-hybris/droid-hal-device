@@ -3,7 +3,7 @@ Description=Activate Bluetooth
 After=syslog.target
 
 [Service]
-ExecStart=/sbin/bcm4330-bluetooth-activate.sh
+ExecStart=/usr/bin/bcm4330-bluetooth-activate.sh
 
 [Install]
 WantedBy=graphical.target
