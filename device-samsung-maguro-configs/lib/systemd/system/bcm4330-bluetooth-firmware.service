@@ -8,3 +8,4 @@ ExecStart=/usr/bin/bcm4330-bluetooth-activate.sh
 
 [Install]
 WantedBy=graphical.target
+
