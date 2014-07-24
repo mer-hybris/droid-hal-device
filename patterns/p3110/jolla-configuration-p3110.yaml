@@ -1,0 +1,11 @@
+# Feel free to disable non-critical HA parts during devel by commenting out
+# Generated in hadk by executing: cd $ANDROID_ROOT; rpm/helpers/add_new_device.sh
+
+Description: Pattern with packages for p3110 configurations
+Name: jolla-configuration-p3110
+Requires:
+- pattern:jolla-hw-adaptation-p3110
+- pattern:jolla-configuration-sfe
+
+Summary: Jolla Configuration p3110
+
