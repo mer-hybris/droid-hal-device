@@ -1,0 +1,10 @@
+[Unit]
+Description=Symlink radio device for rild
+After=system.mount
+
+[Service]
+Type=simple
+ExecStart=/bin/sh /sbin/radio-link.sh
+
+[Install]
+RequiredBy=system.mount
