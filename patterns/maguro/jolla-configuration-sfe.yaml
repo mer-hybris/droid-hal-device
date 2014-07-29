@@ -17,5 +17,13 @@ Requires:
 - vim-enhanced
 - zypper
 
+- jolla-calculator
+- jolla-calendar
+- jolla-clock
+- jolla-email
+- jolla-mediaplayer
+- jolla-notes
+- sailfish-office
+
 Summary: Jolla Configuration SFE
 

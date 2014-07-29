@@ -24,6 +24,7 @@ Requires:
 # Sources for local RPM build available at:
 # https://github.com/beidl/brcm-patchram-plus
 - brcm-patchram-plus
+- rfkill
 
 #- gstreamer0.10-droidcamsrc
 #- gstreamer0.10-omx
@@ -36,9 +37,9 @@ Requires:
 # 2014-07-18 tmp disabling usb-moded as it has not been sufficiently tested in
 # # hadk devices:
 # ## enables mode selector upon plugging USB cable:
-# #- usb-moded
-# #- usb-moded-pc-suite-mode-android
-# #- usb-moded-defaults-android
+- usb-moded
+- usb-moded-pc-suite-mode-android
+- usb-moded-defaults-android
 # ## this is not available in public repos yet
 # ##- jolla-rnd-device
 
