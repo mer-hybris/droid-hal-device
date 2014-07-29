@@ -23,6 +23,7 @@ Requires:
 # Bluetooth enablement
 # Sources for local RPM build available at:
 # https://github.com/beidl/brcm-patchram-plus
+# https://github.com/beidl/rfkill
 - brcm-patchram-plus
 - rfkill
 
