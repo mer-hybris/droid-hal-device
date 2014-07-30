@@ -23,7 +23,9 @@ Requires:
 # Bluetooth enablement
 # Sources for local RPM build available at:
 # https://github.com/beidl/brcm-patchram-plus
+# https://github.com/beidl/rfkill
 - brcm-patchram-plus
+- rfkill
 
 #- gstreamer0.10-droidcamsrc
 #- gstreamer0.10-omx
@@ -33,12 +35,15 @@ Requires:
 # This will do good after sensors start to work:
 #- mce-plugin-libhybris
 
-# 2014-07-18 tmp disabling usb-moded as it has not been sufficiently tested in
-# # hadk devices:
-# ## enables mode selector upon plugging USB cable:
-# #- usb-moded
-# #- usb-moded-pc-suite-mode-android
-# #- usb-moded-defaults-android
+# enables mode selector upon plugging USB cable
+# Disclamer: take care when doing further modifications to the system.
+# These packages are intended for release-quality setups.
+# The user inteface not showing up will lead to an undebuggable system
+# as the USB connection will not be set up properly.
+- usb-moded
+- usb-moded-pc-suite-mode-android
+- usb-moded-defaults-android
+
 # ## this is not available in public repos yet
 # ##- jolla-rnd-device
 
