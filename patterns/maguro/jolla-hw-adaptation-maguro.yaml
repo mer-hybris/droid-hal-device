@@ -7,6 +7,10 @@ Requires:
 - pattern:jolla-hw-adaptation-hybris
 - pattern:jolla-hw-adaptation-hybris-droid-vibrator
 
+# Use systemd fork with a patch to ignore uevents
+# from omapfb vsync events (caused ~15% CPU usage)
+- systemd-droid
+
 - droid-hal-maguro
 - droid-hal-maguro-sailfish-config
 - droid-hal-maguro-img-boot
