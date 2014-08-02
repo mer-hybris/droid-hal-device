@@ -1,4 +1,5 @@
 #!/bin/sh
+DROID_BIN="/usr/libexec/droid-hybris/system/bin"
 PATCHRAM_ARGS="--patchram /system/etc/firmware/bcm4330.hcd \
                --no2bytes \
                --scopcm=0,2,0,0,0,0,0,0,0,0 \
@@ -8,14 +9,14 @@ PATCHRAM_ARGS="--patchram /system/etc/firmware/bcm4330.hcd \
                --use_baudrate_for_download \
                --tosleep=50000"
 
-if [ -f /system/bin/rfkill ]; then
-    /system/bin/rfkill unblock bluetooth
+if [ -f $DROID_BIN/rfkill ]; then
+    $DROID_BIN/rfkill unblock bluetooth
 else
     rfkill unblock bluetooth
 fi
 
-if [ -f /system/bin/brcm_patchram_plus ]; then
-    /system/bin/brcm_patchram_plus $PATCHRAM_ARGS /dev/ttyHS2
+if [ -f $DROID_BIN/brcm_patchram_plus ]; then
+    $DROID_BIN/brcm_patchram_plus $PATCHRAM_ARGS /dev/ttyHS2
 else
     brcm_patchram_plus $PATCHRAM_ARGS /dev/ttyHS2
 fi
