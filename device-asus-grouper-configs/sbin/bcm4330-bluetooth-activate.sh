@@ -9,15 +9,5 @@ PATCHRAM_ARGS="--patchram /system/etc/firmware/bcm4330.hcd \
                --use_baudrate_for_download \
                --tosleep=50000"
 
-if [ -f $DROID_BIN/rfkill ]; then
-    $DROID_BIN/rfkill unblock bluetooth
-else
-    rfkill unblock bluetooth
-fi
-
-if [ -f $DROID_BIN/brcm_patchram_plus ]; then
-    $DROID_BIN/brcm_patchram_plus $PATCHRAM_ARGS /dev/ttyHS2
-else
-    brcm_patchram_plus $PATCHRAM_ARGS /dev/ttyHS2
-fi
-
+$DROID_BIN/rfkill unblock bluetooth
+$DROID_BIN/brcm_patchram_plus $PATCHRAM_ARGS /dev/ttyHS2
