@@ -15,8 +15,8 @@ else
 fi
 
 if [ -f /system/bin/brcm_patchram_plus ]; then
-    /system/bin/brcm_patchram_plus $PATCHRAM_ARGS --bd_addr $BT_ADDR /dev/ttyHS2
+    /system/bin/brcm_patchram_plus $PATCHRAM_ARGS /dev/ttyHS2
 else
-    brcm_patchram_plus $PATCHRAM_ARGS --bd_addr $BT_ADDR /dev/ttyHS2
+    brcm_patchram_plus $PATCHRAM_ARGS /dev/ttyHS2
 fi
 
