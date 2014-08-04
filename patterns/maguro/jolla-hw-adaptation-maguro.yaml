@@ -24,13 +24,6 @@ Requires:
 - qt5-qpa-hwcomposer-plugin
 - qtscenegraph-adaptation
 
-# Bluetooth enablement
-# Sources for local RPM build available at:
-# https://github.com/beidl/brcm-patchram-plus
-# https://github.com/beidl/rfkill
-- brcm-patchram-plus
-- rfkill
-
 #- gstreamer0.10-droidcamsrc
 #- gstreamer0.10-omx
 #- gstreamer0.10-droideglsink
