@@ -5,6 +5,7 @@
 # device_pretty: User-visible model name of the device
 # vendor_pretty: User-visible manufacturer name of the device
 
+%define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
 
