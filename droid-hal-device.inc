@@ -5,6 +5,7 @@
 # device_pretty: User-visible model name of the device
 # vendor_pretty: User-visible manufacturer name of the device
 
+%define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
 
@@ -239,7 +240,7 @@ mkdir tmp/units
 shopt -s nullglob
 FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc)"
 shopt -u nullglob
-%{SOURCE1} --files $FSTAB_FILES  --skip /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
+%{SOURCE1} --files $FSTAB_FILES  --skip /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
