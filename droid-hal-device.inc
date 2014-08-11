@@ -451,10 +451,9 @@ for u in $(cat %{_libdir}/droid/all-units.txt); do
 %systemd_preun $u
 done
 # Only run this during final cleanup
-if [ $1 == 0 ]; then
+if [ $1 -eq 0 ]; then
     echo purging old droid users and groups
-    %{_libdir}/droid/droid-user-remove.sh.installed
-    true
+    %{_libdir}/droid/droid-user-remove.sh.installed || :
 fi
 
 %post
@@ -463,34 +462,35 @@ for u in $(cat %{_libdir}/droid/all-units.txt); do
 done
 cd %{_libdir}/droid
 # Upgrade: remove users using stored file, then add new ones
-if [ $1 == 2 ]; then
+if [ $1 -eq 2 ]; then
     # Remove installed users (at this point droid-user-remove.sh
     # refers to the new set of UIDs)
     echo removing old droid users and groups
-    ./droid-user-remove.sh.installed
+    ./droid-user-remove.sh.installed || :
 fi
 # Now for both install/update add the users and force-store a removal file
 echo creating droid users and groups
-./droid-user-add.sh
+./droid-user-add.sh || :
 cp -f droid-user-remove.sh droid-user-remove.sh.installed
 
 # Now ensure default user has access to various subsystems this HA provides
 # These are the default android ones:
-/usr/bin/groupadd-user graphics
-/usr/bin/groupadd-user system
-/usr/bin/groupadd-user input
-/usr/bin/groupadd-user camera
+/usr/bin/groupadd-user audio || :
+/usr/bin/groupadd-user graphics || :
+/usr/bin/groupadd-user system || :
+/usr/bin/groupadd-user input || :
+/usr/bin/groupadd-user camera || :
 # To add additional groups define a HA config macro like android_config
 
 %post sailfish-config
 
-%{_bindir}/add-oneshot dconf-update
+%{_bindir}/add-oneshot dconf-update || :
 
 %post kernel-modules
 # This runs on the device at install or in mic chroot at img build
 # in chroot the kernel version is not known.
 for ver in $(cd /lib/modules; echo *); do
-  /sbin/depmod $ver
+  /sbin/depmod $ver || :
 done
 
 ################################################################
