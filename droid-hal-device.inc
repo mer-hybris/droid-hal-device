@@ -475,6 +475,7 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 
 # Now ensure default user has access to various subsystems this HA provides
 # These are the default android ones:
+/usr/bin/groupadd-user audio || :
 /usr/bin/groupadd-user graphics || :
 /usr/bin/groupadd-user system || :
 /usr/bin/groupadd-user input || :
