@@ -10,5 +10,4 @@ PATCHRAM_ARGS="--patchram /system/vendor/firmware/bcm4330.hcd \
 BT_ADDR=`cat /factory/bluetooth/bt_addr`
 echo $BT_ADDR > /var/lib/bluetooth/board-address
 
-$DROID_BIN/rfkill unblock bluetooth
 $DROID_BIN/brcm_patchram_plus $PATCHRAM_ARGS --bd_addr $BT_ADDR /dev/ttyO1

@@ -1,10 +1,6 @@
 [Unit]
 Description=Activate Bluetooth
-Requires=droid-hal-init.service
 
 [Service]
 Type=simple
 ExecStart=/bin/sh /sbin/bcm4330-bluetooth-activate.sh
-
-[Install]
-WantedBy=basic.target
