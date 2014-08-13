@@ -8,5 +8,8 @@
 %define vendor_pretty LG
 %define device_pretty Nexus 5
 
+Requires: rfkill
+Requires: bluez >= 4.101+git33
+
 %include rpm/droid-hal-device.inc
 
