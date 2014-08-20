@@ -49,6 +49,7 @@ Source12:       init-debug
 # This is not copied from libhybris and should not be kept in-sync:
 Source13:       device-configs-all
 Source14:       droid.kmap
+Source15:       us.kmap
 # Allow device specific sources to be defined using dhd_sources
 # Reserve Source50 onwards
 %{?dhd_sources}
@@ -402,7 +403,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment
 cp rpm/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment/%{device}
 
 # Keyboard map file
-/usr/lib/qt5/bin/kmap2qmap %{SOURCE14} tmp/droid.qmap
+/usr/lib/qt5/bin/kmap2qmap %{SOURCE14} %{SOURCE15} tmp/droid.qmap
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
 cp tmp/droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 
