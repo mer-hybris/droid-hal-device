@@ -25,8 +25,8 @@ Requires:
 #- gstreamer0.10-droideglsink
 #- nemo-qtmultimedia-plugins-gstvideotexturebackend
 
-# This will do good after sensors start to work:
-#- mce-plugin-libhybris
+# This is needed for notification LEDs
+- mce-plugin-libhybris
 
 # 2014-07-19 tmp disabling usb-moded as it fails to provide connectivity
 # if UI is not up (due to the unavailable jolla-rnd-device), which is not
