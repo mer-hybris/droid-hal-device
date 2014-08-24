@@ -31,6 +31,9 @@ Requires:
 - gstreamer0.10-droideglsink
 - nemo-qtmultimedia-plugins-gstvideotexturebackend
 
+# MP3 support through libav
+- gst-av
+
 # This will do good after sensors start to work:
 - mce-plugin-libhybris
 
