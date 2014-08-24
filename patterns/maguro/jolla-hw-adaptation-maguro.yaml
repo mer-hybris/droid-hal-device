@@ -11,6 +11,8 @@ Requires:
 # from omapfb vsync events (caused ~15% CPU usage)
 - systemd-droid
 
+- jolla-devicelock-plugin-encsfa
+
 - droid-hal-maguro
 - droid-hal-maguro-sailfish-config
 - droid-hal-maguro-img-boot
@@ -25,12 +27,12 @@ Requires:
 - qtscenegraph-adaptation
 
 #- gstreamer0.10-droidcamsrc
-#- gstreamer0.10-omx
-#- gstreamer0.10-droideglsink
-#- nemo-qtmultimedia-plugins-gstvideotexturebackend
+- gstreamer0.10-omx
+- gstreamer0.10-droideglsink
+- nemo-qtmultimedia-plugins-gstvideotexturebackend
 
 # This will do good after sensors start to work:
-#- mce-plugin-libhybris
+- mce-plugin-libhybris
 
 # enables mode selector upon plugging USB cable
 # Disclamer: take care when doing further modifications to the system.
