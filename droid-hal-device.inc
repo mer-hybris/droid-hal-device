@@ -34,6 +34,10 @@ Name: 		droid-hal-%{device}
 Version: 	0.0.6
 Release: 	%{rel_date}
 Provides:	droid-hal
+%if %{device} == hammerhead
+# Each device that provides files in /etc/ofono should have this provides
+Provides:	ofono-configs
+%endif
 Provides:	flash-partition
 Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
