@@ -33,7 +33,8 @@ License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
 Version: 	0.0.6
 Release: 	%{rel_date}
-Provides:       droid-hal
+Provides:	droid-hal
+Provides:	flash-partition
 Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
 Source2: 	usergroupgen.c
@@ -115,6 +116,9 @@ Just the kernel modules
 %package img-boot
 Provides: droid-hal-img-boot
 Group:	System
+Requires: flash-partition
+Requires: oneshot
+%{_oneshot_requires_post}
 Summary: Boot img for droid-hal device: %{device}
 
 %description img-boot
@@ -379,7 +383,7 @@ echo -n "" > tmp/rpmsrc/conf.files
 # Prefer files from device-$VENDOR-$DEVICE-configs over device-configs-all
 for config_dir in %{SOURCE13} %{SOURCE7}; do
     if [ -d $config_dir ]; then
-        (cd $config_dir; find . \( -type f -or -type l \) -print ) | sed 's/^.//' >> tmp/rpmsrc/conf.files
+        (cd $config_dir; find . \( -type f -or -type l \) ! -name "*.sh" -print ) | grep -v /sbin/ | sed 's/^.//' >> tmp/rpmsrc/conf.files
         cp -R $config_dir/* $RPM_BUILD_ROOT/
     fi
 done
@@ -494,6 +498,15 @@ for ver in $(cd /lib/modules; echo *); do
   /sbin/depmod $ver || :
 done
 
+%if %{device} == hammerhead
+%post img-boot
+# This oneshot is enabled only during package upgrades, as initial
+# installation is done when we flash device.
+if [ $1 -ne 1 ] ; then
+  add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh
+fi
+%endif
+
 ################################################################
 # Begin files section
 
@@ -515,6 +528,7 @@ done
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
+%attr(744, root, root) /usr/sbin/flash-partition
 
 # Non executable files
 %defattr(644,root,root,-)
@@ -535,7 +549,6 @@ done
 %config %{_sysconfdir}/hw-release
 # Disabling v4l.rules
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
-
 
 %files devel
 %defattr(644,root,root,-)
@@ -561,6 +574,9 @@ done
 /boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
+%if %{device} == hammerhead
+%attr(744, root, root) /var/lib/platform-updates/flash-bootimg.sh
+%endif
 
 %files img-recovery
 %defattr(644,root,root,-)
