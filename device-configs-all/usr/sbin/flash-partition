@@ -141,6 +141,14 @@ if on_device; then
         eval DEVICE=\${PART_REAL_$?}
         echo Flashing to $DEVICE
 
+        # If we are flashing boot partition and we are running multirom setup
+        # which can be detected by having data_subdir= in th ecmdline skip boot
+        # partition flashing as it is not needed.
+        if test $1 = boot && grep data_subdir= /proc/cmdline &> /dev/null; then
+          echo "Skipping flashing of boot partition as multirom setup detected."
+          exit 0
+        fi
+
         FILENAME=$2
         SPARSE=$(hexdump -e '"%02x"' -n 4 $FILENAME)
         if [[ "$SPARSE" == "ed26ff3a" ]]; then
