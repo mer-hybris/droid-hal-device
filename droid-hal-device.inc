@@ -63,7 +63,6 @@ Group:		System
 #BuildArch:	noarch
 # Note that oneshot is not in mer-core (yet)
 BuildRequires:  oneshot
-BuildRequires:  mer-kernel-checks
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  repomd-pattern-builder
@@ -216,11 +215,9 @@ Provides:   package-groups
 rm -rf tmp
 mkdir tmp
 
-%if %{without mer_verify_kernel_config}
 echo Verifying kernel config
-mer_verify_kernel_config \
+hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
-%endif
 
 echo Building local tools
 mkdir tmp/rpmsrc
