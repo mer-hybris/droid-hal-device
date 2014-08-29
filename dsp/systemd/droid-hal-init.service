@@ -5,7 +5,9 @@ After=local-fs.target systemd-udev-settle.service
 Before=basic.target network.target bluetooth.service ofono.service sensord.service
 DefaultDependencies=no
 Conflicts=shutdown.target actdead.target
-Requires=local-fs.target
+# Lets not do Requires= here as that means that this service will restart which leads automatically
+# to broken state as android init can be only started once per boot. If something goes wrong
+# our best hope is that android init doesn't notice that and that the crashing party fixes itself :)
 
 [Service]
 Type=notify
