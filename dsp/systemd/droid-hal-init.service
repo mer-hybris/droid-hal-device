@@ -2,7 +2,7 @@
 Description=droid-hal-init
 Wants=systemd-udev-settle.service
 After=local-fs.target systemd-udev-settle.service
-Before=basic.target network.target start-user-session@USER.service bluetooth.service ofono.service sensord.service
+Before=basic.target network.target bluetooth.service ofono.service sensord.service
 DefaultDependencies=no
 Conflicts=shutdown.target actdead.target
 Requires=local-fs.target
