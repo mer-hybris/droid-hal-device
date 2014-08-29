@@ -382,12 +382,13 @@ mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "ln -s" ./droid-hal-init {} \;
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
-# To set the environment for Qt/hybris (note this is a bit lipstick specific)
-echo -n "" > tmp/rpmsrc/conf.files
+# Amalgamate configs files from device-specific and all- trees
+# Retain permissions:
+echo "%defattr(-,root,root,-)" > tmp/rpmsrc/conf.files
 # Prefer files from device-$VENDOR-$DEVICE-configs over device-configs-all
 for config_dir in %{SOURCE13} %{SOURCE7}; do
     if [ -d $config_dir ]; then
-        (cd $config_dir; find . \( -type f -or -type l \) ! -name "*.sh" -print ) | grep -v /sbin/ | sed 's/^.//' >> tmp/rpmsrc/conf.files
+        (cd $config_dir; find . \( -type f -or -type l \) -print ) | sed 's/^.//' >> tmp/rpmsrc/conf.files
         cp -R $config_dir/* $RPM_BUILD_ROOT/
     fi
 done
@@ -532,7 +533,6 @@ fi
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
-%attr(744, root, root) /usr/sbin/flash-partition
 
 # Non executable files
 %defattr(644,root,root,-)
