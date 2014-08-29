@@ -385,10 +385,12 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 # Amalgamate configs files from device-specific and all- trees
 # Retain permissions:
 echo "%defattr(-,root,root,-)" > tmp/rpmsrc/conf.files
+# Add files that you will handle manually (per-device and/or per-package) to this | separated var:
+EXCLUDES="/var/lib/platform-updates/flash-bootimg.sh"
 # Prefer files from device-$VENDOR-$DEVICE-configs over device-configs-all
 for config_dir in %{SOURCE13} %{SOURCE7}; do
     if [ -d $config_dir ]; then
-        (cd $config_dir; find . \( -type f -or -type l \) -print ) | sed 's/^.//' >> tmp/rpmsrc/conf.files
+        (cd $config_dir; find . \( -type f -or -type l \) -print ) | grep -vE "$EXCLUDES" | sed 's/^.//' >> tmp/rpmsrc/conf.files
         cp -R $config_dir/* $RPM_BUILD_ROOT/
     fi
 done
