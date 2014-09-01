@@ -33,7 +33,12 @@ License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
 Version: 	0.0.6
 Release: 	%{rel_date}
-Provides:       droid-hal
+Provides:	droid-hal
+%if %{device} == hammerhead
+# Each device that provides files in /etc/ofono should have this provides
+Provides:	ofono-configs
+%endif
+Provides:	flash-partition
 Source0: 	%{name}-%{version}.tar.bz2
 Source1: 	makefstab
 Source2: 	usergroupgen.c
@@ -58,7 +63,6 @@ Group:		System
 #BuildArch:	noarch
 # Note that oneshot is not in mer-core (yet)
 BuildRequires:  oneshot
-BuildRequires:  mer-kernel-checks
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  repomd-pattern-builder
@@ -115,6 +119,9 @@ Just the kernel modules
 %package img-boot
 Provides: droid-hal-img-boot
 Group:	System
+Requires: flash-partition
+Requires: oneshot
+%{_oneshot_requires_post}
 Summary: Boot img for droid-hal device: %{device}
 
 %description img-boot
@@ -208,11 +215,9 @@ Provides:   package-groups
 rm -rf tmp
 mkdir tmp
 
-%if %{without mer_verify_kernel_config}
 echo Verifying kernel config
-mer_verify_kernel_config \
+hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
-%endif
 
 echo Building local tools
 mkdir tmp/rpmsrc
@@ -241,7 +246,7 @@ mkdir tmp/units
 shopt -s nullglob
 FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc)"
 shopt -u nullglob
-%{SOURCE1} --files $FSTAB_FILES  --skip /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
+%{SOURCE1} --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
@@ -374,12 +379,15 @@ mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "ln -s" ./droid-hal-init {} \;
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
-# To set the environment for Qt/hybris (note this is a bit lipstick specific)
-echo -n "" > tmp/rpmsrc/conf.files
+# Amalgamate configs files from device-specific and all- trees
+# Retain permissions:
+echo "%defattr(-,root,root,-)" > tmp/rpmsrc/conf.files
+# Add files that you will handle manually (per-device and/or per-package) to this | separated var:
+EXCLUDES="/var/lib/platform-updates/flash-bootimg.sh"
 # Prefer files from device-$VENDOR-$DEVICE-configs over device-configs-all
 for config_dir in %{SOURCE13} %{SOURCE7}; do
     if [ -d $config_dir ]; then
-        (cd $config_dir; find . \( -type f -or -type l \) -print ) | sed 's/^.//' >> tmp/rpmsrc/conf.files
+        (cd $config_dir; find . \( -type f -or -type l \) -print ) | grep -vE "$EXCLUDES" | sed 's/^.//' >> tmp/rpmsrc/conf.files
         cp -R $config_dir/* $RPM_BUILD_ROOT/
     fi
 done
@@ -494,6 +502,15 @@ for ver in $(cd /lib/modules; echo *); do
   /sbin/depmod $ver || :
 done
 
+%if %{device} == hammerhead
+%post img-boot
+# This oneshot is enabled only during package upgrades, as initial
+# installation is done when we flash device.
+if [ $1 -ne 1 ] ; then
+  add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh
+fi
+%endif
+
 ################################################################
 # Begin files section
 
@@ -536,7 +553,6 @@ done
 # Disabling v4l.rules
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
 
-
 %files devel
 %defattr(644,root,root,-)
 %{_libdir}/droid-devel/
@@ -561,6 +577,9 @@ done
 /boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
+%if %{device} == hammerhead
+%attr(744, root, root) /var/lib/platform-updates/flash-bootimg.sh
+%endif
 
 %files img-recovery
 %defattr(644,root,root,-)
