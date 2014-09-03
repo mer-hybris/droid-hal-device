@@ -3,4 +3,4 @@ Description=Activate Bluetooth
 
 [Service]
 Type=simple
-ExecStart=/bin/sh /sbin/bcm4330-bluetooth-activate.sh
+ExecStart=/sbin/bcm4330-bluetooth-activate.sh

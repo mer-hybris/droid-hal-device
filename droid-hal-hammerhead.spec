@@ -8,6 +8,8 @@
 %define vendor_pretty LG
 %define device_pretty Nexus 5
 
+%define enable_kernel_update 1
+
 Requires: rfkill
 Requires: bluez >= 4.101+git33
 

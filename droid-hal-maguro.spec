@@ -8,4 +8,6 @@
 %define vendor_pretty Samsung
 %define device_pretty Galaxy Nexus
 
+%define enable_kernel_update 1
+
 %include rpm/droid-hal-device.inc
