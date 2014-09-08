@@ -38,10 +38,6 @@ Name: 		droid-hal-%{device}
 Version: 	0.0.6
 Release: 	%{rel_date}
 Provides:	droid-hal
-%if %{device} == hammerhead
-# Each device that provides files in /etc/ofono should have this provides
-Provides:	ofono-configs
-%endif
 Provides:	flash-partition
 # The repo sync service on OBS prepares a 'source tarball' of the rpm
 # dir since we currently have a complex setup with subdirs which OBS
