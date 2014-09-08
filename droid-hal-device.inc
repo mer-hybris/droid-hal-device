@@ -4,6 +4,7 @@
 # vendor: determine the directory used for ./device/<vendor>/<device>
 # device_pretty: User-visible model name of the device
 # vendor_pretty: User-visible manufacturer name of the device
+# hadk_make_target: the target used when running make in the HABUILD_SDK on the OBS. Defaults to "hybris-hal"
 
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
@@ -249,7 +250,7 @@ cp %{SOURCE40} %{SOURCE0}
 %if 0%{?_obs_build_project:1}
 # Hadk style build of android on OBS 
 echo Running droid build in HABUILD_SDK
-ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; breakfast %{device}; rm -f .repo/local_manifests/roomservice.xml; make hybris-hal"
+ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; breakfast %{device}; rm -f .repo/local_manifests/roomservice.xml; make %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
 %endif
 
 # Make a tmp location for built installables
