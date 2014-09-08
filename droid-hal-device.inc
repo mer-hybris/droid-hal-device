@@ -552,7 +552,7 @@ for ver in $(cd /lib/modules; echo *); do
   /sbin/depmod $ver || :
 done
 
-%if %{enable_kernel_update} == 1
+%if 0%{?enable_kernel_update:1}
 %post img-boot
 # This oneshot is enabled only during package upgrades, as initial
 # installation is done when we flash device.
@@ -627,7 +627,7 @@ fi
 /boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
-%if %{enable_kernel_update} == 1
+%if 0%{?enable_kernel_update:1}
 %attr(744, root, root) /var/lib/platform-updates/flash-bootimg.sh
 %endif
 
