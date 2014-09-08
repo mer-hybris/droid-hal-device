@@ -28,6 +28,9 @@
 %define board_mapping_dir %{_datadir}/ssu/board-mappings.d
 %define board_mapping_file %{board_mapping_dir}/05-%{vendor}-%{device}.ini
 
+# Don't run strip
+%define __strip /bin/true
+
 Summary: 	Droid HAL package for %{device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{device}
@@ -39,7 +42,10 @@ Provides:	droid-hal
 Provides:	ofono-configs
 %endif
 Provides:	flash-partition
-Source0: 	%{name}-%{version}.tar.bz2
+# The repo sync service on OBS prepares a 'source tarball' of the rpm
+# dir since we currently have a complex setup with subdirs which OBS
+# doesn't like. This is not a problem for local builds.
+Source0: 	rpm.tar.bzip2
 Source1: 	makefstab
 Source2: 	usergroupgen.c
 Source3:        makeudev
@@ -55,8 +61,11 @@ Source12:       init-debug
 Source13:       device-configs-all
 Source14:       droid.kmap
 Source15:       us.kmap
-# Allow device specific sources to be defined using dhd_sources
+# Ths actual droid source from the repo service when run on OBS.
+# local builds don't mind if this is missing
+Source40:       repo.tar.bzip2
 # Reserve Source50 onwards
+# Allow device specific sources to be defined using dhd_sources
 %{?dhd_sources}
 
 Group:		System
@@ -66,6 +75,11 @@ BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  repomd-pattern-builder
+# These are only required if building on OBS
+%if 0%{?_obs_build_project:1}
+BuildRequires:  ubu-trusty
+BuildRequires:  sudo-for-abuild
+%endif
 %systemd_requires
 %{_oneshot_requires_post}
 
@@ -207,9 +221,36 @@ Provides:   package-groups
 # Begin prep/build section
 
 %prep
-%setup -q
+# No %%setup macro !!
+
+%if 0%{?_obs_build_project:1}
+# The OBS does not have access to 'repo' so a service does the repo init/sync
+# and provides a (huge) tarball with the checked-out tree in it.
+# So now drop to android_root and pretend to do a repo sync
+tar xf %{SOURCE40} -C %android_root
+# Clean up the repo tarball to save space
+rm -f %{SOURCE40}
+# Make a dummy tarball for rpm checks
+mkdir dummy;(cd dummy; touch dummy; tar cvf - . | bzip2 > %{SOURCE40}); rm -rf dummy
+# unpack the directories to SOURCES ... this needs to change
+tar xf %{SOURCE0} -C ../SOURCES
+# Clean up the rpm tarball too
+rm -f %{SOURCE0}
+cp %{SOURCE40} %{SOURCE0}
+
+# In OBS the repo service leaves the rpm/* files for OBS and they just ^^
+# got unpacked to ../SOURCES ... but we're used to having an rpm/ dir
+# So if rpm/ is missing then we use ../SOURCES :
+[ -d rpm ] || ln -s ../SOURCES rpm
+%endif
 
 %build
+
+%if 0%{?_obs_build_project:1}
+# Hadk style build of android on OBS 
+echo Running droid build in HABUILD_SDK
+ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; breakfast %{device}; rm -f .repo/local_manifests/roomservice.xml; make hybris-hal"
+%endif
 
 # Make a tmp location for built installables
 rm -rf tmp
@@ -232,6 +273,7 @@ tmp/rpmsrc/usergroupgen remove > tmp/rpmsrc/droid-user-remove.sh
 echo Building udev rules
 mkdir tmp/udev.rules
 # Device specific ueventd rules is the "not goldfish" one
+chmod 755 %{SOURCE3}
 %{SOURCE3} \
     %{android_root}/out/target/product/%{device}/root/ueventd.rc \
     $(ls %{android_root}/out/target/product/%{device}/root/ueventd.*.rc | grep -v .goldfish.rc) \
@@ -246,6 +288,8 @@ mkdir tmp/units
 shopt -s nullglob
 FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc)"
 shopt -u nullglob
+
+chmod 755 %{SOURCE1}
 %{SOURCE1} --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
 
 echo Fixing up mount points
@@ -267,7 +311,12 @@ MER_HA_HOME_URL="https://sailfishos.org/"
 EOF
 
 # Grab a snapshot of the git state from repo
-./.repo/repo/repo manifest -r -o tmp/manifest.xml
+if [ -e ./repo_service_manifest.xml ] ; then
+   # The OBS service helpfully dropped a repo manifest file here:
+   mv ./repo_service_manifest.xml tmp/manifest.xml
+else
+   ./.repo/repo/repo manifest -r -o tmp/manifest.xml
+fi
 
 ################
 %install
@@ -317,6 +366,7 @@ cp tmp/manifest.xml $HDRS/repo-manifest.xml
 
 # Run extract-headers.sh
 echo "Extracting headers for hybris"
+chmod 755 %SOURCE11 
 %SOURCE11 -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
 
 # Add our config into the default android-config.h
@@ -502,7 +552,7 @@ for ver in $(cd /lib/modules; echo *); do
   /sbin/depmod $ver || :
 done
 
-%if %{enable_kernel_update} == 1
+%if 0%{?enable_kernel_update:1}
 %post img-boot
 # This oneshot is enabled only during package upgrades, as initial
 # installation is done when we flash device.
@@ -577,7 +627,7 @@ fi
 /boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
-%if %{enable_kernel_update} == 1
+%if 0%{?enable_kernel_update:1}
 %attr(744, root, root) /var/lib/platform-updates/flash-bootimg.sh
 %endif
 
