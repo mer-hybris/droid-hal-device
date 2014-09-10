@@ -9,22 +9,6 @@
 %define android_root .
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
 
-# Support build info extracted from OBS builds too
-%if 0%{?_obs_build_project:1}
-%define _build_flavour %(echo %{_obs_build_project} | awk -F : '{if (NF == 3) print $3; else if (NF == 2) print strdevel; else print strunknown}' strdevel=devel strunknown=unknown)
-%else
-%define _build_flavour unknown
-%endif
-
-%define _obs_build_count %(echo %{release} | awk -F . '{if (NF >= 3) print $3; else print $1 }')
-%define _obs_commit_count %(echo %{release} | awk -F . '{if (NF >= 2) print $2; else print $1 }')
-
-%if %{_build_flavour} == release
-%define _version_appendix (%{_target_cpu})
-%else
-%define _version_appendix (%{_target_cpu},%{_build_flavour})
-%endif
-
 %define board_mapping_dir %{_datadir}/ssu/board-mappings.d
 %define board_mapping_file %{board_mapping_dir}/05-%{vendor}-%{device}.ini
 
