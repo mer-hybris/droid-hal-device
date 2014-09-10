@@ -459,8 +459,9 @@ cp tmp/droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 # device.info
 cp tmp/device.info %{buildroot}/%{_sysconfdir}/device.info
 # for use in the -devel package
-# commenting this might break badly:
-#cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
+cp tmp/device.info %{buildroot}/%{_libdir}/droid-devel/device.info
+# legacy purposes (no breakage as long as dependencies require only device/vendor names):
+ln -s device.info %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
 # Screen rotation dconf configuration
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks
