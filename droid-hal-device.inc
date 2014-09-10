@@ -295,19 +295,10 @@ chmod 755 %{SOURCE1}
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
 
-echo Creating hw-release
-# based on http://www.freedesktop.org/software/systemd/man/os-release.html
-cat > tmp/hw-release <<EOF
-# This file is copied as both hw-release (analogous to os-release)
-# and hw-release.vars for use at build time
+echo Creating device.info
+cat >> tmp/device.info <<EOF
 MER_HA_DEVICE=%{device}
 MER_HA_VENDOR=%{vendor}
-MER_HA_VERSION="%{version}.%{_obs_build_count} %{_version_appendix}"
-MER_HA_VERSION_ID=%{version}.%{_obs_build_count}
-MER_HA_PRETTY_NAME="%{device} %{version}.%{_obs_build_count} %{_version_appendix}"
-MER_HA_SAILFISH_BUILD=%{_obs_build_count}
-MER_HA_SAILFISH_FLAVOUR=%{_build_flavour}
-MER_HA_HOME_URL="https://sailfishos.org/"
 EOF
 
 # Grab a snapshot of the git state from repo
@@ -465,10 +456,11 @@ cp rpm/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/att
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
 cp tmp/droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 
-# hw-release
-cp tmp/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
+# device.info
+cp tmp/device.info %{buildroot}/%{_sysconfdir}/device.info
 # for use in the -devel package
-cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
+# commenting this might break badly:
+#cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
 # Screen rotation dconf configuration
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks
@@ -599,7 +591,7 @@ fi
 %{_sharedstatedir}/environment/nemo/99-hybris.conf
 %{_datadir}/qt5/keymaps/droid.qmap
 # Hardware and build info
-%config %{_sysconfdir}/hw-release
+%config %{_sysconfdir}/device.info
 # Disabling v4l.rules
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
 
