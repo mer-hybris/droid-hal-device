@@ -1,4 +1,4 @@
-# This file should be %included into a device specific spec file
+# This file should be %%included into a device specific spec file
 # where macros are defined:
 # device: should be the CM codename 
 # vendor: determine the directory used for ./device/<vendor>/<device>
@@ -86,7 +86,7 @@ BuildRequires:  sudo-for-abuild
 ################
 %package devel
 Group:	Development/Tools
-# Requires: %{name} = %{version}-%{release}
+# Requires: %%{name} = %%{version}-%%{release}
 Provides: droid-hal-devel
 Summary: Development files for droid-hal device: %{device}
 
@@ -381,7 +381,7 @@ mkdir -p $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 
 # If this ever becomes unmanageable then
-# grep -l dev/alog %{android_root}/out/target/product/%{device}/system/lib/*
+# grep -l dev/alog %%{android_root}/out/target/product/%{device}/system/lib/*
 # libdsyscalls.so and libc.so are blacklisted
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
 
@@ -397,7 +397,7 @@ cp -a %{SOURCE12} $RPM_BUILD_ROOT/
 
 # droid user support This may be better done by passing a list of
 # users/groups and running 'ensure_usergroups_exist newlist oldlist'
-# which would preserve oldlist in %post and delete any users no longer
+# which would preserve oldlist in %%post and delete any users no longer
 # needed (unlikely!). This avoids the transient removal of uids and
 # group issues
 install -D tmp/rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
@@ -450,7 +450,7 @@ sed -e 's|%DEVICE%|%{device}|g' \
     -e "s|%ARCH%|%{__isa_name}|g" \
     rpm/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
 
-# Copy kickstart packs (for %{device}-kickstart-configuration)
+# Copy kickstart packs (for %%{device}-kickstart-configuration)
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
 sed -e 's|@DEVICE@|%{device}|g' rpm/kickstart/pack/package-droid-updater > $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
 # and attachments
