@@ -10,6 +10,13 @@
 %define android_root .
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
 
+# On the OBS this package should be built in the i486 scheduler against
+# mer/sailfish *_i486 targets.
+# The prjconf should have an ExportFilter like this (mer/sailfish has this):
+#   ExportFilter: \.armv7hl\.rpm$ armv8el
+# We lie about our architecture and allows OBS to cross-publish this 486 cross-built spec to the armv7hl repos
+%define _target_cpu armv7hl
+
 # Support build info extracted from OBS builds too
 %if 0%{?_obs_build_project:1}
 %define _build_flavour %(echo %{_obs_build_project} | awk -F : '{if (NF == 3) print $3; else if (NF == 2) print strdevel; else print strunknown}' strdevel=devel strunknown=unknown)
