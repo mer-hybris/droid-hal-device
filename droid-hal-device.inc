@@ -256,9 +256,11 @@ ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; bre
 rm -rf tmp
 mkdir tmp
 
+%if %{without mer_verify_kernel_config}
 echo Verifying kernel config
 hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
+%endif
 
 echo Building local tools
 mkdir tmp/rpmsrc
