@@ -60,7 +60,6 @@ Source8:        hybris.conf
 Source10:       droid-hal-device.inc
 # This is copied from libhybris and should be kept in-sync:
 Source11:	extract-headers.sh
-Source12:       init-debug
 # This is not copied from libhybris and should not be kept in-sync:
 Source13:       device-configs-all
 Source14:       droid.kmap
@@ -400,7 +399,7 @@ cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 ln -s /dev/null $RPM_BUILD_ROOT/etc/udev/rules.d/60-persistent-v4l.rules 
 
 # Install init-debug which will provide usb access and non-blocking telnet
-cp -a %{SOURCE12} $RPM_BUILD_ROOT/
+cp -a %{android_root}/hybris/hybris-boot/init-script $RPM_BUILD_ROOT/init-debug
 
 # droid user support This may be better done by passing a list of
 # users/groups and running 'ensure_usergroups_exist newlist oldlist'
