@@ -7,6 +7,9 @@ Requires:
 - pattern:jolla-sailfish-applications
 - pattern:jolla-ui-wayland
 
+# Version package is device-independent
+- droid-hal-version
+
 - jolla-developer-mode
 - sailfishsilica-qt5-demos
 

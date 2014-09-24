@@ -4,6 +4,9 @@ Requires:
 - pattern:jolla-sailfish-applications
 - pattern:jolla-ui-wayland
 
+# Version umbrella package
+- droid-hal-version
+
 - jolla-developer-mode
 - sailfishsilica-qt5-demos
 
