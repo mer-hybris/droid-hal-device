@@ -1,13 +1,21 @@
-# This file should be %included into a device specific spec file
+# This file should be %%included into a device specific spec file
 # where macros are defined:
 # device: should be the CM codename 
 # vendor: determine the directory used for ./device/<vendor>/<device>
 # device_pretty: User-visible model name of the device
 # vendor_pretty: User-visible manufacturer name of the device
+# hadk_make_target: the target used when running make in the HABUILD_SDK on the OBS. Defaults to "hybris-hal"
 
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
+
+# On the OBS this package should be built in the i486 scheduler against
+# mer/sailfish *_i486 targets.
+# The prjconf should have an ExportFilter like this (mer/sailfish has this):
+#   ExportFilter: \.armv7hl\.rpm$ armv8el
+# We lie about our architecture and allows OBS to cross-publish this 486 cross-built spec to the armv7hl repos
+%define _target_cpu armv7hl
 
 # Support build info extracted from OBS builds too
 %if 0%{?_obs_build_project:1}
@@ -37,10 +45,6 @@ Name: 		droid-hal-%{device}
 Version: 	0.0.6
 Release: 	%{rel_date}
 Provides:	droid-hal
-%if %{device} == hammerhead
-# Each device that provides files in /etc/ofono should have this provides
-Provides:	ofono-configs
-%endif
 Provides:	flash-partition
 # The repo sync service on OBS prepares a 'source tarball' of the rpm
 # dir since we currently have a complex setup with subdirs which OBS
@@ -89,7 +93,7 @@ BuildRequires:  sudo-for-abuild
 ################
 %package devel
 Group:	Development/Tools
-# Requires: %{name} = %{version}-%{release}
+# Requires: %%{name} = %%{version}-%%{release}
 Provides: droid-hal-devel
 Summary: Development files for droid-hal device: %{device}
 
@@ -249,7 +253,7 @@ cp %{SOURCE40} %{SOURCE0}
 %if 0%{?_obs_build_project:1}
 # Hadk style build of android on OBS 
 echo Running droid build in HABUILD_SDK
-ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; breakfast %{device}; rm -f .repo/local_manifests/roomservice.xml; make hybris-hal"
+ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; breakfast %{device}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
 %endif
 
 # Make a tmp location for built installables
@@ -384,7 +388,7 @@ mkdir -p $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 
 # If this ever becomes unmanageable then
-# grep -l dev/alog %{android_root}/out/target/product/%{device}/system/lib/*
+# grep -l dev/alog %%{android_root}/out/target/product/%{device}/system/lib/*
 # libdsyscalls.so and libc.so are blacklisted
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
 
@@ -400,7 +404,7 @@ cp -a %{SOURCE12} $RPM_BUILD_ROOT/
 
 # droid user support This may be better done by passing a list of
 # users/groups and running 'ensure_usergroups_exist newlist oldlist'
-# which would preserve oldlist in %post and delete any users no longer
+# which would preserve oldlist in %%post and delete any users no longer
 # needed (unlikely!). This avoids the transient removal of uids and
 # group issues
 install -D tmp/rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
@@ -453,7 +457,7 @@ sed -e 's|%DEVICE%|%{device}|g' \
     -e "s|%ARCH%|%{__isa_name}|g" \
     rpm/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
 
-# Copy kickstart packs (for %{device}-kickstart-configuration)
+# Copy kickstart packs (for %%{device}-kickstart-configuration)
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
 sed -e 's|@DEVICE@|%{device}|g' rpm/kickstart/pack/package-droid-updater > $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
 # and attachments
