@@ -1,0 +1,1 @@
+CONFIG="-n --file=/etc/pulse/arm_qualcomm_msm_7230_ace.pa"
