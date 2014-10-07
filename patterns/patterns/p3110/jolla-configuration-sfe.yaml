@@ -1,0 +1,21 @@
+# Feel free to disable non-critical HA parts during devel by commenting out
+# Generated in hadk by executing: cd $ANDROID_ROOT; rpm/helpers/add_new_device.sh
+
+Description: Pattern with packages for all Sailfish for Everyone devices configurations
+Name: jolla-configuration-sfe
+Requires:
+- pattern:jolla-sailfish-applications
+- pattern:jolla-ui-wayland
+
+- jolla-developer-mode
+- sailfishsilica-qt5-demos
+
+- busybox-static
+- net-tools
+- openssh-clients
+- openssh-server
+- vim-enhanced
+- zypper
+
+Summary: Jolla Configuration SFE
+

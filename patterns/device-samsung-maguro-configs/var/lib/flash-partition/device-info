@@ -1,0 +1,8 @@
+CPUCHECK_STRING="Tuna"
+
+PART_1="boot"
+
+PART_REAL_1="mmcblk0p7"
+
+PART_I="1"
+
