@@ -1,0 +1,12 @@
+[Unit]
+Description=Force modem online
+Requires=dbus.service
+After=dbus.service
+Before=ofono.service
+
+[Service]
+Type=simple
+ExecStart=/sbin/ofono-hack.sh
+
+[Install]
+WantedBy=multi-user.target

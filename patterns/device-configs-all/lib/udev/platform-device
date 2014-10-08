@@ -1,0 +1,5 @@
+#!/bin/sh
+RESULT=`echo "$1" | sed "s|/devices/\([^/]*\)/\([^/]*\)/.*|\1/\2|g"`
+
+echo ANDROID_BLOCK_DEVICE=$RESULT
+

@@ -1,0 +1,129 @@
+#!/usr/bin/perl -w
+use File::Basename;
+
+# Modify to handle both fstab and .rc files
+
+my @files;
+my @skip;
+my $args = "";
+my $outputdir=".";
+while (@ARGV) {
+  $_ = shift @ARGV;
+  if (/^--/) {
+    $args=$_; next;
+  }
+
+  if ($args eq "--files") {
+    push @files, $_;
+  } elsif ($args eq "--skip") {
+    push @skip, $_;
+  } elsif ($args eq "--outputdir") {
+    $outputdir=$_;
+  } else {
+    print "Unrecognised args; not part of --files or --skip\n";
+    exit 1;
+  }
+}
+
+for my $file (@files) {
+  open(FILE, "<$file") or die "Can't read from $file\n";
+  next if $file =~ /goldfish/;
+
+  while (<FILE>) {
+    next if /^\s*#/ or /^\s*$/;
+
+    chomp;
+    my ($cmd, $src, $mnt_point, $type, $mnt_flagsandoptions, $fs_mgr_flags);
+
+    if (basename($file) =~ /.rc$/ ) {	# mount commands from rc files
+      next unless /^\s*mount\s+/;
+      my $tmpopts;
+      ($cmd, $type, $src, $mnt_point, $tmpopts) = split(" ", $_, 5);
+      $tmpopts ||= ""; # hush in case there are no options
+      # Now extract wait and check options into $fs_mgr_flags as I think they#re none-standard
+      my @opts = split(/ /, $tmpopts);
+
+      $fs_mgr_flags = "";
+      $mnt_flagsandoptions = "";
+      while (@opts) {
+	my $opt = shift @opts;
+	if ($opt =~ /^wait/) {
+	  # systemd waits for devices by default so just strip this option
+	  # See core/init/builtins.c ~ line 446 
+	} else {
+	  $mnt_flagsandoptions = "$mnt_flagsandoptions $opt";
+	}
+      }
+      # and convert ' ' to ,:
+      $fs_mgr_flags =~ s/\s+/,/g;
+      $mnt_flagsandoptions =~ s/\s+/,/g;
+
+    } elsif ( basename($file) =~ /^fstab/ ) { # /dev... from fstab files
+      ($src, $mnt_point, $type, $mnt_flagsandoptions, $fs_mgr_flags) = split;
+    } else {
+      print "Can't process file $file. Not an fstab.* or a *.rc\n";
+      exit 1;
+    };
+
+    # droid init.c converts mtd@xxxx to /dev/block/mtdblock%d using
+    # mtd_name_to_number(xxxx) and loop@xxxx to a loopback mount on
+    # file xxxx (I think)
+    next if  grep( /^$mnt_point$/, @skip) ;
+
+    # emmc doesn't work. It may be nice to generate these in a
+    # disabled state.
+    next if $type =~ /emmc/ ;
+
+    # From: http://www.freedesktop.org/software/systemd/man/systemd.unit.html :
+    # For unit names reflecting paths
+    # Example: a device unit dev-sda.device == /dev/sda Given a
+    # path, "/" is replaced by "-",
+    ($unitname = $mnt_point) =~ tr(/)(-) ;
+    # and all unprintable characters and the "-" are replaced by
+    # C-style "\x20" escapes.
+    ###### FIXME - not implemented #####
+    # The initial and ending "/" is removed from all paths during
+    # transformation. This escaping is reversible.
+    $unitname =~ s/^-//;
+    $unitname =~ s/-$//;
+    if (-f "$unitname.mount" ) {
+      print "Error, $unitname.mount already exists\n";
+      exit 1;
+    }
+    open(UNIT, ">$outputdir/$unitname.mount") or die "Couldn't write to $outputdir/$unitname.mount\n";
+
+    $secontext = "";
+    if ($mnt_flagsandoptions =~ s/(context=[^,]*)//) {
+      $secontext = $1;
+    }
+    # tidy up in case we left leading,trailing or paired ,s
+    $mnt_flagsandoptions =~ s/,,/,/;
+    $mnt_flagsandoptions =~ s/^,//;
+    $mnt_flagsandoptions =~ s/,$//;
+
+    print UNIT <<"END" ;
+[Unit]
+Description=Droid mount for $mnt_point
+Before=local-fs.target systemd-modules-load.service
+
+[Mount]
+What=$src
+Where=$mnt_point
+Type=$type
+Options=$mnt_flagsandoptions
+# Options had SELinux context option:  $secontext
+
+# Default is 90 which makes mount period too long in case of
+# errors so drop it down a notch.
+TimeoutSec=10
+
+[Install]
+WantedBy=local-fs.target
+
+# From $file :
+# $_
+END
+    print "Wrote $unitname.unit\n";
+    close UNIT;
+  }
+}

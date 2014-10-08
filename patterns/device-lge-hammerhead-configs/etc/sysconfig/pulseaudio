@@ -1,0 +1,1 @@
+CONFIG="-n --file=/etc/pulse/arm_qualcomm_msm_8974_hammerhead_flattened_device_tree_000b.pa"

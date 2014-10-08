@@ -1,0 +1,2 @@
+KERNEL=="hw_random",NAME="hwrng", SYMLINK+="%k"
+
