@@ -1,0 +1,8 @@
+Description: Pattern with packages for i9305 configurations
+Name: jolla-configuration-i9305
+Requires:
+- pattern:jolla-hw-adaptation-i9305
+- pattern:jolla-configuration-sfe
+
+Summary: Jolla Configuration i9305
+
