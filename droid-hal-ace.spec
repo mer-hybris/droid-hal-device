@@ -8,4 +8,6 @@
 %define vendor_pretty HTC
 %define device_pretty Desire HD
 
+Provides:	usb-moded-configs
+
 %include rpm/droid-hal-device.inc
