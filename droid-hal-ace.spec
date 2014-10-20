@@ -8,6 +8,4 @@
 %define vendor_pretty HTC
 %define device_pretty Desire HD
 
-%define enable_kernel_update 0
-
 %include rpm/droid-hal-device.inc
