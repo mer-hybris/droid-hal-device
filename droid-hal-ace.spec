@@ -8,6 +8,6 @@
 %define vendor_pretty HTC
 %define device_pretty Desire HD
 
-%define enable_kernel_update 0
+Provides:	usb-moded-configs
 
 %include rpm/droid-hal-device.inc
