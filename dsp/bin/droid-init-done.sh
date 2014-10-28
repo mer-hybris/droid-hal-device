@@ -36,7 +36,7 @@
 
 export LD_LIBRARY_PATH=/lib:/usr/lib
 export PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
-export NOTIFY_SOCKET="@/org/freedesktop/systemd1/notify"
+export NOTIFY_SOCKET="$(cat /run/droid-hal/notify-socket-name)"
 DROID_PID=$(pgrep droid-hal-init)
 systemd-notify --pid=$DROID_PID --ready
 # Systemd has a bug and can't handle the situation that notifying daemon (this one)
