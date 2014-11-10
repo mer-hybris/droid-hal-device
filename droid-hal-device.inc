@@ -1,11 +1,12 @@
 # This file should be %%included into a device specific spec file
 # where macros are defined:
-# device: should be the CM codename 
+# device: should be the CM codename or the AOSP TARGET_PRODUCT
 # vendor: determine the directory used for ./device/<vendor>/<device>
 # device_pretty: User-visible model name of the device
 # vendor_pretty: User-visible manufacturer name of the device
 # hadk_make_target: the target used when running make in the HABUILD_SDK on the OBS. Defaults to "hybris-hal"
 # device_target_cpu: Used for native builds. Normally the nested droid build env will do an old-fashioned cross-compile and produce non-x86 binaries (default armv7hl). This can be set to tell OBS what arch the binaries are. Eg Android for Intel arch must set this.
+# device_variant: for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
 
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
@@ -259,7 +260,7 @@ echo _target_cpu is %{_target_cpu}
 %if 0%{?_obs_build_project:1}
 # Hadk style build of android on OBS 
 echo Running droid build in HABUILD_SDK
-ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; lunch %{device}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
+ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; lunch %{device}%{?device_variant}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
 %endif
 
 # Make a tmp location for built installables
