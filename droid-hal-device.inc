@@ -259,7 +259,7 @@ echo _target_cpu is %{_target_cpu}
 %if 0%{?_obs_build_project:1}
 # Hadk style build of android on OBS 
 echo Running droid build in HABUILD_SDK
-ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; breakfast %{device}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
+ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; lunch %{device}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
 %endif
 
 # Make a tmp location for built installables
