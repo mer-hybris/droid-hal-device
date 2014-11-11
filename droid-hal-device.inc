@@ -268,8 +268,9 @@ rm -rf tmp
 mkdir tmp
 
 echo Verifying kernel config
+# AOSP seems to use .../obj/kernel/.config not obj/KERNEL_OBJ/.config like CM : so wildcard it
 hybris/mer-kernel-check/mer_verify_kernel_config \
-    %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
+    %{android_root}/out/target/product/%{device}/obj/*/.config
 
 echo Building local tools
 mkdir tmp/rpmsrc
