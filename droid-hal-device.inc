@@ -59,7 +59,6 @@ Source0: 	rpm.tar.bzip2
 Source1: 	makefstab
 Source2: 	usergroupgen.c
 Source3:        makeudev
-Source4:        apply-permissions.c
 Source5:        makefile
 Source7:        device-%{vendor}-%{device}-configs
 Source8:        hybris.conf
