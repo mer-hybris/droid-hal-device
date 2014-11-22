@@ -1,0 +1,8 @@
+Description: Pattern with packages for bacon configurations
+Name: jolla-configuration-bacon
+Requires:
+- pattern:jolla-hw-adaptation-bacon
+- pattern:jolla-configuration-sfe
+
+Summary: Jolla Configuration bacon
+

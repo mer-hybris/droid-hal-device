@@ -1,0 +1,38 @@
+Description: Pattern with packages for bacon HW Adaptation
+Name: jolla-hw-adaptation-bacon
+Requires:
+- pattern:jolla-hw-adaptation-hybris
+- pattern:jolla-hw-adaptation-hybris-droid-vibrator
+
+- droid-hal-bacon
+- droid-hal-bacon-sailfish-config
+- droid-hal-bacon-img-boot
+- droid-hal-bacon-pulseaudio-settings
+- droid-hal-bacon-policy-settings
+- droid-hal-bacon-kernel-modules
+- droid-hal-bacon-preinit-plugin
+
+# These need to be per-device due to differing backends (fbdev, eglfs, hwc, ..?)
+- qt5-qtwayland-wayland_egl
+- qt5-qpa-hwcomposer-plugin
+- qtscenegraph-adaptation
+
+#- gstreamer0.10-droidcamsrc
+#- gstreamer0.10-omx
+#- gstreamer0.10-droideglsink
+#- nemo-qtmultimedia-plugins-gstvideotexturebackend
+
+# This will do good after sensors start to work:
+#- mce-plugin-libhybris
+
+# 2014-07-18 tmp disabling usb-moded as it has not been sufficiently tested in
+# # hadk devices:
+# ## enables mode selector upon plugging USB cable:
+# #- usb-moded
+# #- usb-moded-pc-suite-mode-android
+# #- usb-moded-defaults-android
+# ## this is not available in public repos yet
+# ##- jolla-rnd-device
+
+Summary: Jolla HW Adaptation bacon
+
