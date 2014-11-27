@@ -424,8 +424,6 @@ cp rpm/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
 install -m 0744 rpm/dsp/preinit/* $RPM_BUILD_ROOT%{_libdir}/startup/preinit/
 ln -s /bin/false $RPM_BUILD_ROOT%{_libdir}/startup/preinit/is_total_erase_supported
 
-# droid permission fixer
-install -D tmp/rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
 
 # Remove cruft
 rm -f $RPM_BUILD_ROOT/fstab.*
@@ -583,7 +581,6 @@ fi
 # This binary should probably move to /sbin/
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
-%{_libdir}/droid/apply-permissions
 %{_libdir}/droid/all-units.txt
 %{board_mapping_file}
 # Created in %%post
