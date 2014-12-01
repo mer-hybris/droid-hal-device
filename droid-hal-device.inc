@@ -57,9 +57,7 @@ Provides:	flash-partition
 # doesn't like. This is not a problem for local builds.
 Source0: 	rpm.tar.bzip2
 Source1: 	makefstab
-Source2: 	usergroupgen.c
 Source3:        makeudev
-Source5:        makefile
 Source7:        device-%{vendor}-%{device}-configs
 Source8:        hybris.conf
 Source10:       droid-hal-device.inc
@@ -272,14 +270,12 @@ hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/*/.config
 
 echo Building local tools
-mkdir tmp/rpmsrc
-cp %{SOURCE2} %{SOURCE4} tmp/rpmsrc/
 ANDROID_ROOT=$(readlink -e %{android_root})
-(cd tmp/rpmsrc; make ANDROID_ROOT=$ANDROID_ROOT -f %{SOURCE5})
+(cd helpers; make ANDROID_ROOT=$ANDROID_ROOT)
 
 echo Building uid scripts
-tmp/rpmsrc/usergroupgen add > tmp/rpmsrc/droid-user-add.sh
-tmp/rpmsrc/usergroupgen remove > tmp/rpmsrc/droid-user-remove.sh
+helpers/usergroupgen add > helpers/droid-user-add.sh
+helpers/usergroupgen remove > helpers/droid-user-remove.sh
 
 echo Building udev rules
 mkdir tmp/udev.rules
@@ -414,8 +410,8 @@ cp -a %{android_root}/hybris/hybris-boot/init-script $RPM_BUILD_ROOT/init-debug
 # which would preserve oldlist in %%post and delete any users no longer
 # needed (unlikely!). This avoids the transient removal of uids and
 # group issues
-install -D tmp/rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
-install -D tmp/rpmsrc/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
+install -D helpers/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
+install -D helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
 # Add the dsp support binaries
 cp rpm/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
