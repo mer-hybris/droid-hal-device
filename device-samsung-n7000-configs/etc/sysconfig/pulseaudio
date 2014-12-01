@@ -1,1 +1,0 @@
-CONFIG="-n --file=/etc/pulse/arm_smdk4x12.pa"

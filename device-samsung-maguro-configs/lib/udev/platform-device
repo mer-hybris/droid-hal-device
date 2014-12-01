@@ -1,8 +1,0 @@
-#!/bin/sh
-RESULT=`echo "$1" | sed "s|/devices/\([^/]*\)/\([^/]*\)/.*|\1/\2|g"`
-MAGURO_PLATFORM="/dev/block/platform/omap/omap_hsmmc.0/by-name"
-mkdir -p $MAGURO_PLATFORM
-ln -s $DEVNAME $MAGURO_PLATFORM/$ID_PART_ENTRY_NAME
-
-echo ANDROID_BLOCK_DEVICE=$RESULT
-
