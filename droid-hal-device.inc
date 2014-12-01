@@ -56,14 +56,9 @@ Provides:	flash-partition
 # dir since we currently have a complex setup with subdirs which OBS
 # doesn't like. This is not a problem for local builds.
 Source0: 	rpm.tar.bzip2
-Source1: 	makefstab
-Source3:        makeudev
 Source7:        device-%{vendor}-%{device}-configs
 Source8:        hybris.conf
 Source10:       droid-hal-device.inc
-# This is copied from libhybris and should be kept in-sync:
-Source11:	extract-headers.sh
-# This is not copied from libhybris and should not be kept in-sync:
 Source13:       device-configs-all
 Source14:       droid.kmap
 Source15:       us.kmap
@@ -280,8 +275,7 @@ helpers/usergroupgen remove > helpers/droid-user-remove.sh
 echo Building udev rules
 mkdir tmp/udev.rules
 # Device specific ueventd rules is the "not goldfish" one
-chmod 755 %{SOURCE3}
-%{SOURCE3} \
+helpers/makeudev \
     %{android_root}/out/target/product/%{device}/root/ueventd.rc \
     $(ls %{android_root}/out/target/product/%{device}/root/ueventd.*.rc | grep -v .goldfish.rc) \
         > tmp/udev.rules/999-android-system.rules
@@ -296,8 +290,8 @@ shopt -s nullglob
 FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc)"
 shopt -u nullglob
 
-chmod 755 %{SOURCE1}
-%{SOURCE1} --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
+
+helpers/makefstab --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
@@ -373,8 +367,8 @@ cp tmp/manifest.xml $HDRS/repo-manifest.xml
 
 # Run extract-headers.sh
 echo "Extracting headers for hybris"
-chmod 755 %SOURCE11 
-%SOURCE11 -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
+# This is copied from libhybris and should be kept in-sync:
+helpers/extract-headers.sh -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
 
 # Add our config into the default android-config.h
 echo Making new $HDRS/android-config.h
