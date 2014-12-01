@@ -57,11 +57,8 @@ Provides:	flash-partition
 # doesn't like. This is not a problem for local builds.
 Source0: 	rpm.tar.bzip2
 Source7:        device-%{vendor}-%{device}-configs
-Source8:        hybris.conf
 Source10:       droid-hal-device.inc
 Source13:       device-configs-all
-Source14:       droid.kmap
-Source15:       us.kmap
 # Ths actual droid source from the repo service when run on OBS.
 # local builds don't mind if this is missing
 Source40:       repo.tar.bzip2
@@ -441,7 +438,7 @@ for config_dir in %{SOURCE13} %{SOURCE7}; do
     fi
 done
 
-cp %{SOURCE8} $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
+cp configs/hybris.conf $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 # SSU board mapping for hardware adaptation
 mkdir -p $RPM_BUILD_ROOT/%{board_mapping_dir}
@@ -460,7 +457,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment
 cp rpm/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment/%{device}
 
 # Keyboard map file
-/usr/lib/qt5/bin/kmap2qmap %{SOURCE14} %{SOURCE15} tmp/droid.qmap
+/usr/lib/qt5/bin/kmap2qmap configs/droid.kmap configs/us.kmap tmp/droid.qmap
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
 cp tmp/droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 
