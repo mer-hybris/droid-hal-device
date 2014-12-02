@@ -496,7 +496,7 @@ cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
 install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
 
-/usr/bin/repomd-pattern-builder.py --patternxml -p ./rpm/patterns/%{device} -o %{buildroot}/usr/share/package-groups/ --version=%{version} --release=%{release}
+/usr/bin/repomd-pattern-builder.py --patternxml -p rpm/patterns/%{device} -p %{dhd_path}/patterns/common -p %{dhd_path}/patterns/hybris -o %{buildroot}/usr/share/package-groups/ --version=%{version} --release=%{release}
 
 ################################################################
 # Begin pre/post section
