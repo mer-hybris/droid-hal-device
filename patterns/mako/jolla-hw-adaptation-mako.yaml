@@ -30,6 +30,10 @@ Requires:
 - qt5-qtdeclarative-import-positioning
 - qt5-qtdeclarative-import-sensors
 
+# This is a temporary acceptable hack to have mako orientation sensors 
+# See README for full description: https://github.com/mer-hybris/unblank-restart-sensors
+- unblank-restart-sensors
+
 # This is needed for notification LEDs:
 - mce-plugin-libhybris
 
