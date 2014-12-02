@@ -342,9 +342,11 @@ mkdir -p $RPM_BUILD_ROOT/lib/modules
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/startup/preinit
 
 # Install
+%if 0%{?enable_kernel_update:1}
 cp -a %{android_root}/out/target/product/%{device}/system/bin/updater $RPM_BUILD_ROOT/boot/update-binary
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BUILD_ROOT/boot
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
+%endif
 
 cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
 
@@ -619,10 +621,10 @@ fi
 %files img-boot
 %defattr(644,root,root,-)
 /boot/hybris-boot.img
+%if 0%{?enable_kernel_update:1}
 /boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
-%if 0%{?enable_kernel_update:1}
 %attr(744, root, root) /var/lib/platform-updates/flash-bootimg.sh
 %endif
 
