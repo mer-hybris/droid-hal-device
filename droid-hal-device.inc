@@ -57,9 +57,7 @@ Provides:	flash-partition
 # dir since we currently have a complex setup with subdirs which OBS
 # doesn't like. This is not a problem for local builds.
 Source0: 	rpm.tar.bzip2
-Source7:        device-%{vendor}-%{device}-configs
 Source10:       droid-hal-device.inc
-Source13:       device-configs-all
 # Ths actual droid source from the repo service when run on OBS.
 # local builds don't mind if this is missing
 Source40:       repo.tar.bzip2
@@ -431,8 +429,10 @@ find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "
 echo "%defattr(-,root,root,-)" > tmp/conf.files
 # Add files that you will handle manually (per-device and/or per-package) to this | separated var:
 EXCLUDES="/var/lib/platform-updates/flash-bootimg.sh"
-# Prefer files from device-$VENDOR-$DEVICE-configs over device-configs-all
-for config_dir in %{SOURCE13} %{SOURCE7}; do
+
+# Prefer files from device-$VENDOR-$DEVICE-configs in the HA specific
+# area over device-configs-all in the dhd-common area
+for config_dir in %{dhd_path}/device-configs-all rpm/device-%{vendor}-%{device}-configs; do
     if [ -d $config_dir ]; then
         (cd $config_dir; find . \( -type f -or -type l \) -print ) | grep -vE "$EXCLUDES" | sed 's/^.//' >> tmp/conf.files
         cp -R $config_dir/* $RPM_BUILD_ROOT/
