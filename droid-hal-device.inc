@@ -10,6 +10,7 @@
 
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
+%define dhd_path rpm/dhd
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
 
 # On the OBS this package should be built in the i486 scheduler against
@@ -263,16 +264,16 @@ hybris/mer-kernel-check/mer_verify_kernel_config \
 
 echo Building local tools
 ANDROID_ROOT=$(readlink -e %{android_root})
-(cd helpers; make ANDROID_ROOT=$ANDROID_ROOT)
+(cd %{dhd_path}/helpers; make ANDROID_ROOT=$ANDROID_ROOT)
 
 echo Building uid scripts
-helpers/usergroupgen add > helpers/droid-user-add.sh
-helpers/usergroupgen remove > helpers/droid-user-remove.sh
+%{dhd_path}/helpers/usergroupgen add > %{dhd_path}/helpers/droid-user-add.sh
+%{dhd_path}/helpers/usergroupgen remove > %{dhd_path}/helpers/droid-user-remove.sh
 
 echo Building udev rules
 mkdir tmp/udev.rules
 # Device specific ueventd rules is the "not goldfish" one
-helpers/makeudev \
+%{dhd_path}/helpers/makeudev \
     %{android_root}/out/target/product/%{device}/root/ueventd.rc \
     $(ls %{android_root}/out/target/product/%{device}/root/ueventd.*.rc | grep -v .goldfish.rc) \
         > tmp/udev.rules/999-android-system.rules
@@ -288,7 +289,7 @@ FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{
 shopt -u nullglob
 
 
-helpers/makefstab --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
+%{dhd_path}/helpers/makefstab --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
@@ -365,7 +366,7 @@ cp tmp/manifest.xml $HDRS/repo-manifest.xml
 # Run extract-headers.sh
 echo "Extracting headers for hybris"
 # This is copied from libhybris and should be kept in-sync:
-helpers/extract-headers.sh -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
+%{dhd_path}/helpers/extract-headers.sh -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
 
 # Add our config into the default android-config.h
 echo Making new $HDRS/android-config.h
@@ -387,7 +388,7 @@ mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
 
 cp -a tmp/units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
-cp -a rpm/dsp/systemd/* $RPM_BUILD_ROOT/%{_unitdir}
+cp -a %{dhd_path}/dsp/systemd/* $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install the udev rules and supporting script
 cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
@@ -401,14 +402,14 @@ cp -a %{android_root}/hybris/hybris-boot/init-script $RPM_BUILD_ROOT/init-debug
 # which would preserve oldlist in %%post and delete any users no longer
 # needed (unlikely!). This avoids the transient removal of uids and
 # group issues
-install -D helpers/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
-install -D helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
+install -D %{dhd_path}/helpers/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
+install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
 # Add the dsp support binaries
-cp rpm/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
+cp %{dhd_path}/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
 
 # Preinit plugins
-install -m 0744 rpm/dsp/preinit/* $RPM_BUILD_ROOT%{_libdir}/startup/preinit/
+install -m 0744  %{dhd_path}/dsp/preinit/* $RPM_BUILD_ROOT%{_libdir}/startup/preinit/
 ln -s /bin/false $RPM_BUILD_ROOT%{_libdir}/startup/preinit/is_total_erase_supported
 
 
@@ -438,7 +439,7 @@ for config_dir in %{SOURCE13} %{SOURCE7}; do
     fi
 done
 
-cp configs/hybris.conf $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
+cp %{dhd_path}/configs/hybris.conf $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
 
 # SSU board mapping for hardware adaptation
 mkdir -p $RPM_BUILD_ROOT/%{board_mapping_dir}
@@ -447,17 +448,17 @@ sed -e 's|%DEVICE%|%{device}|g' \
     -e "s|%DEVICE_PRETTY%|%{device_pretty}|g" \
     -e "s|%VENDOR_PRETTY%|%{vendor_pretty}|g" \
     -e "s|%ARCH%|%{__isa_name}|g" \
-    rpm/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
+    %{dhd_path}/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
 
 # Copy kickstart packs (for %%{device}-kickstart-configuration)
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
-sed -e 's|@DEVICE@|%{device}|g' rpm/kickstart/pack/package-droid-updater > $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
+sed -e 's|@DEVICE@|%{device}|g' %{dhd_path}/kickstart/pack/package-droid-updater > $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
 # and attachments
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment
-cp rpm/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment/%{device}
+cp %{dhd_path}/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment/%{device}
 
 # Keyboard map file
-/usr/lib/qt5/bin/kmap2qmap configs/droid.kmap configs/us.kmap tmp/droid.qmap
+/usr/lib/qt5/bin/kmap2qmap %{dhd_path}/configs/droid.kmap %{dhd_path}/configs/us.kmap tmp/droid.qmap
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
 cp tmp/droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
 
@@ -468,8 +469,8 @@ cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
 # Screen rotation dconf configuration
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks
-cp rpm/dconf/screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
-cp rpm/dconf/locks-screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
+cp %{dhd_path}/dconf/screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
+cp %{dhd_path}/dconf/locks-screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
 
 # This ghost file must exist in the installroot
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
