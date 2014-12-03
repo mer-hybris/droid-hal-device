@@ -1,13 +1,23 @@
 # This file should be %%included into a device specific spec file
 # where macros are defined:
 # device: should be the CM codename or the AOSP TARGET_PRODUCT
-# vendor: determine the directory used for ./device/<vendor>/<device>
+# vendor: determine the droid-side directory used for ./device/<vendor>/<device>
 # device_pretty: User-visible model name of the device
 # vendor_pretty: User-visible manufacturer name of the device
+# rpm_device: device name used rpm-side (eg in configs) : defaults to device
+# rpm_vendor: vendor name used rpm-side (eg in configs) : defaults to vendor
 # hadk_make_target: the target used when running make in the HABUILD_SDK on the OBS. Defaults to "hybris-hal"
 # device_target_cpu: Used for native builds. Normally the nested droid build env will do an old-fashioned cross-compile and produce non-x86 binaries (default armv7hl). This can be set to tell OBS what arch the binaries are. Eg Android for Intel arch must set this.
 # device_variant: for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
 # makefstab_skip_entries: Allow entries into the makefstab unit creation to be skipped
+
+# Set defaults if not defined already:
+%if 0%{!?rpm_device:1}
+%define rpm_device %device
+%endif
+%if 0%{!?rpm_vendor:1}
+%define rpm_vendor %vendor
+%endif
 
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
@@ -42,14 +52,14 @@
 %endif
 
 %define board_mapping_dir %{_datadir}/ssu/board-mappings.d
-%define board_mapping_file %{board_mapping_dir}/05-%{vendor}-%{device}.ini
+%define board_mapping_file %{board_mapping_dir}/05-%{rpm_vendor}-%{rpm_device}.ini
 
 # Don't run strip
 %define __strip /bin/true
 
-Summary: 	Droid HAL package for %{device}
+Summary: 	Droid HAL package for %{rpm_device}
 License: 	BSD-3-Clause
-Name: 		droid-hal-%{device}
+Name: 		droid-hal-%{rpm_device}
 Version: 	0.0.6
 Release: 	%{rel_date}
 Provides:	droid-hal
@@ -89,10 +99,10 @@ BuildRequires:  sudo-for-abuild
 Group:	Development/Tools
 # Requires: %%{name} = %%{version}-%%{release}
 Provides: droid-hal-devel
-Summary: Development files for droid-hal device: %{device}
+Summary: Development files for droid-hal device: %{rpm_device}
 
 %description devel
-Device specific droid headers for %{device}.
+Device specific droid headers for %{rpm_device}.
 Needed by libhybris
 
 ################
@@ -103,7 +113,7 @@ BuildArch:	noarch
 Requires: %{name} = %{version}-%{release}
 Requires: oneshot
 Requires: dconf
-Summary: Per device configuration for sailfish for droid-hal device: %{device}
+Summary: Per device configuration for sailfish for droid-hal device: %{rpm_device}
 
 %description sailfish-config
 Configure sailfish eg naturally landscape devices like mako
@@ -112,7 +122,7 @@ Configure sailfish eg naturally landscape devices like mako
 %package kernel
 Provides: droid-hal-kernel
 Group:	System
-Summary: Kernel for droid-hal device: %{device}
+Summary: Kernel for droid-hal device: %{rpm_device}
 
 %description kernel
 Just the kernel - mainly useful if you want to make a custom img
@@ -122,7 +132,7 @@ Just the kernel - mainly useful if you want to make a custom img
 Provides: droid-hal-kernel-modules
 Requires: kmod
 Group:	System
-Summary: Kernel modules for droid-hal device: %{device}
+Summary: Kernel modules for droid-hal device: %{rpm_device}
 
 %description kernel-modules
 Just the kernel modules
@@ -134,7 +144,7 @@ Group:	System
 Requires: flash-partition
 Requires: oneshot
 %{_oneshot_requires_post}
-Summary: Boot img for droid-hal device: %{device}
+Summary: Boot img for droid-hal device: %{rpm_device}
 
 %description img-boot
 The boot.img for device
@@ -144,14 +154,14 @@ The boot.img for device
 Provides: droid-hal-img-recovery
 Group:	System
 BuildArch:	noarch
-Summary: Recovery image for droid-hal device: %{device}
+Summary: Recovery image for droid-hal device: %{rpm_device}
 
 %description img-recovery
 The recovery.img for device
 
 ################
 %package pulseaudio-settings
-Summary:    PulseAudio settings for %{device} hw
+Summary:    PulseAudio settings for %{rpm_device} hw
 Requires:   pulseaudio >= 4.0
 Requires:   pulseaudio-modules-nemo-parameters >= 4.0.11
 Requires:   pulseaudio-modules-nemo-stream-restore >= 4.0.11
@@ -165,7 +175,7 @@ Provides:   pulseaudio-settings
 
 ################
 %package policy-settings
-Summary:    Policy settings for %{device} hw
+Summary:    Policy settings for %{rpm_device} hw
 Requires:   ohm >= 1.1.16
 Requires:   ohm-plugins-misc
 Requires:   ohm-plugins-dbus
@@ -191,7 +201,7 @@ Provides:   policy-settings
 
 ################
 %package kickstart-configuration
-Summary:    Kickstart configuration for %{device}
+Summary:    Kickstart configuration for %{rpm_device}
 Requires:   ssu-kickstart-configuration-jolla
 Provides:   droid-hal-kickstart-configuration
 
@@ -201,7 +211,7 @@ Provides:   droid-hal-kickstart-configuration
 ################
 
 %package preinit-plugin
-Summary:    Preinit plugins for %{device}
+Summary:    Preinit plugins for %{rpm_device}
 Provides:   preinit-plugins
 
 %description preinit-plugin
@@ -209,7 +219,7 @@ Provides:   preinit-plugins
 
 ################################################################
 %package patterns
-Summary:    Repository patterns for %{device} hw
+Summary:    Repository patterns for %{rpm_device} hw
 Provides:   package-groups
 
 %description patterns
@@ -298,11 +308,11 @@ echo Creating hw-release
 cat > tmp/hw-release <<EOF
 # This file is copied as both hw-release (analogous to os-release)
 # and hw-release.vars for use at build time
-MER_HA_DEVICE=%{device}
-MER_HA_VENDOR=%{vendor}
+MER_HA_DEVICE=%{rpm_device}
+MER_HA_VENDOR=%{rpm_vendor}
 MER_HA_VERSION="%{version}.%{_obs_build_count} %{_version_appendix}"
 MER_HA_VERSION_ID=%{version}.%{_obs_build_count}
-MER_HA_PRETTY_NAME="%{device} %{version}.%{_obs_build_count} %{_version_appendix}"
+MER_HA_PRETTY_NAME="%{rpm_device} %{version}.%{_obs_build_count} %{_version_appendix}"
 MER_HA_SAILFISH_BUILD=%{_obs_build_count}
 MER_HA_SAILFISH_FLAVOUR=%{_build_flavour}
 MER_HA_HOME_URL="https://sailfishos.org/"
@@ -376,7 +386,7 @@ echo "Extracting headers for hybris"
 echo Making new $HDRS/android-config.h
 sed '/CONFIG GOES HERE/,$d' $HDRS/android-config.h > $HDRS/android-config.h.new
 cat <<EOF >> $HDRS/android-config.h.new
-/* Added by Droid HAL packaging for %{device} */
+/* Added by Droid HAL packaging for %{rpm_device} */
 %{?android_config}
 EOF
 sed '0,/CONFIG GOES HERE/d' $HDRS/android-config.h >> $HDRS/android-config.h.new
@@ -438,7 +448,7 @@ EXCLUDES="/var/lib/platform-updates/flash-bootimg.sh"
 
 # Prefer files from device-$VENDOR-$DEVICE-configs in the HA specific
 # area over device-configs-all in the dhd-common area
-for config_dir in %{dhd_path}/device-configs-all rpm/device-%{vendor}-%{device}-configs; do
+for config_dir in %{dhd_path}/device-configs-all rpm/device-%{rpm_vendor}-%{rpm_device}-configs; do
     if [ -d $config_dir ]; then
         (cd $config_dir; find . \( -type f -or -type l \) -print ) | grep -vE "$EXCLUDES" | sed 's/^.//' >> tmp/conf.files
         cp -R $config_dir/* $RPM_BUILD_ROOT/
@@ -449,19 +459,19 @@ cp %{dhd_path}/configs/hybris.conf $RPM_BUILD_ROOT/%{_sharedstatedir}/environmen
 
 # SSU board mapping for hardware adaptation
 mkdir -p $RPM_BUILD_ROOT/%{board_mapping_dir}
-sed -e 's|%DEVICE%|%{device}|g' \
-    -e 's|%VENDOR%|%{vendor}|g' \
+sed -e 's|%DEVICE%|%{rpm_device}|g' \
+    -e 's|%VENDOR%|%{rpm_vendor}|g' \
     -e "s|%DEVICE_PRETTY%|%{device_pretty}|g" \
     -e "s|%VENDOR_PRETTY%|%{vendor_pretty}|g" \
     -e "s|%ARCH%|%{__isa_name}|g" \
     %{dhd_path}/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
 
-# Copy kickstart packs (for %%{device}-kickstart-configuration)
-mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
-sed -e 's|@DEVICE@|%{device}|g' %{dhd_path}/kickstart/pack/package-droid-updater > $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
+# Copy kickstart packs (for %%{rpm_device}-kickstart-configuration)
+mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{rpm_device}
+sed -e 's|@DEVICE@|%{rpm_device}|g' %{dhd_path}/kickstart/pack/package-droid-updater > $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{rpm_device}/package-droid-updater
 # and attachments
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment
-cp %{dhd_path}/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment/%{device}
+cp %{dhd_path}/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment/%{rpm_device}
 
 # Keyboard map file
 /usr/lib/qt5/bin/kmap2qmap %{dhd_path}/configs/droid.kmap %{dhd_path}/configs/us.kmap tmp/droid.qmap
@@ -502,7 +512,7 @@ cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
 install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
 
-/usr/bin/repomd-pattern-builder.py --patternxml -p rpm/patterns/%{device} -p %{dhd_path}/patterns/common -p %{dhd_path}/patterns/hybris -o %{buildroot}/usr/share/package-groups/ --version=%{version} --release=%{release}
+/usr/bin/repomd-pattern-builder.py --patternxml -p rpm/patterns/%{rpm_device} -p %{dhd_path}/patterns/common -p %{dhd_path}/patterns/hybris -o %{buildroot}/usr/share/package-groups/ --version=%{version} --release=%{release}
 
 ################################################################
 # Begin pre/post section
@@ -644,8 +654,8 @@ fi
 
 %files kickstart-configuration
 %defattr(644,root,root-)
-%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
-%{_datadir}/ssu/kickstart/attachment/%{device}
+%{_datadir}/ssu/kickstart/pack/%{rpm_device}/package-droid-updater
+%{_datadir}/ssu/kickstart/attachment/%{rpm_device}
 
 %files patterns
 %defattr(-,root,root,-)
