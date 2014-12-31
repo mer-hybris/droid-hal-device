@@ -82,7 +82,6 @@ Group:		System
 BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
-BuildRequires:  repomd-pattern-builder
 # These are only required if building on OBS
 %if 0%{?_obs_build_project:1}
 BuildRequires:  ubu-trusty
@@ -215,14 +214,6 @@ Summary:    Preinit plugins for %{rpm_device}
 Provides:   preinit-plugins
 
 %description preinit-plugin
-%{summary}.
-
-################################################################
-%package patterns
-Summary:    Repository patterns for %{rpm_device} hw
-Provides:   package-groups
-
-%description patterns
 %{summary}.
 
 ################################################################
@@ -512,8 +503,6 @@ cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
 install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
 
-/usr/bin/repomd-pattern-builder.py --patternxml -p rpm/patterns/%{rpm_device} -p %{dhd_path}/patterns/common -p %{dhd_path}/patterns/hybris -o %{buildroot}/usr/share/package-groups/ --version=%{version} --release=%{release}
-
 ################################################################
 # Begin pre/post section
 
@@ -656,10 +645,6 @@ fi
 %defattr(644,root,root-)
 %{_datadir}/ssu/kickstart/pack/%{rpm_device}/package-droid-updater
 %{_datadir}/ssu/kickstart/attachment/%{rpm_device}
-
-%files patterns
-%defattr(-,root,root,-)
-%{_datadir}/package-groups/*.xml
 
 %files preinit-plugin
 %defattr(-,root,root,-)
