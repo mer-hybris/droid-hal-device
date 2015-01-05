@@ -105,19 +105,6 @@ Device specific droid headers for %{rpm_device}.
 Needed by libhybris
 
 ################
-%package sailfish-config
-Provides: droid-hal-sailfish-config
-Group:	System
-BuildArch:	noarch
-Requires: %{name} = %{version}-%{release}
-Requires: oneshot
-Requires: dconf
-Summary: Per device configuration for sailfish for droid-hal device: %{rpm_device}
-
-%description sailfish-config
-Configure sailfish eg naturally landscape devices like mako
-
-################
 %package kernel
 Provides: droid-hal-kernel
 Group:	System
@@ -471,10 +458,6 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 /usr/bin/groupadd-user camera || :
 # To add additional groups define a HA config macro like android_config
 
-%post sailfish-config
-
-%{_bindir}/add-oneshot dconf-update || :
-
 %post kernel-modules
 # This runs on the device at install or in mic chroot at img build
 # in chroot the kernel version is not known.
@@ -536,11 +519,6 @@ fi
 %defattr(644,root,root,-)
 %{_libdir}/droid-devel/
 %{_libdir}/pkgconfig/*pc
-
-%files sailfish-config
-%defattr(-,root,root,-)
-%{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
-%{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
 
 %files kernel
 %defattr(644,root,root,-)
