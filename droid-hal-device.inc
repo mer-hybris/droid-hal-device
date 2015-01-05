@@ -158,20 +158,6 @@ Summary: Recovery image for droid-hal device: %{rpm_device}
 %description img-recovery
 The recovery.img for device
 
-################
-%package pulseaudio-settings
-Summary:    PulseAudio settings for %{rpm_device} hw
-Requires:   pulseaudio >= 4.0
-Requires:   pulseaudio-modules-nemo-parameters >= 4.0.11
-Requires:   pulseaudio-modules-nemo-stream-restore >= 4.0.11
-Requires:   pulseaudio-modules-nemo-mainvolume >= 4.0.11
-Requires:   pulseaudio-modules-droid >= 4.0.6
-Requires:   pulseaudio-policy-enforcement >= 4.0.8
-Provides:   pulseaudio-settings
-
-%description pulseaudio-settings
-%{summary}.
-
 ################################################################
 # Begin prep/build section
 
@@ -577,7 +563,4 @@ fi
 %files img-recovery
 %defattr(644,root,root,-)
 /boot/hybris-recovery.img
-
-%files pulseaudio-settings
-%defattr(644,root,root,-)
 
