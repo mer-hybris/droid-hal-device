@@ -172,15 +172,6 @@ Provides:   pulseaudio-settings
 %description pulseaudio-settings
 %{summary}.
 
-################
-
-%package preinit-plugin
-Summary:    Preinit plugins for %{rpm_device}
-Provides:   preinit-plugins
-
-%description preinit-plugin
-%{summary}.
-
 ################################################################
 # Begin prep/build section
 
@@ -306,7 +297,6 @@ mkdir -p $RPM_BUILD_ROOT/%{_bindir}/droid
 mkdir -p $RPM_BUILD_ROOT/img
 mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/lib/modules
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/startup/preinit
 
 # Install
 %if 0%{?enable_kernel_update:1}
@@ -377,11 +367,6 @@ install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/dr
 
 # Add the dsp support binaries
 cp %{dhd_path}/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
-
-# Preinit plugins
-install -m 0744  %{dhd_path}/dsp/preinit/* $RPM_BUILD_ROOT%{_libdir}/startup/preinit/
-ln -s /bin/false $RPM_BUILD_ROOT%{_libdir}/startup/preinit/is_total_erase_supported
-
 
 # Remove cruft
 rm -f $RPM_BUILD_ROOT/fstab.*
@@ -595,8 +580,4 @@ fi
 
 %files pulseaudio-settings
 %defattr(644,root,root,-)
-
-%files preinit-plugin
-%defattr(-,root,root,-)
-%{_libdir}/startup/preinit/*
 
