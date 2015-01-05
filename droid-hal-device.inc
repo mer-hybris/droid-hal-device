@@ -258,9 +258,6 @@ mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/etc/udev/rules.d
-mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/compositor
-mkdir -p $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo
-mkdir -p $RPM_BUILD_ROOT/%{_oneshotdir}
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/os-release.d
 
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/modules/
@@ -321,7 +318,6 @@ mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
 
 cp -a tmp/units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
-cp -a %{dhd_path}/dsp/systemd/* $RPM_BUILD_ROOT/%{_unitdir}
 
 # Install the udev rules and supporting script
 cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
@@ -338,9 +334,6 @@ cp -a %{android_root}/hybris/hybris-boot/init-script $RPM_BUILD_ROOT/init-debug
 install -D %{dhd_path}/helpers/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
 install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
-# Add the dsp support binaries
-cp %{dhd_path}/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
-
 # Remove cruft
 rm -f $RPM_BUILD_ROOT/fstab.*
 rm -f $RPM_BUILD_ROOT/*goldfish*
@@ -354,23 +347,6 @@ mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "ln -s" ./droid-hal-init {} \;
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
-# Amalgamate configs files from device-specific and all- trees
-# Retain permissions:
-echo "%defattr(-,root,root,-)" > tmp/conf.files
-# Add files that you will handle manually (per-device and/or per-package) to this | separated var:
-EXCLUDES="/var/lib/platform-updates/flash-bootimg.sh"
-
-# Prefer files from device-$VENDOR-$DEVICE-configs in the HA specific
-# area over device-configs-all in the dhd-common area
-for config_dir in %{dhd_path}/device-configs-all rpm/device-%{rpm_vendor}-%{rpm_device}-configs; do
-    if [ -d $config_dir ]; then
-        (cd $config_dir; find . \( -type f -or -type l \) -print ) | grep -vE "$EXCLUDES" | sed 's/^.//' >> tmp/conf.files
-        cp -R $config_dir/* $RPM_BUILD_ROOT/
-    fi
-done
-
-cp %{dhd_path}/configs/hybris.conf $RPM_BUILD_ROOT/%{_sharedstatedir}/environment/nemo/99-hybris.conf
-
 # SSU board mapping for hardware adaptation
 mkdir -p $RPM_BUILD_ROOT/%{board_mapping_dir}
 sed -e 's|%DEVICE%|%{rpm_device}|g' \
@@ -380,20 +356,10 @@ sed -e 's|%DEVICE%|%{rpm_device}|g' \
     -e "s|%ARCH%|%{__isa_name}|g" \
     %{dhd_path}/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
 
-# Keyboard map file
-/usr/lib/qt5/bin/kmap2qmap %{dhd_path}/configs/droid.kmap %{dhd_path}/configs/us.kmap tmp/droid.qmap
-mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
-cp tmp/droid.qmap $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps/droid.qmap
-
 # hw-release
 cp tmp/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
 # for use in the -devel package
 cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
-
-# Screen rotation dconf configuration
-mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks
-cp %{dhd_path}/dconf/screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
-cp %{dhd_path}/dconf/locks-screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
 
 # This ghost file must exist in the installroot
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
@@ -477,12 +443,9 @@ fi
 ################################################################
 # Begin files section
 
-%files -f tmp/conf.files
+%files
 %defattr(-,root,root,-)
 /sbin/*
-%{_bindir}/droid/droid-init-done.sh
-%{_bindir}/droid/kill-cgroup.sh
-%{_bindir}/droid/droid-hal-startup.sh
 # This binary should probably move to /sbin/
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
@@ -503,13 +466,9 @@ fi
 # just /dev/alog/ libraries (for trying to run pure android apps)
 %{_libexecdir}/droid-hybris/lib-dev-alog/.
 /lib/udev/rules.d/*
-/lib/udev/platform-device
 # Droid config droppings
 /*.rc
 /default.prop
-%{_sharedstatedir}/environment/compositor/droid-hal-device.conf
-%{_sharedstatedir}/environment/nemo/99-hybris.conf
-%{_datadir}/qt5/keymaps/droid.qmap
 # Hardware and build info
 %config %{_sysconfdir}/hw-release
 # Disabling v4l.rules
