@@ -173,41 +173,6 @@ Provides:   pulseaudio-settings
 %{summary}.
 
 ################
-%package policy-settings
-Summary:    Policy settings for %{rpm_device} hw
-Requires:   ohm >= 1.1.16
-Requires:   ohm-plugins-misc
-Requires:   ohm-plugins-dbus
-Requires:   ohm-plugin-telephony
-Requires:   ohm-plugin-signaling
-Requires:   ohm-plugin-media
-Requires:   ohm-plugin-accessories
-Requires:   ohm-plugin-resolver
-Requires:   ohm-plugin-ruleengine
-Requires:   ohm-plugin-profile
-Requires:   pulseaudio-modules-nemo-common >= 4.0.11
-Requires:   pulseaudio-policy-enforcement >= 4.0.8
-Requires:   policy-settings-common >= 0.2.0
-Obsoletes:  ohm-config <= 1.1.15
-# ohm-configs-default should not be installed ever, thus no version
-# specification defined here.
-Obsoletes:  ohm-configs-default
-Provides:   ohm-configs > 1.1.15
-Provides:   policy-settings
-
-%description policy-settings
-%{summary}.
-
-################
-%package kickstart-configuration
-Summary:    Kickstart configuration for %{rpm_device}
-Requires:   ssu-kickstart-configuration-jolla
-Provides:   droid-hal-kickstart-configuration
-
-%description kickstart-configuration
-%{summary}.
-
-################
 
 %package preinit-plugin
 Summary:    Preinit plugins for %{rpm_device}
@@ -457,13 +422,6 @@ sed -e 's|%DEVICE%|%{rpm_device}|g' \
     -e "s|%ARCH%|%{__isa_name}|g" \
     %{dhd_path}/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
 
-# Copy kickstart packs (for %%{rpm_device}-kickstart-configuration)
-mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{rpm_device}
-sed -e 's|@DEVICE@|%{rpm_device}|g' %{dhd_path}/kickstart/pack/package-droid-updater > $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{rpm_device}/package-droid-updater
-# and attachments
-mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment
-cp %{dhd_path}/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment/%{rpm_device}
-
 # Keyboard map file
 /usr/lib/qt5/bin/kmap2qmap %{dhd_path}/configs/droid.kmap %{dhd_path}/configs/us.kmap tmp/droid.qmap
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/qt5/keymaps
@@ -637,14 +595,6 @@ fi
 
 %files pulseaudio-settings
 %defattr(644,root,root,-)
-
-%files policy-settings
-%defattr(644,root,root,-)
-
-%files kickstart-configuration
-%defattr(644,root,root-)
-%{_datadir}/ssu/kickstart/pack/%{rpm_device}/package-droid-updater
-%{_datadir}/ssu/kickstart/attachment/%{rpm_device}
 
 %files preinit-plugin
 %defattr(-,root,root,-)
