@@ -1,0 +1,12 @@
+[Unit]
+Description=Enable Bluetooth HCI over SMD
+DefaultDependencies=false
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/hcismd-enable.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=bluetooth.service
