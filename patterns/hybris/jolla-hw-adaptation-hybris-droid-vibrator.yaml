@@ -1,8 +1,0 @@
-Description: Hybris HW Adaptation Pattern for Droid Vibrator
-Name: jolla-hw-adaptation-hybris-droid-vibrator
-Requires:
-- ngfd-plugin-droid-vibrator
-- qt5-feedback-haptics-droid-vibrator
-
-Summary: Jolla HW Adaptation Hybris Droid Vibrator
-
