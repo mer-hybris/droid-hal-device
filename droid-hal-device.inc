@@ -422,6 +422,7 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 /usr/bin/groupadd-user system || :
 /usr/bin/groupadd-user input || :
 /usr/bin/groupadd-user camera || :
+/usr/bin/groupadd-user media || :
 # To add additional groups define a HA config macro like android_config
 
 %{_bindir}/add-oneshot resize-filesystem || :
