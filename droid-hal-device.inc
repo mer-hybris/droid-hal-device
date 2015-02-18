@@ -51,9 +51,6 @@
 %define _version_appendix (%{_target_cpu},%{_build_flavour})
 %endif
 
-%define board_mapping_dir %{_datadir}/ssu/board-mappings.d
-%define board_mapping_file %{board_mapping_dir}/05-%{rpm_vendor}-%{rpm_device}.ini
-
 # Don't run strip
 %define __strip /bin/true
 
@@ -347,15 +344,6 @@ mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "ln -s" ./droid-hal-init {} \;
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
-# SSU board mapping for hardware adaptation
-mkdir -p $RPM_BUILD_ROOT/%{board_mapping_dir}
-sed -e 's|%DEVICE%|%{rpm_device}|g' \
-    -e 's|%VENDOR%|%{rpm_vendor}|g' \
-    -e "s|%DEVICE_PRETTY%|%{device_pretty}|g" \
-    -e "s|%VENDOR_PRETTY%|%{vendor_pretty}|g" \
-    -e "s|%ARCH%|%{__isa_name}|g" \
-    %{dhd_path}/ssu/board-mappings.d/05-sfe.ini.in >$RPM_BUILD_ROOT/%{board_mapping_file}
-
 # hw-release
 cp tmp/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
 # for use in the -devel package
@@ -453,7 +441,6 @@ fi
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
 %{_libdir}/droid/all-units.txt
-%{board_mapping_file}
 # Created in %%post
 # init-debug
 %attr(755,root,root) /init-debug
