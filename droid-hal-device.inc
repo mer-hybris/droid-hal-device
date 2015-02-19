@@ -269,7 +269,7 @@ mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/lib/modules
 
 # Install
-%if 0%{?enable_recovery_zip:1}
+%if 0%{?installable_zip:1}
 cp -a %{android_root}/out/target/product/%{device}/system/bin/updater $RPM_BUILD_ROOT/boot/update-binary
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BUILD_ROOT/boot
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
@@ -484,7 +484,7 @@ fi
 %files img-boot
 %defattr(644,root,root,-)
 /boot/hybris-boot.img
-%if 0%{?enable_recovery_zip:1}
+%if 0%{?installable_zip:1}
 /boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
