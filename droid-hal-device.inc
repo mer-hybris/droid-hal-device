@@ -362,6 +362,9 @@ cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/. || true
 cp -a out/target/product/%{device}/obj/*/modules.builtin $MOD_DIR/. || true
 cp -a out/target/product/%{device}/obj/*/modules.order $MOD_DIR/. || true
 
+# on some systems modules are in /lib/modules for some reason, lets move them to right place
+mv $RPM_BUILD_ROOT/lib/modules/* $RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE || true
+
 # Images are installed to /boot - they'll probably be unpacked using
 # rpm2cpio mostly anyhow
 cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/boot/
