@@ -124,10 +124,13 @@ Just the kernel modules
 %package img-boot
 Provides: droid-hal-img-boot
 Group:	System
-Requires: flash-partition
 Requires: oneshot
 %{_oneshot_requires_post}
 Summary: Boot img for droid-hal device: %{rpm_device}
+%if 0%{?enable_kernel_update:1}
+# The device flashing info and scripts is now in droid-configs
+Requires(post): droid-config-%{rpm_device}
+%endif
 
 %description img-boot
 The boot.img for device
@@ -266,7 +269,7 @@ mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/lib/modules
 
 # Install
-%if 0%{?enable_kernel_update:1}
+%if 0%{?enable_recovery_zip:1}
 cp -a %{android_root}/out/target/product/%{device}/system/bin/updater $RPM_BUILD_ROOT/boot/update-binary
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BUILD_ROOT/boot
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
@@ -481,11 +484,10 @@ fi
 %files img-boot
 %defattr(644,root,root,-)
 /boot/hybris-boot.img
-%if 0%{?enable_kernel_update:1}
+%if 0%{?enable_recovery_zip:1}
 /boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
-%attr(744, root, root) /var/lib/platform-updates/flash-bootimg.sh
 %endif
 
 %files img-recovery
