@@ -77,6 +77,7 @@ Group:		System
 #BuildArch:	noarch
 # Note that oneshot is not in mer-core (yet)
 BuildRequires:  oneshot
+BuildRequires:  git
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 # These are only required if building on OBS
