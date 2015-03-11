@@ -1,0 +1,41 @@
+# Feel free to disable non-critical HA parts during devel by commenting out
+# Generated in hadk by executing: cd $ANDROID_ROOT; rpm/helpers/add_new_device.sh
+
+Description: Pattern with packages for flo HW Adaptation
+Name: jolla-hw-adaptation-flo
+Requires:
+- pattern:jolla-hw-adaptation-hybris
+- pattern:jolla-hw-adaptation-hybris-droid-vibrator
+
+- droid-hal-flo
+- droid-hal-flo-sailfish-config
+- droid-hal-flo-img-boot
+- droid-hal-flo-pulseaudio-settings
+- droid-hal-flo-policy-settings
+- droid-hal-flo-kernel-modules
+- droid-hal-flo-preinit-plugin
+
+# These need to be per-device due to differing backends (fbdev, eglfs, hwc, ..?)
+- qt5-qtwayland-wayland_egl
+- qt5-qpa-hwcomposer-plugin
+- qtscenegraph-adaptation
+
+#- gstreamer0.10-droidcamsrc
+#- gstreamer0.10-omx
+#- gstreamer0.10-droideglsink
+#- nemo-qtmultimedia-plugins-gstvideotexturebackend
+
+# This will do good after sensors start to work:
+#- mce-plugin-libhybris
+
+# 2014-07-18 tmp disabling usb-moded as it has not been sufficiently tested in
+# # hadk devices:
+# ## enables mode selector upon plugging USB cable:
+# #- usb-moded
+# #- usb-moded-pc-suite-mode-android
+# #- usb-moded-defaults-android
+# ## this is not available in public repos yet
+# ##- jolla-rnd-device
+
+Summary: Jolla HW Adaptation flo
+
