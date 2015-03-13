@@ -347,8 +347,6 @@ mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "ln -s" ./droid-hal-init {} \;
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
-# hw-release
-cp tmp/hw-release %{buildroot}/%{_sysconfdir}/hw-release 
 # for use in the -devel package
 cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
@@ -463,8 +461,6 @@ fi
 # Droid config droppings
 /*.rc
 /default.prop
-# Hardware and build info
-%config %{_sysconfdir}/hw-release
 # Disabling v4l.rules
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
 
