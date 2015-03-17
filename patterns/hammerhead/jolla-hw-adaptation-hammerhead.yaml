@@ -25,6 +25,13 @@ Requires:
 #- gstreamer0.10-droideglsink
 #- nemo-qtmultimedia-plugins-gstvideotexturebackend
 
+- gstreamer1.0
+- gstreamer1.0-plugins-good
+- gstreamer1.0-plugins-base
+- gstreamer1.0-plugins-bad
+
+- nemo-gstreamer1.0-interfaces
+
 # This is needed for notification LEDs
 - mce-plugin-libhybris
 
