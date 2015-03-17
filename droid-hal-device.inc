@@ -460,6 +460,10 @@ sed -e 's|%DEVICE%|%{device}|g' \
 # Copy kickstart packs (for %%{device}-kickstart-configuration)
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}
 sed -e 's|@DEVICE@|%{device}|g' rpm/kickstart/pack/package-droid-updater > $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
+
+mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/post_nochroot/
+cp rpm/kickstart/post_nochroot/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/post_nochroot/%{device}
+
 # and attachments
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment
 cp rpm/kickstart/attachment/hybris $RPM_BUILD_ROOT/%{_datadir}/ssu/kickstart/attachment/%{device}
@@ -649,6 +653,7 @@ fi
 %defattr(644,root,root-)
 %{_datadir}/ssu/kickstart/pack/%{device}/package-droid-updater
 %{_datadir}/ssu/kickstart/attachment/%{device}
+%{_datadir}/ssu/kickstart/post_nochroot/%{device}
 
 %files patterns
 %defattr(-,root,root,-)
