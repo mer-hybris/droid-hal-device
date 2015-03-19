@@ -14,7 +14,6 @@ Requires:
 - droid-hal-hammerhead-policy-settings
 - droid-hal-hammerhead-kernel-modules
 - droid-hal-hammerhead-preinit-plugin
-- droid-hal-hammerhead-gstdroid-hack
 
 # These need to be per-device due to differing backends (fbdev, eglfs, hwc, ..?)
 - qt5-qtwayland-wayland_egl
@@ -32,6 +31,8 @@ Requires:
 - gstreamer1.0-plugins-bad
 
 - nemo-gstreamer1.0-interfaces
+
+- gstreamer1.0-droid
 
 # This is needed for notification LEDs
 - mce-plugin-libhybris

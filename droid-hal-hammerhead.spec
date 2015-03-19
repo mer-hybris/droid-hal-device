@@ -10,12 +10,6 @@
 
 %define enable_kernel_update 1
 
-# WARNING: If you comment a macro, it will still be picked up by rpmbuild!
-# The only proper way to disable a macro is:
-#define have_gstdroid 1
-# ^ also 1 or 0 still means macro is defined when checking in conditionals!
-# When you want to enable it. simply replace '#' with '%' in front of 'define'
-
 Requires: rfkill
 Requires: bluez >= 4.101+git33
 # Each device that provides files in /etc/ofono should have this provides

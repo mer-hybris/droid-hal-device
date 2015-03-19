@@ -222,13 +222,6 @@ Provides:   package-groups
 %{summary}.
 
 ################################################################
-%package gstdroid-hack
-Summary:    Temporary gst-droid hack for %{device} hw
-
-%description gstdroid-hack
-%{summary}. Can be empty if built without have_gstdroid support.
-
-################################################################
 # Begin prep/build section
 
 %prep
@@ -509,11 +502,6 @@ cp -a out/target/product/%{device}/obj/KERNEL_OBJ/modules.order $MOD_DIR/. || tr
 cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/boot/
 cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 
-%if 0%{?have_gstdroid:1}
-cp $MER_ROOT/devel/gst-droid/gst-libs/gst/droid/.libs/libgstdroid-1.0.so.0.0.0 $RPM_BUILD_ROOT/%{_libdir}/libgstdroid-1.0.so.0
-mkdir $RPM_BUILD_ROOT/%{_libdir}/gstreamer-1.0
-cp $MER_ROOT/devel/gst-droid/gst/.libs/libgstdroid.so $RPM_BUILD_ROOT/%{_libdir}/gstreamer-1.0
-%endif
 
 # Everything is installed; get a list of the units we installed to
 # allow the systemd_post to work... and then install that:
@@ -580,10 +568,6 @@ if [ $1 -ne 1 ] ; then
   add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh
 fi
 %endif
-
-%post gstdroid-hack -p /sbin/ldconfig
-
-%postun gstdroid-hack -p /sbin/ldconfig
 
 ################################################################
 # Begin files section
@@ -678,11 +662,4 @@ fi
 %files preinit-plugin
 %defattr(-,root,root,-)
 %{_libdir}/startup/preinit/*
-
-%files gstdroid-hack
-%defattr(-,root,root,-)
-%if 0%{?have_gstdroid:1}
-%{_libdir}/libgstdroid-1.0.so.0
-%{_libdir}/gstreamer-1.0/libgstdroid.so
-%endif
 
