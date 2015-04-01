@@ -25,14 +25,24 @@ Requires:
 # This will do good after sensors start to work:
 #- mce-plugin-libhybris
 
-# 2014-07-18 tmp disabling usb-moded as it has not been sufficiently tested in
-# # hadk devices:
-# ## enables mode selector upon plugging USB cable:
-# #- usb-moded
-# #- usb-moded-pc-suite-mode-android
-# #- usb-moded-defaults-android
-# ## this is not available in public repos yet
-# ##- jolla-rnd-device
+## USB mode controller
+# Enables mode selector upon plugging USB cable:
+- usb-moded
+- usb-moded-defaults-android
+- usb-moded-developer-mode-android
+- usb-moded-pc-suite-mode-android
+
+# Extra useful modes not officially supported:
+# might need some configuration to get working
+- usb-moded-mass-storage-android-config
+# working but careful with roaming!
+- usb-moded-connection-sharing-android-config
+# android diag mode only usable for certain android tools
+- usb-moded-diag-mode-android
+
+# jolla-rnd-device will enable usb-moded even when UI is not yet
+# brought up (useful during development, available since update10)
+- jolla-rnd-device
 
 Summary: Jolla HW Adaptation @DEVICE@
 
