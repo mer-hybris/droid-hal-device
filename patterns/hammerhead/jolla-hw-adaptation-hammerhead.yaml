@@ -37,15 +37,24 @@ Requires:
 # This is needed for notification LEDs
 - mce-plugin-libhybris
 
-# 2014-07-19 tmp disabling usb-moded as it fails to provide connectivity
-# if UI is not up (due to the unavailable jolla-rnd-device), which is not
-# suitable for hammerhead being in a state of active hwc development
-## enables mode selector upon plugging USB cable:
-#- usb-moded
-#- usb-moded-pc-suite-mode-android
-#- usb-moded-defaults-android
-## this is not available in public repos yet:
-##- jolla-rnd-device
+## USB mode controller
+# Enables mode selector upon plugging USB cable:
+- usb-moded
+- usb-moded-defaults-android
+- usb-moded-developer-mode-android
+- usb-moded-pc-suite-mode-android
+
+# Extra useful modes not officially supported:
+# might need some configuration to get working
+- usb-moded-mass-storage-android-config
+# working but careful with roaming!
+- usb-moded-connection-sharing-android-config
+# android diag mode only usable for certain android tools
+- usb-moded-diag-mode-android
+
+# jolla-rnd-device will enable usb-moded even when UI is not yet
+# brought up (useful during development, available since update10)
+- jolla-rnd-device
 
 Summary: Jolla HW Adaptation hammerhead
 
