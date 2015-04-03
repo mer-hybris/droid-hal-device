@@ -1,16 +1,29 @@
 # This file should be %%included into a device specific spec file
 # where macros are defined:
+#
+# Device information:
 # device: should be the CM codename or the AOSP TARGET_PRODUCT
 # vendor: determine the droid-side directory used for ./device/<vendor>/<device>
 # device_pretty: User-visible model name of the device
 # vendor_pretty: User-visible manufacturer name of the device
 # rpm_device: device name used rpm-side (eg in configs) : defaults to device
 # rpm_vendor: vendor name used rpm-side (eg in configs) : defaults to vendor
+#
+# Device capabilities:
+# installable_zip: adds zip updater scripts (default for all SFE devices)
+# enable_kernel_update: ability to flash kernel partition, inspect the usage of this macro
+#
+# Miscellaneous:
 # hadk_make_target: the target used when running make in the HABUILD_SDK on the OBS. Defaults to "hybris-hal"
 # device_target_cpu: Used for native builds. Normally the nested droid build env will do an old-fashioned cross-compile and produce non-x86 binaries (default armv7hl). This can be set to tell OBS what arch the binaries are. Eg Android for Intel arch must set this.
 # device_variant: for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
 # makefstab_skip_entries: Allow entries into the makefstab unit creation to be skipped
 # have_custom_img_boot: Defined when img-boot is packaged separately from droid-hal-device
+
+# IMPORTANT if you want to comment out any macros in your .spec, delete the %
+# sign, otherwise they will remain defined! E.g.:
+#define some_macro "I'll not be defined because I don't have % in the front"
+
 
 # Set defaults if not defined already:
 %if 0%{!?rpm_device:1}
