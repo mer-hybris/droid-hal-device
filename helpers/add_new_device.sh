@@ -8,10 +8,10 @@ if [ -z $DEVICE ]; then
     exit 1
 fi
 
-ROOTFS_DIR=device-$VENDOR-$DEVICE-configs
+ROOTFS_DIR=sparse
 PATTERNS_DIR=patterns
 PATTERNS_DEVICE_DIR=$PATTERNS_DIR/$DEVICE
-PATTERNS_TEMPLATES_DIR=$PATTERNS_DIR/templates
+PATTERNS_TEMPLATES_DIR=dhd/$PATTERNS_DIR/templates
 
 if [ ! -d rpm/$PATTERNS_TEMPLATES_DIR ]; then
     echo $0: launch this script from the $ANDROID_ROOT directory
@@ -20,7 +20,7 @@ fi
 
 cd rpm/
 
-if [ -e $ROOTFS_DIR ]; then
+if [[ -e $ROOTFS_DIR && ! $1 == "-y" ]]; then
     read -p "Device $DEVICE appears to be already created. Re-generate patterns? [Y/n] " -n 1 -r
     REPLY=${REPLY:-Y}
     echo
