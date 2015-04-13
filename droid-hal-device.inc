@@ -65,7 +65,6 @@ Provides:	flash-partition
 # dir since we currently have a complex setup with subdirs which OBS
 # doesn't like. This is not a problem for local builds.
 Source0: 	rpm.tar.bzip2
-Source10:       droid-hal-device.inc
 # Ths actual droid source from the repo service when run on OBS.
 # local builds don't mind if this is missing
 Source40:       repo.tar.bzip2
