@@ -101,6 +101,22 @@ Device specific droid headers for %{rpm_device}.
 Needed by libhybris
 
 ################
+%package tools
+Provides: droid-hal-tools
+Group:	Tools
+Summary: Some tools from android specific for %{device}
+License: ASL 2.0
+BuildRequires:  pkgconfig(zlib)
+
+Obsoletes: droid-hal-tools <= 0.0.2
+
+%description tools
+This package contains some tools that some hardware adaptations need for
+handling the android style content. This package is intended to be such
+that it can be installed on the device and is not meant to be used in host/sdk
+environment.
+
+################
 %package kernel
 Provides: droid-hal-kernel
 Group:	System
@@ -190,6 +206,19 @@ echo Verifying kernel config
 hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/*/.config
 
+# Check if local overrides for tool mk files exist, otherwise dhd defaults are used
+if test -f rpm/helpers/mkbootimg.mk; then
+    export MKBOOTIMG_MK=$(pwd)/rpm/helpers/mkbootimg.mk
+fi
+
+if test -f rpm/helpers/simg2img.mk; then
+    export SIMG2IMG_MK=$(pwd)/rpm/helpers/simg2img.mk
+fi
+
+if test -f rpm/helpers/img2simg.mk; then
+    export IMG2SIMG_MK=$(pwd)/rpm/helpers/img2simg.mk
+fi
+
 echo Building local tools
 ANDROID_ROOT=$(readlink -e %{android_root})
 (cd %{dhd_path}/helpers; make ANDROID_ROOT=$ANDROID_ROOT)
@@ -266,6 +295,11 @@ mkdir -p $RPM_BUILD_ROOT/%{_bindir}/droid
 mkdir -p $RPM_BUILD_ROOT/img
 mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/lib/modules
+
+# Install tools
+install -m 755 -D %{android_root}/system/core/mkbootimg/mkbootimg %{buildroot}/%{_bindir}/
+install -m 755 -D %{android_root}/system/core/libsparse/simg2img %{buildroot}/%{_bindir}/
+install -m 755 -D %{android_root}/system/core/libsparse/img2simg %{buildroot}/%{_bindir}/
 
 # Install
 %if 0%{?installable_zip:1}
@@ -467,6 +501,12 @@ fi
 %defattr(644,root,root,-)
 %{_libdir}/droid-devel/
 %{_libdir}/pkgconfig/*pc
+
+%files tools
+%defattr(-,root,root,-)
+%{_bindir}/mkbootimg
+%{_bindir}/img2simg
+%{_bindir}/simg2img
 
 %files kernel
 %defattr(644,root,root,-)
