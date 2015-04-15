@@ -415,7 +415,10 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 /usr/bin/groupadd-user input || :
 /usr/bin/groupadd-user camera || :
 /usr/bin/groupadd-user media || :
-# To add additional groups define a HA config macro like android_config
+
+# To add additional groups define a HA config, one can define those as part
+# of additional_post_scripts macro.
+%{?additional_post_scripts}
 
 %post kernel-modules
 # This runs on the device at install or in mic chroot at img build
