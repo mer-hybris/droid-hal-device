@@ -10,7 +10,6 @@
 # device_target_cpu: Used for native builds. Normally the nested droid build env will do an old-fashioned cross-compile and produce non-x86 binaries (default armv7hl). This can be set to tell OBS what arch the binaries are. Eg Android for Intel arch must set this.
 # device_variant: for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
 # makefstab_skip_entries: Allow entries into the makefstab unit creation to be skipped
-# enable_image_host_tools: If defined, builds device specific image creation host tools
 
 # Set defaults if not defined already:
 %if 0%{!?rpm_device:1}
@@ -102,6 +101,22 @@ Device specific droid headers for %{rpm_device}.
 Needed by libhybris
 
 ################
+%package tools
+Provides: droid-hal-tools
+Group:	Tools
+Summary: Some tools from android specific for %{device}
+License: ASL 2.0
+BuildRequires:  pkgconfig(zlib)
+
+Obsoletes: droid-hal-tools <= 0.0.2
+
+%description tools
+This package contains some tools that some hardware adaptations need for
+handling the android style content. This package is intended to be such
+that it can be installed on the device and is not meant to be used in host/sdk
+environment.
+
+################
 %package kernel
 Provides: droid-hal-kernel
 Group:	System
@@ -144,15 +159,6 @@ Summary: Recovery image for droid-hal device: %{rpm_device}
 
 %description img-recovery
 The recovery.img for device
-
-################
-%if 0%{?enable_image_host_tools:1}
-%package host-tools
-Summary:    %{device} specific image creation tools for host environment
-
-%description host-tools
-%{summary}.
-%endif
 
 ################################################################
 # Begin prep/build section
@@ -199,6 +205,19 @@ echo Verifying kernel config
 # AOSP seems to use .../obj/kernel/.config not obj/KERNEL_OBJ/.config like CM : so wildcard it
 hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/*/.config
+
+# Check if local overrides for tool mk files exist, otherwise dhd defaults are used
+if test -f rpm/helpers/mkbootimg.mk; then
+    export MKBOOTIMG_MK=$(pwd)/rpm/helpers/mkbootimg.mk
+fi
+
+if test -f rpm/helpers/simg2img.mk; then
+    export SIMG2IMG_MK=$(pwd)/rpm/helpers/simg2img.mk
+fi
+
+if test -f rpm/helpers/img2simg.mk; then
+    export IMG2SIMG_MK=$(pwd)/rpm/helpers/img2simg.mk
+fi
 
 echo Building local tools
 ANDROID_ROOT=$(readlink -e %{android_root})
@@ -277,11 +296,10 @@ mkdir -p $RPM_BUILD_ROOT/img
 mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/lib/modules
 
-%if 0%{?enable_image_host_tools:1}
-install -m 755 -D %{android_root}/out/host/linux-x86/bin/mkbootimg $RPM_BUILD_ROOT/%{_bindir}/mkbootimg-host
-install -m 755 -D %{android_root}/out/host/linux-x86/bin/img2simg $RPM_BUILD_ROOT/%{_bindir}/img2simg-host
-install -m 755 -D %{android_root}/out/host/linux-x86/bin/simg2img $RPM_BUILD_ROOT/%{_bindir}/simg2img-host
-%endif
+# Install tools
+install -m 755 -D %{android_root}/system/core/mkbootimg/mkbootimg %{buildroot}/%{_bindir}/
+install -m 755 -D %{android_root}/system/core/libsparse/simg2img %{buildroot}/%{_bindir}/
+install -m 755 -D %{android_root}/system/core/libsparse/img2simg %{buildroot}/%{_bindir}/
 
 # Install
 %if 0%{?installable_zip:1}
@@ -484,6 +502,12 @@ fi
 %{_libdir}/droid-devel/
 %{_libdir}/pkgconfig/*pc
 
+%files tools
+%defattr(-,root,root,-)
+%{_bindir}/mkbootimg
+%{_bindir}/img2simg
+%{_bindir}/simg2img
+
 %files kernel
 %defattr(644,root,root,-)
 /boot/kernel*
@@ -505,11 +529,3 @@ fi
 %defattr(644,root,root,-)
 /boot/hybris-recovery.img
 
-%if 0%{?enable_image_host_tools:1}
-%files host-tools
-%defattr(-,root,root,-)
-%{_bindir}/mkbootimg-host
-%{_bindir}/img2simg-host
-%{_bindir}/simg2img-host
-
-%endif
