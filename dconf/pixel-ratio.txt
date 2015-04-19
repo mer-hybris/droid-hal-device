@@ -1,2 +1,2 @@
 [desktop/sailfish/silica]
-theme_pixel_ratio=1.5
+theme_pixel_ratio=1.3
