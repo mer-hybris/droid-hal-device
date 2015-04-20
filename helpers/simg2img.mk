@@ -8,6 +8,9 @@ SRCS+= sparse_err.c
 SRCS+= sparse_read.c
 SRCS+= simg2img.c
 
+# Too smart macros don't work with c99, filter it out.
+CFLAGS := $(filter-out -std=c99,$(CFLAGS))
+
 CPPFLAGS+= -Iinclude
 
 OBJS=$(SRCS:.c=.o)
