@@ -14,14 +14,14 @@ fi
 
 # A POSIX variable
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
+CONFIG_DIR=hybris/droid-configs
 
-while getopts "ps:" opt; do
+while getopts "ps" opt; do
     case "$opt" in
-    p)  cd rpm
-        dhd/helpers/add_new_device.sh -y
-        git diff
-        echo "Patterns updated. Do cd rpm/; git diff to accept changes you're happy with"
-        cd ..
+    p)  rpm/dhd/helpers/add_new_device.sh -y
+        git --no-pager --git-dir=$CONFIG_DIR/.git --work-tree=$CONFIG_DIR diff
+        echo
+        echo "Patterns updated. Do cd $CONFIG_DIR/ and commit changes you're happy with"
         ;;
     s)  echo Comparing submodules currently unsupported
         ;;

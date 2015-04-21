@@ -8,17 +8,18 @@ if [ -z $DEVICE ]; then
     exit 1
 fi
 
+CONFIG_DIR=hybris/droid-configs
 ROOTFS_DIR=sparse
-PATTERNS_DIR=patterns
-PATTERNS_DEVICE_DIR=$PATTERNS_DIR/$DEVICE
-PATTERNS_TEMPLATES_DIR=dhd/$PATTERNS_DIR/templates
+PATTERNS_DIR=droid-configs-device/patterns
+PATTERNS_DEVICE_DIR=patterns
+PATTERNS_TEMPLATES_DIR=$CONFIG_DIR/$PATTERNS_DIR/templates
 
-if [ ! -d rpm/$PATTERNS_TEMPLATES_DIR ]; then
+if [ ! -d $PATTERNS_TEMPLATES_DIR ]; then
     echo $0: launch this script from the $ANDROID_ROOT directory
     exit 1
 fi
 
-cd rpm/
+cd $CONFIG_DIR
 
 if [[ -e $ROOTFS_DIR && ! $1 == "-y" ]]; then
     read -p "Device $DEVICE appears to be already created. Re-generate patterns? [Y/n] " -n 1 -r
@@ -43,11 +44,11 @@ for pattern in $(find $PATTERNS_DIR/{common,hybris,templates} -name *.yaml); do
     echo $PATTERNS_FILE
     cat <<'EOF' >$PATTERNS_FILE
 # Feel free to disable non-critical HA parts during devel by commenting out
-# Generated in hadk by executing: cd $ANDROID_ROOT; rpm/helpers/add_new_device.sh
+# Generated in hadk by executing: cd $ANDROID_ROOT; rpm/dhd/helpers/add_new_device.sh
 
 EOF
     sed -e 's|@DEVICE@|'$DEVICE'|g' $pattern >>$PATTERNS_FILE
 done
 
-cd ..
+cd -
 
