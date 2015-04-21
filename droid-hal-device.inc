@@ -10,6 +10,7 @@
 # device_target_cpu: Used for native builds. Normally the nested droid build env will do an old-fashioned cross-compile and produce non-x86 binaries (default armv7hl). This can be set to tell OBS what arch the binaries are. Eg Android for Intel arch must set this.
 # device_variant: for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
 # makefstab_skip_entries: Allow entries into the makefstab unit creation to be skipped
+# have_custom_img_boot: Defined when img-boot is packaged separately from droid-hal-device
 
 # Set defaults if not defined already:
 %if 0%{!?rpm_device:1}
@@ -120,6 +121,7 @@ Summary: Kernel modules for droid-hal device: %{rpm_device}
 %description kernel-modules
 Just the kernel modules
 
+%if 0%{!?have_custom_img_boot:1}
 ################
 %package img-boot
 Provides: droid-hal-img-boot
@@ -134,6 +136,7 @@ Requires(post): droid-config-%{rpm_device}
 
 %description img-boot
 The boot.img for device
+%endif
 
 ################
 %package img-recovery
@@ -368,7 +371,9 @@ mv $RPM_BUILD_ROOT/lib/modules/* $RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE || 
 
 # Images are installed to /boot - they'll probably be unpacked using
 # rpm2cpio mostly anyhow
+%if 0%{!?have_custom_img_boot:1}
 cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/boot/
+%endif
 cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 
 
@@ -427,6 +432,7 @@ for ver in $(cd /lib/modules; echo *); do
   /sbin/depmod $ver || :
 done
 
+%if 0%{!?have_custom_img_boot:1}
 %if 0%{?enable_kernel_update:1}
 %post img-boot
 # This oneshot is enabled only during package upgrades, as initial
@@ -434,6 +440,7 @@ done
 if [ $1 -ne 1 ] ; then
   add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh
 fi
+%endif
 %endif
 
 ################################################################
@@ -480,6 +487,7 @@ fi
 %defattr(644,root,root,-)
 /lib/modules
 
+%if 0%{!?have_custom_img_boot:1}
 %files img-boot
 %defattr(644,root,root,-)
 /boot/hybris-boot.img
@@ -487,6 +495,7 @@ fi
 /boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
+%endif
 %endif
 
 %files img-recovery
