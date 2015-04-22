@@ -11,7 +11,7 @@ Requires:
 # from omapfb vsync events (caused ~15% CPU usage)
 - systemd-droid
 
-- jolla-devicelock-plugin-encpartition
+- jolla-devicelock-plugin-encsfa
 
 - droid-hal-maguro
 - droid-hal-maguro-sailfish-config
