@@ -11,8 +11,7 @@
 %define enable_kernel_update 1
 
 Requires: rfkill
-Requires: bluez >= 4.101+git33
-# Each device that provides files in /etc/ofono should have this provides
+
 Provides:	ofono-configs
 
 %include rpm/droid-hal-device.inc
