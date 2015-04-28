@@ -44,5 +44,10 @@ Requires:
 # brought up (useful during development, available since update10)
 - jolla-rnd-device
 
+# from update13, this is needed explicitly
+- bluez-configs-sailfish
+# hammerhead, grouper, and maguro use this in scripts, so include for all
+- rfkill
+
 Summary: Jolla HW Adaptation @DEVICE@
 

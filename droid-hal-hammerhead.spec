@@ -10,8 +10,6 @@
 
 %define enable_kernel_update 1
 
-Requires: rfkill
-
 Provides:	ofono-configs
 
 %include rpm/droid-hal-device.inc
