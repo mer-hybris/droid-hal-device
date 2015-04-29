@@ -1,5 +1,4 @@
 # These and other macros are documented in dhd/droid-hal-device.inc
-# For devices with modem, you will need to explicitly set ofono plugins here
 
 %define device @DEVICE@
 %define vendor @VENDOR@
