@@ -44,7 +44,7 @@
 #   ExportFilter: \.armv7hl\.rpm$ armv8el
 # We lie about our architecture and allows OBS to cross-publish this 486 cross-built spec to the armv7hl repos
 %if 0%{?device_target_cpu:1}
-%define my_target_cpu %{device_target_cpu}
+%define _target_cpu %{device_target_cpu}
 %else
 %define _target_cpu armv7hl
 %endif
