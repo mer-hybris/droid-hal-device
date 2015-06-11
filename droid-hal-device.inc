@@ -83,8 +83,8 @@ Source0: 	rpm.tar.bzip2
 # local builds don't mind if this is missing
 Source40:       repo.tar.bzip2
 # Reserve Source50 onwards
-# Allow device specific sources to be defined using dhd_sources
-%{?dhd_sources}
+# Allow device specific sources to be defined using dhdev_sources
+%{?dhdev_sources}
 
 Group:		System
 #BuildArch:	noarch
