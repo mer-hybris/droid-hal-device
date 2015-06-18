@@ -36,7 +36,6 @@
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
 %define dhd_path rpm/dhd
-%define rel_date %(date +'%%Y%%m%%d%%H%%M')
 
 # On the OBS this package should be built in the i486 scheduler against
 # mer/sailfish *_i486 targets.
@@ -72,7 +71,13 @@ Summary: 	Droid HAL package for %{rpm_device}
 License: 	BSD-3-Clause
 Name: 		droid-hal-%{rpm_device}
 Version: 	0.0.6
+# timestamped releases are used only for HADK (mb2) builds
+%if 0%{!?local_hadk_build_project:1}
+Release: 	1
+%else
+%define rel_date %(date +'%%Y%%m%%d%%H%%M')
 Release: 	%{rel_date}
+%endif
 Provides:	droid-hal
 Provides:	flash-partition
 # The repo sync service on OBS prepares a 'source tarball' of the rpm
