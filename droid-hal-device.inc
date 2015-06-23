@@ -19,6 +19,7 @@
 # device_variant: for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
 # makefstab_skip_entries: Allow entries into the makefstab unit creation to be skipped
 # have_custom_img_boot: Defined when img-boot is packaged separately from droid-hal-device
+# have_custom_img_recovery: Defined when img-recovery is packaged separately from droid-hal-device
 
 # IMPORTANT if you want to comment out any macros in your .spec, delete the %
 # sign, otherwise they will remain defined! E.g.:
@@ -166,6 +167,7 @@ Requires(post): droid-config-%{rpm_device}
 The boot.img for device
 %endif
 
+%if 0%{!?have_custom_img_recovery:1}
 ################
 %package img-recovery
 Provides: droid-hal-img-recovery
@@ -175,6 +177,7 @@ Summary: Recovery image for droid-hal device: %{rpm_device}
 
 %description img-recovery
 The recovery.img for device
+%endif
 
 ################################################################
 # Begin prep/build section
@@ -420,8 +423,10 @@ mv $RPM_BUILD_ROOT/lib/modules/* $RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE || 
 %if 0%{!?have_custom_img_boot:1}
 cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/boot/
 %endif
-cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 
+%if 0%{!?have_custom_img_recovery:1}
+cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
+%endif
 
 # Everything is installed; get a list of the units we installed to
 # allow the systemd_post to work... and then install that:
@@ -550,7 +555,8 @@ fi
 %endif
 %endif
 
+%if 0%{!?have_custom_img_recovery:1}
 %files img-recovery
 %defattr(644,root,root,-)
 /boot/hybris-recovery.img
-
+%endif
