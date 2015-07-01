@@ -68,7 +68,9 @@ if [ x$MAJOR = x -o x$MINOR = x -o x$PATCH = x ]; then
     IFS="." read MAJOR MINOR PATCH PATCH2 PATCH3 <<EOF
 $(IFS="." awk '/PLATFORM_VERSION := ([0-9.]+)/ { print $3; }' < $VERSION_DEFAULTS)
 EOF
-
+    if [ x$PATCH = x ]; then
+         PATCH=0
+    fi
     if [ x$MAJOR = x -o x$MINOR = x -o x$PATCH = x ]; then
         error "Cannot read PLATFORM_VERSION from ${VERSION_DEFAULTS}."
         error "Please specify MAJOR, MINOR and PATCH manually to continue."
