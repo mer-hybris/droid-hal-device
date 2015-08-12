@@ -414,6 +414,8 @@ touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
 # /boot and modules to /lib as normal
 KERNEL_RELEASE=$(cat out/target/product/%{device}/*/*/include/config/kernel.release)
 cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$KERNEL_RELEASE
+cp out/target/product/%{device}/obj/ROOT/hybris-boot_intermediates/boot-initramfs.gz $RPM_BUILD_ROOT/boot/
+
 MOD_DIR=$RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE
 mkdir -p $MOD_DIR
 cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/. || true
@@ -544,6 +546,7 @@ fi
 %files kernel
 %defattr(644,root,root,-)
 /boot/kernel*
+/boot/boot-initramfs.gz
 
 %files kernel-modules
 %defattr(644,root,root,-)
