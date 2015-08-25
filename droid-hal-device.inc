@@ -20,6 +20,7 @@
 # makefstab_skip_entries: Allow entries into the makefstab unit creation to be skipped
 # have_custom_img_boot: Defined when img-boot is packaged separately from droid-hal-device
 # have_custom_img_recovery: Defined when img-recovery is packaged separately from droid-hal-device
+# pre_actions: command to execute on OBS before `. build/envsetup.sh`, such as choosing correct Java VM
 
 # IMPORTANT if you want to comment out any macros in your .spec, delete the %
 # sign, otherwise they will remain defined! E.g.:
@@ -218,7 +219,7 @@ echo _target_cpu is %{_target_cpu}
 %if 0%{?_obs_build_project:1}
 # Hadk style build of android on OBS 
 echo Running droid build in HABUILD_SDK
-ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; lunch %{device}%{?device_variant}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
+ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; %{?pre_actions}; source build/envsetup.sh; lunch %{device}%{?device_variant}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
 %endif
 
 # Make a tmp location for built installables
