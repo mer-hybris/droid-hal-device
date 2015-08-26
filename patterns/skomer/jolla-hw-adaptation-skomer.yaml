@@ -1,0 +1,56 @@
+# Feel free to disable non-critical HA parts during devel by commenting out
+# Generated in hadk by executing: cd $ANDROID_ROOT; rpm/helpers/add_new_device.sh
+
+Description: Pattern with packages for skomer HW Adaptation
+Name: jolla-hw-adaptation-skomer
+Requires:
+- pattern:jolla-hw-adaptation-hybris
+- pattern:jolla-hw-adaptation-hybris-droid-vibrator
+
+- droid-hal-skomer
+- droid-hal-skomer-sailfish-config
+- droid-hal-skomer-img-boot
+- droid-hal-skomer-pulseaudio-settings
+- droid-hal-skomer-policy-settings
+- droid-hal-skomer-kernel-modules
+- droid-hal-skomer-preinit-plugin
+
+# These need to be per-device due to differing backends (fbdev, eglfs, hwc, ..?)
+- qt5-qtwayland-wayland_egl
+- qt5-qpa-hwcomposer-plugin
+- qtscenegraph-adaptation
+
+#- gstreamer0.10-droidcamsrc
+#- gstreamer0.10-omx
+#- gstreamer0.10-droideglsink
+#- nemo-qtmultimedia-plugins-gstvideotexturebackend
+
+# This will do good after sensors start to work:
+#- mce-plugin-libhybris
+
+## USB mode controller
+# Enables mode selector upon plugging USB cable:
+- usb-moded
+- usb-moded-defaults-android
+- usb-moded-developer-mode-android
+- usb-moded-pc-suite-mode-android
+
+# Extra useful modes not officially supported:
+# might need some configuration to get working
+- usb-moded-mass-storage-android-config
+# working but careful with roaming!
+- usb-moded-connection-sharing-android-config
+# android diag mode only usable for certain android tools
+- usb-moded-diag-mode-android
+
+# jolla-rnd-device will enable usb-moded even when UI is not yet
+# brought up (useful during development, available since update10)
+- jolla-rnd-device
+
+# from update13, this is needed explicitly
+- bluez-configs-sailfish
+# hammerhead, grouper, and maguro use this in scripts, so include for all
+- rfkill
+
+Summary: Jolla HW Adaptation skomer
+
