@@ -178,7 +178,6 @@ The boot.img for device
 %package img-recovery
 Provides: droid-hal-img-recovery
 Group:	System
-BuildArch:	noarch
 Summary: Recovery image for droid-hal device: %{rpm_device}
 
 %description img-recovery
