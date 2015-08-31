@@ -82,7 +82,7 @@ function builddhd() {
     createrepo $LOCAL_REPO
 
     sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      ssu ar local-$DEVICE-hal-$1 file://$LOCAL_REPO
+      ssu ar local-$DEVICE-hal file://$LOCAL_REPO
 
     sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
       zypper ref
