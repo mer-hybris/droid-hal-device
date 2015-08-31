@@ -95,6 +95,10 @@ function buildversion() {
       build
     mv -v RPMS/*.rpm $LOCAL_REPO
     cd ../../
+
+    createrepo $LOCAL_REPO
+    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
+      zypper ref
 }
 
 function yesno() {
