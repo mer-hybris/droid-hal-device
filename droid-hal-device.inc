@@ -21,6 +21,7 @@
 # have_custom_img_boot: Defined when img-boot is packaged separately from droid-hal-device
 # have_custom_img_recovery: Defined when img-recovery is packaged separately from droid-hal-device
 # pre_actions: command to execute on OBS before `. build/envsetup.sh`, such as choosing correct Java VM
+# straggler_files: any files that don'ŧ get packaged automatically, also needs droid-hal-$DEVICE-detritus in patterns
 
 # IMPORTANT if you want to comment out any macros in your .spec, delete the %
 # sign, otherwise they will remain defined! E.g.:
@@ -182,6 +183,14 @@ Summary: Recovery image for droid-hal device: %{rpm_device}
 
 %description img-recovery
 The recovery.img for device
+%endif
+
+%if 0%{?straggler_files:1}
+################
+%package detritus
+Summary: Straggler files for %{device} hw
+%description detritus
+%{summary}.
 %endif
 
 ################################################################
@@ -567,4 +576,10 @@ fi
 %files img-recovery
 %defattr(644,root,root,-)
 /boot/hybris-recovery.img
+%endif
+
+%if 0%{?straggler_files:1}
+%files detritus
+%defattr(644,root,root,-)
+%{?straggler_files}
 %endif
