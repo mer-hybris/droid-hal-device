@@ -225,6 +225,16 @@ cp %{SOURCE40} %{SOURCE0}
 echo _target_cpu is %{_target_cpu}
 
 %if 0%{?_obs_build_project:1}
+
+# Set up kernel extra version for OBS kernel builds
+if EXTRAVERSION_OLD=$(cat %android_root/kernel/Makefile | grep "EXTRAVERSION ="); then
+    sed -i "s/$EXTRAVERSION_OLD/EXTRAVERSION = +%{version}/g" %android_root/kernel/Makefile
+elif EXTRAVERSION_OLD=$(cat %android_root/linux/kernel/Makefile | grep "EXTRAVERSION ="); then
+    sed -i "s/$EXTRAVERSION_OLD/EXTRAVERSION = +%{version}/g" %android_root/linux/kernel/Makefile
+else
+    echo "Kernel Makefile not found, skipping EXTRAVERSION appending"
+fi
+
 # Hadk style build of android on OBS 
 echo Running droid build in HABUILD_SDK
 ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; %{?pre_actions}; source build/envsetup.sh; lunch %{device}%{?device_variant}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
