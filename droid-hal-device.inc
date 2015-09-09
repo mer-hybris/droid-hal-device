@@ -21,7 +21,7 @@
 # have_custom_img_boot: Defined when img-boot is packaged separately from droid-hal-device
 # have_custom_img_recovery: Defined when img-recovery is packaged separately from droid-hal-device
 # pre_actions: command to execute on OBS before `. build/envsetup.sh`, such as choosing correct Java VM
-# straggler_files: any files that don'ŧ get packaged automatically, also needs droid-hal-$DEVICE-detritus in patterns
+# straggler_files: any files that don't get packaged automatically, also needs droid-hal-$DEVICE-detritus in patterns
 
 # IMPORTANT if you want to comment out any macros in your .spec, delete the %
 # sign, otherwise they will remain defined! E.g.:
