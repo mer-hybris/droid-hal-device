@@ -381,6 +381,17 @@ cat <<EOF >> $HDRS/android-config.h.new
 /* Added by Droid HAL packaging for %{rpm_device} */
 %{?android_config}
 EOF
+# Detect QCOM_BSP and add the define into android-config.h if needed
+if (grep -q '^TARGET_USES_QCOM_BSP := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk || \
+    (grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk && \
+     grep -q '^BOARD_USES_QCOM_HARDWARE := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk)); then
+
+    echo Found QCOM_BSP
+    cat <<EOF >> $HDRS/android-config.h.new
+/* Added by automatic QCOM_BSP detection */
+#define QCOM_BSP 1
+EOF
+fi
 sed '0,/CONFIG GOES HERE/d' $HDRS/android-config.h >> $HDRS/android-config.h.new
 mv $HDRS/android-config.h.new $HDRS/android-config.h
 
