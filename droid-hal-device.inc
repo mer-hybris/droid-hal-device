@@ -435,6 +435,13 @@ KERNEL_RELEASE=$(cat out/target/product/%{device}/*/*/include/config/kernel.rele
 cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$KERNEL_RELEASE
 cp out/target/product/%{device}/obj/ROOT/hybris-boot_intermediates/boot-initramfs.gz $RPM_BUILD_ROOT/boot/
 
+echo "/boot/kernel-$KERNEL_RELEASE" > kernel.files
+echo "/boot/boot-initramfs.gz" >> kernel.files
+
+if cp out/target/product/%{device}/dt.img $RPM_BUILD_ROOT/boot/ &> /dev/null; then
+    echo /boot/dt.img >> kernel.files
+fi
+
 MOD_DIR=$RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE
 mkdir -p $MOD_DIR
 cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/. || true
@@ -562,10 +569,8 @@ fi
 %{_bindir}/img2simg
 %{_bindir}/simg2img
 
-%files kernel
+%files kernel -f kernel.files
 %defattr(644,root,root,-)
-/boot/kernel*
-/boot/boot-initramfs.gz
 
 %files kernel-modules
 %defattr(644,root,root,-)
