@@ -21,6 +21,8 @@ fi
 
 cd $CONFIG_DIR
 
+echo Creating the following nodes:
+
 if [[ -e $ROOTFS_DIR && ! $1 == "-y" ]]; then
     read -p "Device $DEVICE appears to be already created. Re-generate patterns? [Y/n] " -n 1 -r
     REPLY=${REPLY:-Y}
@@ -32,8 +34,6 @@ else
     echo $ROOTFS_DIR/
     mkdir -p $ROOTFS_DIR
 fi
-
-echo Creating the following nodes:
 
 echo $PATTERNS_DEVICE_DIR/
 
