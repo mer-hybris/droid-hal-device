@@ -66,7 +66,7 @@ function buildconfigs() {
     cd hybris/droid-configs
     mb2 -t $VENDOR-$DEVICE-$ARCH \
         -s rpm/droid-config-$DEVICE.spec \
-         build
+         build || die
     mv -v RPMS/*.rpm $LOCAL_REPO || die
     cd ../../
 
@@ -76,7 +76,7 @@ function buildconfigs() {
 }
 
 function builddhd() {
-    mb2 -t $VENDOR-$DEVICE-$ARCH -s rpm/droid-hal-$DEVICE.spec build
+    mb2 -t $VENDOR-$DEVICE-$ARCH -s rpm/droid-hal-$DEVICE.spec build || die
 
     mv -v RPMS/*$DEVICE* $LOCAL_REPO
     createrepo $LOCAL_REPO
@@ -92,7 +92,7 @@ function buildversion() {
     cd hybris/droid-hal-version-$DEVICE
     mb2 -t $VENDOR-$DEVICE-$ARCH \
       -s rpm/droid-hal-version-$DEVICE.spec \
-      build
+      build || die
     mv -v RPMS/*.rpm $LOCAL_REPO
     cd ../../
 
