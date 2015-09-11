@@ -58,7 +58,7 @@ builddhd
 buildconfigs
 echo "-------------------------------------------------------------------------------"
 
-read -p 'About to perform "Build HA Middleware Packages" HADK chapter. Press Enter to continue.'
+read -p 'About to build HA middleware packages. Press Enter to continue.'
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu domain sales
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu dr sdk
 
