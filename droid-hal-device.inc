@@ -309,14 +309,6 @@ MER_HA_SAILFISH_FLAVOUR=%{_build_flavour}
 MER_HA_HOME_URL="https://sailfishos.org/"
 EOF
 
-# Grab a snapshot of the git state from repo
-if [ -e ./repo_service_manifest.xml ] ; then
-   # The OBS service helpfully dropped a repo manifest file here:
-   mv ./repo_service_manifest.xml tmp/manifest.xml
-else
-   ./.repo/repo/repo manifest -r -o tmp/manifest.xml
-fi
-
 ################
 %install
 echo install $(cat tmp/units/all-units.txt)
@@ -365,9 +357,6 @@ cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_lib
 
 HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
 mkdir -p $HDRS
-
-# Store the 'as built' manifest
-cp tmp/manifest.xml $HDRS/repo-manifest.xml
 
 # Run extract-headers.sh
 echo "Extracting headers for hybris"
