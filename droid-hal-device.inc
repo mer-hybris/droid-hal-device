@@ -75,7 +75,7 @@ License: 	BSD-3-Clause
 Name: 		droid-hal-%{rpm_device}
 Version: 	0.0.6
 # timestamped releases are used only for HADK (mb2) builds
-%if 0%{!?local_hadk_build_project:1}
+%if 0%{?_obs_build_project:1}
 Release: 	1
 %else
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
