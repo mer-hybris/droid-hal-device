@@ -135,7 +135,7 @@ function buildmw {
         [ -f "$LOG" ] && rm "$LOG"
 
         if [ ! -d $PKG ] ; then
-            minfo "Source code directory doesn't exist, clonig repository"
+            minfo "Source code directory doesn't exist, cloning repository"
             git clone $GIT_URL >>$LOG 2>&1|| die_with_log "$LOG" "cloning of $GIT_URL failed"
         fi
 
@@ -188,7 +188,7 @@ function buildmwb {
         [ -f "$LOG" ] && rm "$LOG"
 
         if [ ! -d $PKG ] ; then
-            minfo "Source code directory doesn't exist, clonig repository"
+            minfo "Source code directory doesn't exist, cloning repository"
             git clone $GIT_URL -b $GIT_BRANCH>>$LOG 2>&1|| die_with_log "$LOG" "cloning of $GIT_URL failed"
         fi
 
