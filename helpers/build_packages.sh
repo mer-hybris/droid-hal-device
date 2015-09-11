@@ -51,6 +51,7 @@ if [ ! -d rpm/dhd ]; then
     exit 1
 fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
+mkdir -p $LOCAL_REPO
 rm -rf $LOCAL_REPO/droid-hal-*
 rm -rf $LOCAL_REPO/droid-config-*
 builddhd
