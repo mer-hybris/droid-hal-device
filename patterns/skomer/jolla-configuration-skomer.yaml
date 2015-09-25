@@ -1,0 +1,11 @@
+# Feel free to disable non-critical HA parts during devel by commenting out
+# Generated in hadk by executing: cd $ANDROID_ROOT; rpm/helpers/add_new_device.sh
+
+Description: Pattern with packages for skomer configurations
+Name: jolla-configuration-skomer
+Requires:
+- pattern:jolla-hw-adaptation-skomer
+- pattern:jolla-configuration-sfe
+
+Summary: Jolla Configuration skomer
+
