@@ -73,8 +73,6 @@ buildmw libhybris || die
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-build zypper -n rm mesa-llvmpipe
 buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
 buildmw ngfd-plugin-droid-vibrator || die
-buildmw "https://github.com/nemomobile/policy-settings-common.git" rpm/policy-settings-common.spec || die
-buildmw "https://github.com/nemomobile/pulseaudio-policy-enforcement.git" rpm/pulseaudio-policy-enforcement.spec || die
 buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die
 buildmw qt5-feedback-haptics-droid-vibrator || die
 buildmw qt5-qpa-hwcomposer-plugin || die
