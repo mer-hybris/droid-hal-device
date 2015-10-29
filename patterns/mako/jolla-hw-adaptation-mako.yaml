@@ -30,9 +30,21 @@ Requires:
 - qt5-qtdeclarative-import-positioning
 - qt5-qtdeclarative-import-sensors
 
+# since 1.1.9 api this is requiered for cellular functionality
+- jolla-sailfish-cellular-apps
+- telepathy-ring
+
+# For 1.1.7 only: provide settings layout for a device with valid GSM modem.
+# # Updates after 1.1.7 will autodetect the modem presence during runtime and change
+# # layout accordingly
+- jolla-settings-layout
+
 # This is a temporary acceptable hack to have mako orientation sensors 
 # See README for full description: https://github.com/mer-hybris/unblank-restart-sensors
 - unblank-restart-sensors
+
+# Needed for gps
+- geoclue-provider-hybris-community
 
 # This is needed for notification LEDs:
 - mce-plugin-libhybris
