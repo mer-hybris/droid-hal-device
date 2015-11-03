@@ -22,6 +22,7 @@
 # have_custom_img_recovery: Defined when img-recovery is packaged separately from droid-hal-device
 # pre_actions: command to execute on OBS before `. build/envsetup.sh`, such as choosing correct Java VM
 # straggler_files: any files that don't get packaged automatically, also needs droid-hal-$DEVICE-detritus in patterns
+# provides_own_headers: extract-headers.sh script is not run, but android-config.h is generated.
 
 # IMPORTANT if you want to comment out any macros in your .spec, delete the %
 # sign, otherwise they will remain defined! E.g.:
@@ -359,9 +360,15 @@ HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
 mkdir -p $HDRS
 
 # Run extract-headers.sh
+%if 0%{!?provides_own_headers:1}
 echo "Extracting headers for hybris"
 # This is copied from libhybris and should be kept in-sync:
 %{dhd_path}/helpers/extract-headers.sh -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
+%else
+pushd %{android_root}/rpm/droid-headers 1>/dev/null
+make install DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} INCLUDEDIR=%{_libdir}/droid-devel/droid-headers
+popd 1>/dev/null
+%endif
 
 # Add our config into the default android-config.h
 echo Making new $HDRS/android-config.h
@@ -385,8 +392,10 @@ sed '0,/CONFIG GOES HERE/d' $HDRS/android-config.h >> $HDRS/android-config.h.new
 mv $HDRS/android-config.h.new $HDRS/android-config.h
 
 # Move the pkgconfig .pc to the correct location
+%if 0%{!?provides_own_headers:1}
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
+%endif
 
 # If this ever becomes unmanageable then
 # grep -l dev/alog %%{android_root}/out/target/product/%{device}/system/lib/*
