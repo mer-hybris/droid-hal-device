@@ -300,16 +300,15 @@ all:
 
 install:
 	mkdir -p \$(DESTDIR)/\$(INCLUDEDIR)
-	cp -r src/* \$(DESTDIR)/\$(INCLUDEDIR)
+	cp -r * \$(DESTDIR)/\$(INCLUDEDIR)
+	rm -f \$(DESTDIR)/\$(INCLUDEDIR)/Makefile
+	rm -f \$(DESTDIR)/\$(INCLUDEDIR)/android-headers.pc.in
 	mkdir -p \$(DESTDIR)/\$(PREFIX)/lib/pkgconfig
 	sed -e 's;@prefix@;\$(PREFIX)/;g; s;@includedir@;\$(INCLUDEDIR);g' android-headers.pc.in > \$(DESTDIR)/\$(PREFIX)/lib/pkgconfig/android-headers.pc
 EOF
 
     echo "Creating ${HEADER_PATH}/android-headers.pc.in"
     cat > ${HEADER_PATH}/android-headers.pc.in << EOF
-prefix=@prefix@
-includedir=@includedir@
-
 Name: android-headers
 Description: Provides the headers for the droid system
 Version: ${MAJOR}.${MINOR}.${PATCH}
