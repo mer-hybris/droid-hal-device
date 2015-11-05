@@ -353,6 +353,8 @@ rm -f $RPM_BUILD_ROOT/sbin/modprobe
 sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
 
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
+# Remove kernel modules if installed under /system/lib/modules
+rm -rf $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/modules
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 
