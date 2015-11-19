@@ -1,10 +1,12 @@
 # This file should be %%included into a device specific spec file
 # where macros are defined:
-# device: should be the CM codename 
+# device: should be the CM codename or the AOSP TARGET_PRODUCT
 # vendor: determine the directory used for ./device/<vendor>/<device>
 # device_pretty: User-visible model name of the device
 # vendor_pretty: User-visible manufacturer name of the device
 # hadk_make_target: the target used when running make in the HABUILD_SDK on the OBS. Defaults to "hybris-hal"
+# device_target_cpu: Used for native builds. Normally the nested droid build env will do an old-fashioned cross-compile and produce non-x86 binaries (default armv7hl). This can be set to tell OBS what arch the binaries are. Eg Android for Intel arch must set this.
+# device_variant: for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
 
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
@@ -15,7 +17,11 @@
 # The prjconf should have an ExportFilter like this (mer/sailfish has this):
 #   ExportFilter: \.armv7hl\.rpm$ armv8el
 # We lie about our architecture and allows OBS to cross-publish this 486 cross-built spec to the armv7hl repos
+%if 0%{?device_target_cpu:1}
+%define my_target_cpu %{device_target_cpu}
+%else
 %define _target_cpu armv7hl
+%endif
 
 # Support build info extracted from OBS builds too
 %if 0%{?_obs_build_project:1}
@@ -51,16 +57,12 @@ Provides:	flash-partition
 # doesn't like. This is not a problem for local builds.
 Source0: 	rpm.tar.bzip2
 Source1: 	makefstab
-Source2: 	usergroupgen.c
 Source3:        makeudev
-Source4:        apply-permissions.c
-Source5:        makefile
 Source7:        device-%{vendor}-%{device}-configs
 Source8:        hybris.conf
 Source10:       droid-hal-device.inc
 # This is copied from libhybris and should be kept in-sync:
 Source11:	extract-headers.sh
-Source12:       init-debug
 # This is not copied from libhybris and should not be kept in-sync:
 Source13:       device-configs-all
 Source14:       droid.kmap
@@ -250,10 +252,12 @@ cp %{SOURCE40} %{SOURCE0}
 
 %build
 
+echo _target_cpu is %{_target_cpu}
+
 %if 0%{?_obs_build_project:1}
 # Hadk style build of android on OBS 
 echo Running droid build in HABUILD_SDK
-ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; breakfast %{device}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
+ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; source build/envsetup.sh; lunch %{device}%{?device_variant}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
 %endif
 
 # Make a tmp location for built installables
@@ -261,18 +265,17 @@ rm -rf tmp
 mkdir tmp
 
 echo Verifying kernel config
+# AOSP seems to use .../obj/kernel/.config not obj/KERNEL_OBJ/.config like CM : so wildcard it
 hybris/mer-kernel-check/mer_verify_kernel_config \
-    %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
+    %{android_root}/out/target/product/%{device}/obj/*/.config
 
 echo Building local tools
-mkdir tmp/rpmsrc
-cp %{SOURCE2} %{SOURCE4} tmp/rpmsrc/
 ANDROID_ROOT=$(readlink -e %{android_root})
-(cd tmp/rpmsrc; make ANDROID_ROOT=$ANDROID_ROOT -f %{SOURCE5})
+(cd helpers; make ANDROID_ROOT=$ANDROID_ROOT)
 
 echo Building uid scripts
-tmp/rpmsrc/usergroupgen add > tmp/rpmsrc/droid-user-add.sh
-tmp/rpmsrc/usergroupgen remove > tmp/rpmsrc/droid-user-remove.sh
+helpers/usergroupgen add > helpers/droid-user-add.sh
+helpers/usergroupgen remove > helpers/droid-user-remove.sh
 
 echo Building udev rules
 mkdir tmp/udev.rules
@@ -400,15 +403,15 @@ cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 ln -s /dev/null $RPM_BUILD_ROOT/etc/udev/rules.d/60-persistent-v4l.rules 
 
 # Install init-debug which will provide usb access and non-blocking telnet
-cp -a %{SOURCE12} $RPM_BUILD_ROOT/
+cp -a %{android_root}/hybris/hybris-boot/init-script $RPM_BUILD_ROOT/init-debug
 
 # droid user support This may be better done by passing a list of
 # users/groups and running 'ensure_usergroups_exist newlist oldlist'
 # which would preserve oldlist in %%post and delete any users no longer
 # needed (unlikely!). This avoids the transient removal of uids and
 # group issues
-install -D tmp/rpmsrc/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
-install -D tmp/rpmsrc/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
+install -D helpers/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
+install -D helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
 # Add the dsp support binaries
 cp rpm/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
@@ -417,8 +420,6 @@ cp rpm/dsp/bin/* $RPM_BUILD_ROOT/%{_bindir}/droid
 install -m 0744 rpm/dsp/preinit/* $RPM_BUILD_ROOT%{_libdir}/startup/preinit/
 ln -s /bin/false $RPM_BUILD_ROOT%{_libdir}/startup/preinit/is_total_erase_supported
 
-# droid permission fixer
-install -D tmp/rpmsrc/apply-permissions $RPM_BUILD_ROOT%{_libdir}/droid/apply-permissions
 
 # Remove cruft
 rm -f $RPM_BUILD_ROOT/fstab.*
@@ -488,14 +489,13 @@ touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
 
 # Kernel and module installation; to
 # /boot and modules to /lib as normal
-KERNEL_RELEASE=$(cat out/target/product/%{device}/obj/KERNEL_OBJ/include/config/kernel.release)
+KERNEL_RELEASE=$(cat out/target/product/%{device}/obj/*/include/config/kernel.release)
 cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$KERNEL_RELEASE
 MOD_DIR=$RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE
 mkdir -p $MOD_DIR
-cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/.
-cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/.
-cp -a out/target/product/%{device}/obj/KERNEL_OBJ/modules.builtin $MOD_DIR/. || true
-cp -a out/target/product/%{device}/obj/KERNEL_OBJ/modules.order $MOD_DIR/. || true
+cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/. || true
+cp -a out/target/product/%{device}/obj/*/modules.builtin $MOD_DIR/. || true
+cp -a out/target/product/%{device}/obj/*/modules.order $MOD_DIR/. || true
 
 # Images are installed to /boot - they'll probably be unpacked using
 # rpm2cpio mostly anyhow
@@ -581,7 +581,6 @@ fi
 # This binary should probably move to /sbin/
 %{_libdir}/droid/droid-user-add.sh
 %{_libdir}/droid/droid-user-remove.sh
-%{_libdir}/droid/apply-permissions
 %{_libdir}/droid/all-units.txt
 %{board_mapping_file}
 # Created in %%post
