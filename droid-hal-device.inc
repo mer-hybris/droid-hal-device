@@ -12,6 +12,7 @@
 # Device capabilities:
 # installable_zip: adds zip updater scripts (default for all SFE devices)
 # enable_kernel_update: ability to flash kernel partition, inspect the usage of this macro
+# enable_bootloader_update: ability to flash aboot partition, inspect the usage of this macro
 #
 # Miscellaneous:
 # hadk_make_target: the target used when running make in the HABUILD_SDK on the OBS. Defaults to "hybris-hal"
@@ -20,6 +21,7 @@
 # makefstab_skip_entries: Allow entries into the makefstab unit creation to be skipped
 # have_custom_img_boot: Defined when img-boot is packaged separately from droid-hal-device
 # have_custom_img_recovery: Defined when img-recovery is packaged separately from droid-hal-device
+# bootloader_binary: Define bootloader binary name when aboot is packaged separately from droid-hal-device
 # pre_actions: command to execute on OBS before `. build/envsetup.sh`, such as choosing correct Java VM
 # straggler_files: any files that don't get packaged automatically, also needs droid-hal-$DEVICE-detritus in patterns
 # provides_own_headers: extract-headers.sh script is not run, but android-config.h is generated.
@@ -184,6 +186,20 @@ Summary: Recovery image for droid-hal device: %{rpm_device}
 
 %description img-recovery
 The recovery.img for device
+%endif
+
+%if 0%{?bootloader_binary:1}
+################
+%package aboot
+Group:  System
+Summary: Bootloader for %{device} hw
+%if 0%{?enable_bootloader_update:1}
+# The device flashing info and scripts is now in droid-configs
+Requires(post): droid-config-%{rpm_device}
+%endif
+
+%description aboot
+Bootloader for %{device} hw.
 %endif
 
 %if 0%{?straggler_files:1}
@@ -472,6 +488,10 @@ cp out/target/product/%{device}/hybris-boot.img $RPM_BUILD_ROOT/boot/
 cp out/target/product/%{device}/hybris-recovery.img $RPM_BUILD_ROOT/boot/
 %endif
 
+%if 0%{?bootloader_binary:1}
+cp out/target/product/%{device}/%{?bootloader_binary} $RPM_BUILD_ROOT/boot/
+%endif
+
 # Everything is installed; get a list of the units we installed to
 # allow the systemd_post to work... and then install that:
 echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
@@ -534,6 +554,17 @@ done
 # installation is done when we flash device.
 if [ $1 -ne 1 ] ; then
   add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh
+fi
+%endif
+%endif
+
+%if 0%{?bootloader_binary:1}
+%if 0%{?enable_bootloader_update:1}
+%post aboot
+# This oneshot is enabled only during package upgrades, as initial
+# installation is done when we flash device.
+if [ $1 -ne 1 ] ; then
+  add-preinit-oneshot /var/lib/platform-updates/flash-aboot.sh
 fi
 %endif
 %endif
@@ -602,6 +633,12 @@ fi
 %files img-recovery
 %defattr(644,root,root,-)
 /boot/hybris-recovery.img
+%endif
+
+%if 0%{?bootloader_binary:1}
+%files aboot
+%defattr(644,root,root,-)
+/boot/%{?bootloader_binary}
 %endif
 
 %if 0%{?straggler_files:1}
