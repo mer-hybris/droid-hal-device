@@ -201,6 +201,10 @@ extract_headers_to log \
 extract_headers_to system \
     system/core/include/system
 
+check_header_exists system/media/audio/include/system/audio.h && \
+    extract_headers_to system \
+        system/media/audio/include/system
+
 extract_headers_to android \
     system/core/include/android
 
