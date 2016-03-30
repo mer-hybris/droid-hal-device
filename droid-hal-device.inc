@@ -420,8 +420,7 @@ make ANDROID_ROOT=$ANDROID_ROOT IMG2SIMG_SOURCES="$IMG2SIMG_SOURCES" SIMG2IMG_SO
 popd
 
 echo Building uid scripts
-%{dhd_path}/helpers/usergroupgen add > %{dhd_path}/helpers/droid-user-add.sh
-%{dhd_path}/helpers/usergroupgen remove > %{dhd_path}/helpers/droid-user-remove.sh
+%{dhd_path}/helpers/usergroupgen > %{dhd_path}/helpers/droid.ids
 
 echo Building udev rules
 mkdir tmp/udev.rules
@@ -609,13 +608,8 @@ else
 cp -a %{android_root}/hybris/hybris-boot/hb/init-script $RPM_BUILD_ROOT/init-debug
 fi
 
-# droid user support This may be better done by passing a list of
-# users/groups and running 'ensure_usergroups_exist newlist oldlist'
-# which would preserve oldlist in %%post and delete any users no longer
-# needed (unlikely!). This avoids the transient removal of uids and
-# group issues
-install -D %{dhd_path}/helpers/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
-install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
+# droid user support
+install -D %{dhd_path}/helpers/droid.ids $RPM_BUILD_ROOT%{_libdir}/droid/droid.ids
 
 # Remove cruft, unless the file is listed in straggler_files
 
@@ -678,7 +672,7 @@ done
 cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
 # This ghost file must exist in the installroot
-touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
+touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid.ids.created
 
 echo "#!/bin/sh" > $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh
 if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
@@ -743,7 +737,26 @@ done
 # Only run this during final cleanup
 if [ $1 -eq 0 ]; then
     echo purging old droid users and groups
-    %{_libdir}/droid/droid-user-remove.sh.installed || :
+    cat %{_libdir}/droid/droid.ids.created |while read name id; do
+        userdel -f $name
+        groupdel $name
+        sed -i "/^$name $id\$/d" droid.ids.created
+    done || :
+fi
+
+%pre
+#Compatibility with old droid-hal version - convert previous format
+#of droid-specific user/group information to current one.
+cd %{_libdir}/droid
+if [ $1 -gt 1 -a \
+     -e droid-user-remove.sh.installed -a \
+     -e droid-user-add.sh ]; then
+  #We've got the previous data in a shell-style generated text file. Convert.
+  #Only user/group name and ID is important, username=groupname, uid=gid.
+  sed -n -e 's/^groupadd -g \(.*\) \(.*\)/\2 \1/p' \
+      droid-user-add.sh > droid.ids.created || :
+  #Truncate the old file. rpm will remove it on its own.
+  echo '#!/bin/sh' > droid-user-remove.sh.installed
 fi
 
 %post
@@ -751,17 +764,29 @@ for u in $(cat %{_libdir}/droid/all-units.txt); do
 %systemd_post $u
 done
 cd %{_libdir}/droid
-# Upgrade: remove users using stored file, then add new ones
-if [ $1 -eq 2 ]; then
-    # Remove installed users (at this point droid-user-remove.sh
-    # refers to the new set of UIDs)
-    echo removing old droid users and groups
-    ./droid-user-remove.sh.installed || :
+# Upgrade: Check which users and groups were changed
+# between the previous version of droid-hal and current
+if [ $1 -gt 1 ]; then
+    ## Find users/groups that were removed by the current droid-hal ##
+    echo removing no longer used droid-hal users and groups
+    grep -v -F -x -f droid.ids droid.ids.created |while read name id; do
+        userdel -f $name
+        groupdel $name
+        sed -i "/^$name $id\$/d" droid.ids.created
+    done || :
 fi
-# Now for both install/update add the users and force-store a removal file
+# Now for both install/update add the users and mark which were added already
 echo creating droid users and groups
-./droid-user-add.sh || :
-cp -f droid-user-remove.sh droid-user-remove.sh.installed
+# On fresh installs, the file is not there at all and would break grep below
+if [ ! -e droid.ids.created ]; then
+    touch droid.ids.created
+fi
+
+grep -v -F -x -f droid.ids.created droid.ids |while read name id; do
+    groupadd -g $id $name || :
+    useradd -M -N -s /sbin/nologin -d / -u $id -g $id $name || :
+    echo $name $id >> droid.ids.created
+done
 
 # Now ensure default user has access to various subsystems this HA provides
 # These are the default android ones:
@@ -836,13 +861,12 @@ fi
 %defattr(-,root,root,-)
 /sbin/*
 # This binary should probably move to /sbin/
-%{_libdir}/droid/droid-user-add.sh
-%{_libdir}/droid/droid-user-remove.sh
+%{_libdir}/droid/droid.ids
 %{_libdir}/droid/all-units.txt
 # Created in %%post
 # init-debug
 %attr(755,root,root) /init-debug
-%ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
+%ghost %attr(755, root, root) %{_libdir}/droid/droid.ids.created
 %attr(755, root, root) %{_libdir}/droid/generated-post-scripts.sh
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
