@@ -86,6 +86,10 @@ function builddhd() {
 
     sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
       zypper ref
+
+    # pickup any changes in case dhd has been rebuilt before
+    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
+      zypper dup --from local-$DEVICE-hal
 }
 
 function buildversion() {
