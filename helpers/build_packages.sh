@@ -70,7 +70,7 @@ mkdir -p $MER_ROOT/devel/mer-hybris
 pushd $MER_ROOT/devel/mer-hybris
 
 buildmw libhybris || die
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-build zypper -n rm mesa-llvmpipe
+sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n rm mesa-llvmpipe
 buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
 buildmw ngfd-plugin-droid-vibrator || die
 buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die
