@@ -39,7 +39,7 @@
 %define rpm_vendor %vendor
 %endif
 
-%define __requires_exclude ^/system/bin/.*$
+%define __requires_exclude ^/system/.*$
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
 %define dhd_path rpm/dhd
