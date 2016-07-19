@@ -192,6 +192,10 @@ extract_headers_to hardware_legacy \
     hardware/libhardware_legacy/include/hardware_legacy/vibrator.h \
     hardware/libhardware_legacy/include/hardware_legacy/audio_policy_conf.h
 
+check_header_exists system/media/camera/include/system/camera_vendor_tags.h && \
+    extract_headers_to system \
+        system/media/camera/include/system/camera_vendor_tags.h
+
 extract_headers_to cutils \
     system/core/include/cutils
 
