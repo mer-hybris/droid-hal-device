@@ -34,7 +34,7 @@
 
 source ~/.hadk.env
 
-ARCH="${ARCH:-armv7hl}"
+ARCH="${PORT_ARCH:-armv7hl}"
 
 function minfo {
     echo -e "\e[01;34m* $* \e[00m"
