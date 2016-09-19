@@ -332,6 +332,7 @@ echo install $(cat tmp/units/all-units.txt)
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
+mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib64-dev-alog/
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
@@ -368,7 +369,7 @@ rm -f $RPM_BUILD_ROOT/sbin/modprobe
 # Now remove the mount commands from any .rc files as they're included in .mount unit files now
 sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
 
-cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
+cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib,lib64} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 # Remove kernel modules if installed under /system/lib/modules
 rm -rf $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/modules
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
@@ -419,6 +420,7 @@ mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 # grep -l dev/alog %%{android_root}/out/target/product/%{device}/system/lib/*
 # libdsyscalls.so and libc.so are blacklisted
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
+ln -s ../system/lib64/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib64-dev-alog/.
 
 cp -a tmp/units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
 
@@ -598,8 +600,10 @@ fi
 %{_unitdir}
 # hybris and /dev/alog/ libraries
 %{_libexecdir}/droid-hybris/system/lib/
+%{_libexecdir}/droid-hybris/system/lib64/
 # just /dev/alog/ libraries (for trying to run pure android apps)
 %{_libexecdir}/droid-hybris/lib-dev-alog/.
+%{_libexecdir}/droid-hybris/lib64-dev-alog/.
 /lib/udev/rules.d/*
 # Droid config droppings
 /*.rc
