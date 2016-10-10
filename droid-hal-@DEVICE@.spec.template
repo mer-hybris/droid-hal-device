@@ -1,0 +1,11 @@
+# These and other macros are documented in dhd/droid-hal-device.inc
+
+%define device @DEVICE@
+%define vendor @VENDOR@
+
+%define vendor_pretty @VENDOR_PRETTY@
+%define device_pretty @DEVICE_PRETTY@
+
+%define installable_zip 1
+
+%include rpm/dhd/droid-hal-device.inc
