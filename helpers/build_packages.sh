@@ -65,6 +65,11 @@ sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu dr sdk
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref -f
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n install droid-hal-$DEVICE-devel
 
+if [ ! -d $MER_ROOT/devel ]; then
+    sudo mkdir $MER_ROOT/devel
+    sudo chown -R $USER $MER_ROOT/devel
+fi
+
 rm -rf $MER_ROOT/devel/mer-hybris
 mkdir -p $MER_ROOT/devel/mer-hybris
 pushd $MER_ROOT/devel/mer-hybris
