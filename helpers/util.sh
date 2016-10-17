@@ -56,7 +56,7 @@ function die {
 function die_with_log {
     if [ -f "$1" ] ; then
         tail -n10 "$1"
-        minfo "Check `dirname $(pwd)`/`basename $1` for full log."
+        minfo "Check $1 for full log."
     fi
     shift
     die $*
