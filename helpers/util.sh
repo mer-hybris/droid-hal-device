@@ -134,7 +134,7 @@ function buildmw {
             minfo "No git url specified, assuming $GIT_URL"
         fi
 
-        cd "$MER_ROOT/devel/mer-hybris" || die
+        cd "$ANDROID_ROOT/hybris/mw" || die
         LOG="`pwd`/$PKG.log"
         [ -f "$LOG" ] && rm "$LOG"
 
@@ -187,7 +187,7 @@ function buildmwb {
             minfo "No git url specified, assuming $GIT_URL"
         fi
 
-        cd "$MER_ROOT/devel/mer-hybris" || die
+        cd "$ANDROID_ROOT/hybris/mw" || die
         LOG="`pwd`/$PKG.log"
         [ -f "$LOG" ] && rm "$LOG"
 
