@@ -86,7 +86,6 @@ Release: 	1
 Release: 	%{rel_date}
 %endif
 Provides:	droid-hal
-Provides:	flash-partition
 # The repo sync service on OBS prepares a 'source tarball' of the rpm
 # dir since we currently have a complex setup with subdirs which OBS
 # doesn't like. This is not a problem for local builds.
@@ -171,7 +170,7 @@ Requires: oneshot
 Summary: Boot img for droid-hal device: %{rpm_device}
 %if 0%{?enable_kernel_update:1}
 # The device flashing info and scripts is now in droid-configs
-Requires(post): droid-config-%{rpm_device}
+Requires(post): droid-config-%{rpm_device}-flashing
 %endif
 
 %description img-boot
@@ -196,7 +195,7 @@ Group:  System
 Summary: Bootloader for %{device} hw
 %if 0%{?enable_bootloader_update:1}
 # The device flashing info and scripts is now in droid-configs
-Requires(post): droid-config-%{rpm_device}
+Requires(post): droid-config-%{rpm_device}-flashing
 %endif
 
 %description aboot
