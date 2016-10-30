@@ -35,6 +35,7 @@
 source ~/.hadk.env
 
 ARCH="${PORT_ARCH:-armv7hl}"
+BUILDALL=n
 
 function minfo {
     echo -e "\e[01;34m* $* \e[00m"
@@ -105,11 +106,18 @@ function buildversion() {
       zypper ref
 }
 
-function yesno() {
-    read -r -p "${1:-} [Y/n]" REPLY
+function yesnoall() {
+    if [ $BUILDALL == "y" ]; then
+        return `true`
+    fi
+    read -r -p "${1:-} [Y/n/all]" REPLY
     REPLY=${REPLY:-y}
     case $REPLY in
        [yY])
+       true
+       ;;
+    [aA])
+       BUILDALL=y
        true
        ;;
     *)
@@ -127,7 +135,7 @@ function buildmw {
 
 
     PKG="$(basename ${GIT_URL%.git})"
-    yesno "Build $PKG?"
+    yesnoall "Build $PKG?"
     if [ $? == "0" ]; then
         if [ "$GIT_URL" = "$PKG" ]; then
             GIT_URL=https://github.com/mer-hybris/$PKG.git
@@ -180,7 +188,7 @@ function buildmwb {
 
 
     PKG="$(basename ${GIT_URL%.git})"
-    yesno "Build $PKG?"
+    yesnoall "Build $PKG?"
     if [ $? == "0" ]; then
         if [ "$GIT_URL" = "$PKG" ]; then
             GIT_URL=https://github.com/mer-hybris/$PKG.git
