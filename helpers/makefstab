@@ -76,12 +76,28 @@ for my $file (@files) {
 
     # From: http://www.freedesktop.org/software/systemd/man/systemd.unit.html :
     # For unit names reflecting paths
-    # Example: a device unit dev-sda.device == /dev/sda Given a
-    # path, "/" is replaced by "-",
-    ($unitname = $mnt_point) =~ tr(/)(-) ;
-    # and all unprintable characters and the "-" are replaced by
-    # C-style "\x20" escapes.
-    ###### FIXME - not implemented #####
+    # Example: a device unit dev-sda.device == /dev/sda
+    $unitname = $mnt_point;
+    # all unprintable characters and the "-" are replaced by
+    # C-style "\x2d" escapes.
+    ###### FIXME - not all implemented #####
+    $unitname =~ s/\ /\\x20/;
+    $unitname =~ s/\!/\\x21/;
+    $unitname =~ s/\"/\\x22/;
+    $unitname =~ s/\#/\\x23/;
+    $unitname =~ s/\$/\\x24/;
+    $unitname =~ s/\%/\\x25/;
+    $unitname =~ s/\&/\\x26/;
+    $unitname =~ s/\'/\\x27/;
+    $unitname =~ s/\(/\\x28/;
+    $unitname =~ s/\)/\\x29/;
+    $unitname =~ s/\*/\\x2a/;
+    $unitname =~ s/\+/\\x2b/;
+    $unitname =~ s/\,/\\x2c/;
+    $unitname =~ s/\-/\\x2d/;
+    $unitname =~ s/\./\\x2e/;
+    # Given a path, "/" is replaced by "-",
+    $unitname =~ tr(/)(-);
     # The initial and ending "/" is removed from all paths during
     # transformation. This escaping is reversible.
     $unitname =~ s/^-//;
