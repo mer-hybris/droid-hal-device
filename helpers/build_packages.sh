@@ -38,7 +38,7 @@ function usage() {
     echo "  -h, --help      you're reading it"
     echo "  -d, --droid-hal build droid-hal-device (rpm/)"
     echo "  -c, --configs   build droid-configs"
-    echo "  -m, --mw        build HW middleware packages"
+    echo "  -m, --mw[=REPO] build HW middleware packages or REPO"
     echo "  -v, --version   build droid-hal-version"
     echo " No options assumes building for all areas."
     exit 1
@@ -53,7 +53,7 @@ if [[ ! -d rpm/helpers && ! -d rpm/dhd ]]; then
     exit 1
 fi
 
-OPTIONS=$(getopt -o hdcmv -l help,droid-hal,configs,mw,version -- "$@")
+OPTIONS=$(getopt -o hdcm::v -l help,droid-hal,configs,mw::,version -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -74,7 +74,11 @@ while true; do
       -h|--help) usage ;;
       -d|--droid-hal) BUILDDHD=1 ;;
       -c|--configs) BUILDCONFIGS=1 ;;
-      -m|--mw) BUILDMW=1 ;;
+      -m|--mw) BUILDMW=1
+          case "$2" in
+              *) BUILDMW_REPO=$2;;
+          esac
+          shift;;
       -v|--version) BUILDVERSION=1 ;;
       --)        shift ; break ;;
       *)         echo "unknown option: $1" ; exit 1 ;;
@@ -116,6 +120,7 @@ sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n install droid-hal-$DEVIC
 mkdir -p $ANDROID_ROOT/hybris/mw
 pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
+if [ "$BUILDMW_REPO" == "" ]; then
 buildmw libhybris || die
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n rm mesa-llvmpipe
 buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
@@ -126,6 +131,9 @@ buildmw qt5-qpa-hwcomposer-plugin qt-5.2 || die
 buildmw "https://github.com/mer-hybris/qtscenegraph-adaptation.git" rpm/qtscenegraph-adaptation-droid.spec || die
 buildmw "https://git.merproject.org/mer-core/sensorfw.git" rpm/sensorfw-qt5-hybris.spec || die
 buildmw geoclue-providers-hybris || die
+else
+buildmw $BUILDMW_REPO || die
+fi
 popd > /dev/null
 fi
 
