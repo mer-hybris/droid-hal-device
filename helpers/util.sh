@@ -133,7 +133,7 @@ function buildmw {
     GIT_URL="$1"
     shift
     GIT_BRANCH=""
-    if [ "$1" != "" ]; then
+    if [[ "$1" != *.spec ]]; then
         GIT_BRANCH="-b $1"
         shift;
     fi
