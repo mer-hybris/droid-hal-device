@@ -158,7 +158,7 @@ function buildmw {
             git clone $GIT_URL $GIT_BRANCH >>$LOG 2>&1|| die_with_log "$LOG" "cloning of $GIT_URL failed"
         fi
 
-        pushd $PKG || die
+        pushd $PKG > /dev/null || die
         minfo "pulling updates..."
         git pull >>$LOG 2>&1|| die_with_log "$LOG" "pulling of updates failed"
         git submodule update >>$LOG 2>&1|| die_with_log "$LOG" "pulling of updates failed"
@@ -180,7 +180,7 @@ function buildmw {
         createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die_with_log "$LOG" "can't create repo"
         sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref >>$LOG 2>&1|| die_with_log "$LOG" "can't update pkg info"
         minfo "Building of $PKG finished successfully"
-        popd
+        popd > /dev/null
     fi
     echo
 }
