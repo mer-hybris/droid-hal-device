@@ -74,6 +74,8 @@ function buildconfigs() {
     createrepo $LOCAL_REPO
     sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
       zypper ref
+
+    hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
 }
 
 function builddhd() {
