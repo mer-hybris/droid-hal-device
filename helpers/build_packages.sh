@@ -113,7 +113,6 @@ sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu dr sdk
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref -f
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n install droid-hal-$DEVICE-devel
 
-rm -rf $ANDROID_ROOT/hybris/mw
 mkdir -p $ANDROID_ROOT/hybris/mw
 pushd $ANDROID_ROOT/hybris/mw
 
