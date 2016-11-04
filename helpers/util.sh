@@ -132,6 +132,11 @@ function buildmw {
 
     GIT_URL="$1"
     shift
+    GIT_BRANCH=""
+    if [ "$1" != "" ]; then
+        GIT_BRANCH="-b $1"
+        shift;
+    fi
 
     [ -z "$GIT_URL" ] && die "Please give me the git URL (or directory name, if it's already installed)."
 
@@ -150,7 +155,7 @@ function buildmw {
 
         if [ ! -d $PKG ] ; then
             minfo "Source code directory doesn't exist, cloning repository"
-            git clone $GIT_URL >>$LOG 2>&1|| die_with_log "$LOG" "cloning of $GIT_URL failed"
+            git clone $GIT_URL $GIT_BRANCH >>$LOG 2>&1|| die_with_log "$LOG" "cloning of $GIT_URL failed"
         fi
 
         pushd $PKG || die
@@ -179,56 +184,4 @@ function buildmw {
     fi
     echo
 }
-function buildmwb {
 
-    GIT_URL="$1"
-    shift
-    GIT_BRANCH="$1"
-    shift
-
-    [ -z "$GIT_URL" ] && die "Please give me the git URL (or directory name, if it's already installed)."
-
-
-    PKG="$(basename ${GIT_URL%.git})"
-    yesnoall "Build $PKG?"
-    if [ $? == "0" ]; then
-        if [ "$GIT_URL" = "$PKG" ]; then
-            GIT_URL=https://github.com/mer-hybris/$PKG.git
-            minfo "No git url specified, assuming $GIT_URL"
-        fi
-
-        cd "$ANDROID_ROOT/hybris/mw" || die
-        LOG="`pwd`/$PKG.log"
-        [ -f "$LOG" ] && rm "$LOG"
-
-        if [ ! -d $PKG ] ; then
-            minfo "Source code directory doesn't exist, cloning repository"
-            git clone $GIT_URL -b $GIT_BRANCH>>$LOG 2>&1|| die_with_log "$LOG" "cloning of $GIT_URL failed"
-        fi
-
-        pushd $PKG || die
-        minfo "pulling updates..."
-        git pull >>$LOG 2>&1|| die_with_log "$LOG" "pulling of updates failed"
-        git submodule update >>$LOG 2>&1|| die_with_log "$LOG" "pulling of updates failed"
-
-        SPECS="$*"
-        if [ -z "$SPECS" ]; then
-            minfo "No spec files for package building specified, building all I can find."
-            SPECS="rpm/*.spec"
-        fi
-
-        for SPEC in $SPECS ; do
-            minfo "Building $SPEC"
-            mb2 -s $SPEC -t $VENDOR-$DEVICE-$ARCH build >>$LOG 2>&1|| die_with_log "$LOG" "building of package failed"
-        done
-        minfo "Building successful, adding packages to repo"
-        mkdir -p "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die_with_log "$LOG"
-        rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm >>$LOG 2>&1|| die_with_log "$LOG"
-        mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die_with_log "$LOG"
-        createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die_with_log "$LOG" "can't create repo"
-        sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref >>$LOG 2>&1|| die_with_log "$LOG" "can't update pkg info"
-        minfo "Building of $PKG finished successfully"
-        popd
-    fi
-    echo
-}
