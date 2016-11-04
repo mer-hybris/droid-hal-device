@@ -33,12 +33,57 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+function usage() {
+    echo "Usage: $0 [OPTION]..."
+    echo "  -h, --help      you're reading it"
+    echo "  -d, --droid-hal build droid-hal-device (rpm/)"
+    echo "  -c, --configs   build droid-configs"
+    echo "  -m, --mw        build HW middleware packages"
+    echo "  -v, --version   build droid-hal-version"
+    echo " No options assumes building for all areas."
+    exit 1
+}
+
 if [ -z $DEVICE ]; then
     echo 'Error: $DEVICE is undefined. Please run hadk'
     exit 1
 fi
 if [[ ! -d rpm/helpers && ! -d rpm/dhd ]]; then
     echo $0: launch this script from the $ANDROID_ROOT directory
+    exit 1
+fi
+
+OPTIONS=$(getopt -o hdcmv -l help,droid-hal,configs,mw,version -- "$@")
+
+if [ $? -ne 0 ]; then
+    echo "getopt error"
+    exit 1
+fi
+
+eval set -- $OPTIONS
+
+if [ "$#" == "1" ]; then
+    BUILDDHD=1
+    BUILDCONFIGS=1
+    BUILDMW=1
+    BUILDVERSION=1
+fi
+
+while true; do
+    case "$1" in
+      -h|--help) usage ;;
+      -d|--droid-hal) BUILDDHD=1 ;;
+      -c|--configs) BUILDCONFIGS=1 ;;
+      -m|--mw) BUILDMW=1 ;;
+      -v|--version) BUILDVERSION=1 ;;
+      --)        shift ; break ;;
+      *)         echo "unknown option: $1" ; exit 1 ;;
+    esac
+    shift
+done
+
+if [ $# -ne 0 ]; then
+    echo "unknown option(s): $@"
     exit 1
 fi
 
@@ -52,13 +97,16 @@ if [ ! -d rpm/dhd ]; then
 fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
+if [ "$BUILDDHD" == "1" ]; then
 rm -rf $LOCAL_REPO/droid-hal-*
-rm -rf $LOCAL_REPO/droid-config-*
 builddhd
+fi
+if [ "$BUILDCONFIGS" == "1" ]; then
+rm -rf $LOCAL_REPO/droid-config-*
 buildconfigs
-echo "-------------------------------------------------------------------------------"
+fi
 
-read -p 'About to build HA middleware packages. Press Enter to continue.'
+if [ "$BUILDMW" == "1" ]; then
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu domain sales
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu dr sdk
 
@@ -81,6 +129,10 @@ buildmw "https://git.merproject.org/mer-core/sensorfw.git" rpm/sensorfw-qt5-hybr
 buildmw geoclue-providers-hybris || die
 read -p '"Build HA Middleware Packages built". Press Enter to continue.'
 popd
+fi
 
+if [ "$BUILDVERSION" == "1" ]; then
 buildversion
 echo "----------------------DONE! Now proceed on creating the rootfs------------------"
+fi
+
