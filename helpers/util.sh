@@ -144,6 +144,12 @@ function buildmw {
     PKG="$(basename ${GIT_URL%.git})"
     yesnoall "Build $PKG?"
     if [ $? == "0" ]; then
+        # Remove this warning when ngfd-plugin-droid-vibrator will get rid of CMake
+        if [ "$GIT_URL" = "ngfd-plugin-droid-vibrator" ]; then
+            merror "WARNING: ngfd-plugin-droid-vibrator build is known to halt under various scenarios!"
+            merror "Please keep interrupting/rebuilding until it works. We suspect CMake and SSDs :)"
+        fi
+
         if [ "$GIT_URL" = "$PKG" ]; then
             GIT_URL=https://github.com/mer-hybris/$PKG.git
             minfo "No git url specified, assuming $GIT_URL"
