@@ -200,7 +200,7 @@ function build {
         SPECS="rpm/*.spec"
     fi
     for SPEC in $SPECS ; do
-        mb2 -s $SPECS -t $VENDOR-$DEVICE-$ARCH build
+        mb2 -s $SPEC -t $VENDOR-$DEVICE-$ARCH build
     done
 }
 
