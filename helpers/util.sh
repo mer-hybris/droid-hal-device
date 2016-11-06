@@ -191,3 +191,38 @@ function buildmw {
     echo
 }
 
+# Code portions above can eventually be refactored by re-using build and deploy
+# functions below
+
+function build {
+    SPECS=$1
+    if [ -z "$SPECS" ]; then
+        SPECS="rpm/*.spec"
+    fi
+    for SPEC in $SPECS ; do
+        mb2 -s $SPECS -t $VENDOR-$DEVICE-$ARCH build
+    done
+}
+
+function deploy {
+    PKG=$1
+    if [ -z "$PKG" ]; then
+        die "Please provide a package name to build"
+    fi
+    mkdir -p "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG"
+    rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm
+    mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG"
+    createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE"
+    sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref
+}
+
+function buildpkg {
+    if [ -z "$1" ]; then
+        die "Please specify path to the package"
+    fi
+    pushd $1 > /dev/null || die "Path not found: $1"
+    build $2
+    deploy $(basename $1)
+    popd > /dev/null
+}
+
