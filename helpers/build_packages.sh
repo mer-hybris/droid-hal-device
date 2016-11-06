@@ -40,6 +40,7 @@ function usage() {
     echo "  -c, --configs   build droid-configs"
     echo "  -m, --mw[=REPO] build HW middleware packages or REPO"
     echo "  -v, --version   build droid-hal-version"
+    echo "  -b, --build=PKG build one package (PKG can include path)"
     echo " No options assumes building for all areas."
     exit 1
 }
@@ -53,7 +54,7 @@ if [[ ! -d rpm/helpers && ! -d rpm/dhd ]]; then
     exit 1
 fi
 
-OPTIONS=$(getopt -o hdcm::v -l help,droid-hal,configs,mw::,version -- "$@")
+OPTIONS=$(getopt -o hdcm::vb: -l help,droid-hal,configs,mw::,version,build: -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -77,6 +78,11 @@ while true; do
       -m|--mw) BUILDMW=1
           case "$2" in
               *) BUILDMW_REPO=$2;;
+          esac
+          shift;;
+      -b|--build) BUILDPKG=1
+          case "$2" in
+              *) BUILDPKG_PATH=$2;;
           esac
           shift;;
       -v|--version) BUILDVERSION=1 ;;
@@ -140,5 +146,13 @@ fi
 if [ "$BUILDVERSION" == "1" ]; then
 buildversion
 echo "----------------------DONE! Now proceed on creating the rootfs------------------"
+fi
+
+if [ "$BUILDPKG" == "1" ]; then
+    if [ -z $BUILDPKG_PATH ]; then
+       echo "--build requires an argument (path to package)"
+    else
+        buildpkg $BUILDPKG_PATH
+    fi
 fi
 
