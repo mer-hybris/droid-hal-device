@@ -36,6 +36,7 @@ source ~/.hadk.env
 
 ARCH="${PORT_ARCH:-armv7hl}"
 BUILDALL=n
+LOG="/dev/null"
 
 function minfo {
     echo -e "\e[01;34m* $* \e[00m"
@@ -46,21 +47,16 @@ function merror {
 }
 
 function die {
+    if [ "$LOG" != "/dev/null" && -f "$LOG" ] ; then
+        tail -n20 "$LOG"
+        minfo "Check $LOG for full log."
+    fi
     if [ -z "$*" ]; then
         merror "command failed at `date`, dying..."
     else
         merror "$*"
     fi
     exit 1
-}
-
-function die_with_log {
-    if [ -f "$1" ] ; then
-        tail -n10 "$1"
-        minfo "Check $1 for full log."
-    fi
-    shift
-    die $*
 }
 
 function buildconfigs() {
@@ -128,6 +124,11 @@ function yesnoall() {
     esac
 }
 
+function initlog {
+    LOG="`pwd`/$1.log"
+    [ -f "$LOG" ] && rm "$LOG"
+}
+
 function buildmw {
 
     GIT_URL="$1"
@@ -156,36 +157,23 @@ function buildmw {
         fi
 
         cd "$ANDROID_ROOT/hybris/mw" || die
-        LOG="`pwd`/$PKG.log"
-        [ -f "$LOG" ] && rm "$LOG"
+
+        initlog $PKG
 
         if [ ! -d $PKG ] ; then
             minfo "Source code directory doesn't exist, cloning repository"
-            git clone $GIT_URL $GIT_BRANCH >>$LOG 2>&1|| die_with_log "$LOG" "cloning of $GIT_URL failed"
+            git clone $GIT_URL $GIT_BRANCH >>$LOG 2>&1|| die "cloning of $GIT_URL failed"
         fi
 
         pushd $PKG > /dev/null || die
         minfo "pulling updates..."
-        git pull >>$LOG 2>&1|| die_with_log "$LOG" "pulling of updates failed"
-        git submodule update >>$LOG 2>&1|| die_with_log "$LOG" "pulling of updates failed"
+        git pull >>$LOG 2>&1|| die "pulling of updates failed"
+        git submodule update >>$LOG 2>&1|| die "pulling of updates failed"
 
-        SPECS="$*"
-        if [ -z "$SPECS" ]; then
-            minfo "No spec files for package building specified, building all I can find."
-            SPECS="rpm/*.spec"
-        fi
+        build $1
 
-        for SPEC in $SPECS ; do
-            minfo "Building $SPEC"
-            mb2 -s $SPEC -t $VENDOR-$DEVICE-$ARCH build >>$LOG 2>&1|| die_with_log "$LOG" "building of package failed"
-        done
-        minfo "Building successful, adding packages to repo"
-        mkdir -p "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die_with_log "$LOG"
-        rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm >>$LOG 2>&1|| die_with_log "$LOG"
-        mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die_with_log "$LOG"
-        createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die_with_log "$LOG" "can't create repo"
-        sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref >>$LOG 2>&1|| die_with_log "$LOG" "can't update pkg info"
-        minfo "Building of $PKG finished successfully"
+        deploy $PKG
+
         popd > /dev/null
     fi
     echo
@@ -197,10 +185,12 @@ function buildmw {
 function build {
     SPECS=$1
     if [ -z "$SPECS" ]; then
+        minfo "No spec file for package building specified, building all I can find."
         SPECS="rpm/*.spec"
     fi
     for SPEC in $SPECS ; do
-        mb2 -s $SPEC -t $VENDOR-$DEVICE-$ARCH build
+        minfo "Building $SPEC"
+        mb2 -s $SPEC -t $VENDOR-$DEVICE-$ARCH build >>$LOG 2>&1|| die "building of package failed"
     done
 }
 
@@ -209,11 +199,13 @@ function deploy {
     if [ -z "$PKG" ]; then
         die "Please provide a package name to build"
     fi
-    mkdir -p "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG"
-    rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm
-    mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG"
-    createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE"
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref
+    minfo "Building successful, adding packages to repo"
+    mkdir -p "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die
+    rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm >>$LOG 2>&1|| die
+    mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
+    createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
+    sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref >>$LOG 2>&1|| die "can't update pkg info"
+    minfo "Building of $PKG finished successfully"
 }
 
 function buildpkg {
@@ -221,8 +213,10 @@ function buildpkg {
         die "Please specify path to the package"
     fi
     pushd $1 > /dev/null || die "Path not found: $1"
+    PKG=$(basename $1)
+    initlog $PKG
     build $2
-    deploy $(basename $1)
+    deploy $PKG
     popd > /dev/null
 }
 
