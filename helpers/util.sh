@@ -205,6 +205,11 @@ function deploy {
     mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
     createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
     sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref >>$LOG 2>&1|| die "can't update pkg info"
+    # Force install due to Version unchanging in local builds,
+    # and dup wouldn't work either
+    # TODO: regexp match an RPM package filename to extract package name only,
+    # so then it becomes possible to zypper install --force elegantly
+    sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper --non-interactive install --force $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
     minfo "Building of $PKG finished successfully"
 }
 
