@@ -47,7 +47,7 @@ function merror {
 }
 
 function die {
-    if [ "$LOG" != "/dev/null" && -f "$LOG" ] ; then
+    if [[ "$LOG" != "/dev/null" && -f "$LOG" ]] ; then
         tail -n20 "$LOG"
         minfo "Check $LOG for full log."
     fi
