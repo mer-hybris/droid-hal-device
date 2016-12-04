@@ -306,7 +306,7 @@ FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{
 shopt -u nullglob
 
 
-%{dhd_path}/helpers/makefstab --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config %{?makefstab_skip_entries} --outputdir tmp/units
+%{dhd_path}/helpers/makefstab --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config /dev/usb-ffs/adb %{?makefstab_skip_entries} --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
