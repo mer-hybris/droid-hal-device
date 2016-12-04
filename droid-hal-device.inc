@@ -104,6 +104,7 @@ Needed by libhybris
 ################
 %package sailfish-config
 Provides: droid-hal-sailfish-config
+Provides: theme-configs
 Group:	System
 BuildArch:	noarch
 Requires: %{name} = %{version}-%{release}
@@ -482,6 +483,9 @@ cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks
 cp rpm/dconf/screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
 cp rpm/dconf/locks-screen-rotation.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
+# Pixel-ratio
+cp rpm/dconf/pixel-ratio.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/pixel-ratio.txt
+cp rpm/dconf/locks-pixel-ratio.txt $RPM_BUILD_ROOT/%{_sysconfdir}/dconf/db/vendor.d/locks/pixel-ratio.txt
 
 # This ghost file must exist in the installroot
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
@@ -551,7 +555,8 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 
 %post sailfish-config
 
-%{_bindir}/add-oneshot dconf-update || :
+# "--now" required by theme icon generation
+%{_bindir}/add-oneshot --now dconf-update || :
 
 %post kernel-modules
 # This runs on the device at install or in mic chroot at img build
@@ -620,6 +625,8 @@ fi
 %defattr(-,root,root,-)
 %{_sysconfdir}/dconf/db/vendor.d/screen-rotation.txt
 %{_sysconfdir}/dconf/db/vendor.d/locks/screen-rotation.txt
+%{_sysconfdir}/dconf/db/vendor.d/pixel-ratio.txt
+%{_sysconfdir}/dconf/db/vendor.d/locks/pixel-ratio.txt
 
 %files kernel
 %defattr(644,root,root,-)
