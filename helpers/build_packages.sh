@@ -41,6 +41,7 @@ function usage() {
     echo "  -m, --mw[=REPO] build HW middleware packages or REPO"
     echo "  -v, --version   build droid-hal-version"
     echo "  -b, --build=PKG build one package (PKG can include path)"
+    echo "  -s, --spec=SPEC optionally used with -m or -b"
     echo " No options assumes building for all areas."
     exit 1
 }
@@ -54,7 +55,7 @@ if [[ ! -d rpm/helpers && ! -d rpm/dhd ]]; then
     exit 1
 fi
 
-OPTIONS=$(getopt -o hdcm::vb: -l help,droid-hal,configs,mw::,version,build: -- "$@")
+OPTIONS=$(getopt -o hdcm::vb:s: -l help,droid-hal,configs,mw::,version,build:,spec: -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -83,6 +84,11 @@ while true; do
       -b|--build) BUILDPKG=1
           case "$2" in
               *) BUILDPKG_PATH=$2;;
+          esac
+          shift;;
+      -s|--spec) BUILDSPEC=1
+          case "$2" in
+              *) BUILDSPEC_FILE=$2;;
           esac
           shift;;
       -v|--version) BUILDVERSION=1 ;;
@@ -138,7 +144,7 @@ buildmw "https://github.com/mer-hybris/qtscenegraph-adaptation.git" rpm/qtsceneg
 buildmw "https://git.merproject.org/mer-core/sensorfw.git" rpm/sensorfw-qt5-hybris.spec || die
 buildmw geoclue-providers-hybris || die
 else
-buildmw $BUILDMW_REPO || die
+buildmw $BUILDMW_REPO $BUILDSPEC_FILE || die
 fi
 popd > /dev/null
 fi
@@ -152,7 +158,7 @@ if [ "$BUILDPKG" == "1" ]; then
     if [ -z $BUILDPKG_PATH ]; then
        echo "--build requires an argument (path to package)"
     else
-        buildpkg $BUILDPKG_PATH
+        buildpkg $BUILDPKG_PATH $BUILDSPEC_FILE
     fi
 fi
 
