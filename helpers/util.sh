@@ -59,18 +59,29 @@ function die {
     exit 1
 }
 
+function initlog {
+    LOGPATH=`pwd`
+    if [ -n "$2" ]; then
+        LOGPATH=$2
+    fi
+    LOG="$LOGPATH/$1.log"
+    [ -f "$LOG" ] && rm "$LOG"
+}
+
 function buildconfigs() {
     PKG=droid-configs
     cd hybris/$PKG
+    initlog $PKG $(dirname `pwd`)
     build rpm/droid-config-$DEVICE.spec
     deploy $PKG do_not_install
     cd ../../
 
-    hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
+    hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh >>$LOG 2>&1|| die "error while processing patterns"
 }
 
 function builddhd() {
     PKG=droid-hal-$DEVICE
+    initlog $PKG
     build rpm/$PKG.spec
     deploy $PKG do_not_install
 }
@@ -78,6 +89,7 @@ function builddhd() {
 function buildversion() {
     PKG=droid-hal-version-$DEVICE
     cd hybris/$PKG
+    initlog $PKG $(dirname `pwd`)
     build rpm/$PKG.spec
     deploy $PKG do_not_install
     cd ../../
@@ -101,11 +113,6 @@ function yesnoall() {
        false
        ;;
     esac
-}
-
-function initlog {
-    LOG="`pwd`/$1.log"
-    [ -f "$LOG" ] && rm "$LOG"
 }
 
 function buildmw {
@@ -155,7 +162,6 @@ function buildmw {
 
         popd > /dev/null
     fi
-    echo
 }
 
 function build {
@@ -181,7 +187,7 @@ function deploy {
     mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
     createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
     sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref >>$LOG 2>&1|| die "can't update pkg info"
+    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install zypper ref || die "can't update pkg info"
     DO_NOT_INSTALL=$2
     if [ -z $DO_NOT_INSTALL ]; then
         # Force install due to Version unchanging in local builds,
@@ -199,7 +205,7 @@ function buildpkg {
     fi
     pushd $1 > /dev/null || die "Path not found: $1"
     PKG=$(basename $1)
-    initlog $PKG
+    initlog $PKG $(dirname `pwd`)
     build $2
     deploy $PKG
     popd > /dev/null
