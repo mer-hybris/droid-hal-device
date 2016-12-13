@@ -111,10 +111,10 @@ function yesnoall() {
     read -r -p "${1:-} [Y/n/all]" REPLY
     REPLY=${REPLY:-y}
     case $REPLY in
-       [yY])
+    [yY]*)
        true
        ;;
-    [aA])
+    [aA]*)
        BUILDALL=y
        true
        ;;
