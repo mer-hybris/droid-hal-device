@@ -114,11 +114,9 @@ fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
 if [ "$BUILDDHD" == "1" ]; then
-rm -rf $LOCAL_REPO/droid-hal-$DEVICE*
 builddhd
 fi
 if [ "$BUILDCONFIGS" == "1" ]; then
-rm -rf $LOCAL_REPO/droid-config-*
 buildconfigs
 fi
 

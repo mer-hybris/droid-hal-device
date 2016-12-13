@@ -60,48 +60,27 @@ function die {
 }
 
 function buildconfigs() {
-    cd hybris/droid-configs
-    mb2 -t $VENDOR-$DEVICE-$ARCH \
-        -s rpm/droid-config-$DEVICE.spec \
-         build || die
-    mv -v RPMS/*.rpm $LOCAL_REPO || die
+    PKG=droid-configs
+    cd hybris/$PKG
+    build rpm/droid-config-$DEVICE.spec
+    deploy $PKG do_not_install
     cd ../../
-
-    createrepo $LOCAL_REPO
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      zypper ref
 
     hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
 }
 
 function builddhd() {
-    mb2 -t $VENDOR-$DEVICE-$ARCH -s rpm/droid-hal-$DEVICE.spec build || die
-
-    mv -v RPMS/*$DEVICE* $LOCAL_REPO
-    createrepo $LOCAL_REPO
-
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      ssu ar local-$DEVICE-hal file://$LOCAL_REPO
-
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      zypper ref
-
-    # pickup any changes in case dhd has been rebuilt before
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      zypper dup --from local-$DEVICE-hal
+    PKG=droid-hal-$DEVICE
+    build rpm/$PKG.spec
+    deploy $PKG do_not_install
 }
 
 function buildversion() {
-    cd hybris/droid-hal-version-$DEVICE
-    mb2 -t $VENDOR-$DEVICE-$ARCH \
-      -s rpm/droid-hal-version-$DEVICE.spec \
-      build || die
-    mv -v RPMS/*.rpm $LOCAL_REPO
+    PKG=droid-hal-version-$DEVICE
+    cd hybris/$PKG
+    build rpm/$PKG.spec
+    deploy $PKG do_not_install
     cd ../../
-
-    createrepo $LOCAL_REPO
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      zypper ref
 }
 
 function yesnoall() {
@@ -179,9 +158,6 @@ function buildmw {
     echo
 }
 
-# Code portions above can eventually be refactored by re-using build and deploy
-# functions below
-
 function build {
     SPECS=$1
     if [ -z "$SPECS" ]; then
@@ -206,11 +182,14 @@ function deploy {
     createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
     sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
     sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref >>$LOG 2>&1|| die "can't update pkg info"
-    # Force install due to Version unchanging in local builds,
-    # and dup wouldn't work either
-    # TODO: regexp match an RPM package filename to extract package name only,
-    # so then it becomes possible to zypper install --force elegantly
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper --non-interactive install --force $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
+    DO_NOT_INSTALL=$2
+    if [ -z $DO_NOT_INSTALL ]; then
+        # Force install due to Version unchanging in local builds,
+        # and dup wouldn't work either
+        # TODO: regexp match an RPM package filename to extract package name only,
+        # so then it becomes possible to zypper install --force elegantly
+        sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper --non-interactive install --force $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
+    fi
     minfo "Building of $PKG finished successfully"
 }
 
