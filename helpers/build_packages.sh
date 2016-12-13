@@ -111,12 +111,24 @@ if [ ! -d rpm/dhd ]; then
     echo "rpm/dhd/ does not exist, please run migrate first."
     exit 1
 fi
+mkdir -p $ANDROID_ROOT/hybris/mw
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
 if [ "$BUILDDHD" == "1" ]; then
 builddhd
 fi
 if [ "$BUILDCONFIGS" == "1" ]; then
+if [ -n "$(grep '%define community_adaptation' $ANDROID_ROOT/hybris/droid-configs/rpm/droid-config-$DEVICE.spec)" ]; then
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i community-adaptation > /dev/null
+    ret=$?
+    if [ $ret -eq 104 ]; then
+        BUILDALL=y
+        buildmw https://github.com/mer-hybris/community-adaptation.git rpm/community-adaptation-devel.spec || die
+        BUILDALL=n
+    elif [ $ret -ne 0 ]; then
+        die "Could not determine if community-adaptation package is available, exiting."
+    fi
+fi
 buildconfigs
 fi
 
@@ -127,7 +139,6 @@ sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu dr sdk
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref -f
 sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n install droid-hal-$DEVICE-devel
 
-mkdir -p $ANDROID_ROOT/hybris/mw
 pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
 if [ "$BUILDMW_REPO" == "" ]; then

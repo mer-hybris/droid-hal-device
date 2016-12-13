@@ -142,7 +142,7 @@ function buildmw {
             minfo "No git url specified, assuming $GIT_URL"
         fi
 
-        cd "$ANDROID_ROOT/hybris/mw" || die
+        pushd "$ANDROID_ROOT/hybris/mw" > /dev/null || die
 
         initlog $PKG
 
@@ -160,6 +160,7 @@ function buildmw {
 
         deploy $PKG
 
+        popd > /dev/null
         popd > /dev/null
     fi
 }
