@@ -112,6 +112,12 @@ if [ ! -d rpm/dhd ]; then
     exit 1
 fi
 mkdir -p $ANDROID_ROOT/hybris/mw
+zypper se -i createrepo > /dev/null
+ret=$?
+if [ $ret -eq 104 ]; then
+   minfo Installing required Platform SDK packages
+   sudo zypper in android-tools createrepo zip
+fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
 if [ "$BUILDDHD" == "1" ]; then
