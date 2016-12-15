@@ -536,6 +536,13 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 /usr/bin/groupadd-user camera || :
 /usr/bin/groupadd-user media || :
 
+if (grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk || \
+    grep -q 'PLATFORM_VERSION := 6.' %{android_root}/build/core/version_defaults.mk) && \
+   grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
+
+    /usr/bin/groupadd-user inet || :
+fi
+
 # To add additional groups define a HA config, one can define those as part
 # of additional_post_scripts macro.
 %{?additional_post_scripts}
