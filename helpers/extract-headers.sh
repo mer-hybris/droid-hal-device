@@ -242,9 +242,11 @@ NOW=$(LC_ALL=C date)
 
 # Add here all sub-projects of AOSP/CM from which headers are extracted
 GIT_PROJECTS="
+    bionic
     hardware/libhardware
     hardware/libhardware_legacy
     system/core
+    system/media
     external/kernel-headers
     external/libnfc-nxp
 "
