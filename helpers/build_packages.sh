@@ -163,6 +163,14 @@ buildmw qt5-qpa-hwcomposer-plugin qt-5.2 || die
 buildmw "https://github.com/mer-hybris/qtscenegraph-adaptation.git" rpm/qtscenegraph-adaptation-droid.spec || die
 buildmw "https://git.merproject.org/mer-core/sensorfw.git" rpm/sensorfw-qt5-hybris.spec || die
 buildmw geoclue-providers-hybris || die
+# build kf5bluezqt-bluez4 if not yet provided by Sailfish OS itself
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se kf5bluezqt-bluez4 > /dev/null
+ret=$?
+if [ $ret -eq 104 ]; then
+    buildmw "https://git.merproject.org/mer-core/kf5bluezqt.git" rpm/kf5bluezqt-bluez4.spec || die
+    # pull device's bluez4 configs correctly
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
+fi
 else
 buildmw $BUILDMW_REPO $BUILDSPEC_FILE || die
 fi
