@@ -416,7 +416,8 @@ cat <<EOF >> $HDRS/android-config.h.new
 EOF
 # Detect QCOM_BSP and add the define into android-config.h if needed
 if (grep -q '^TARGET_USES_QCOM_BSP := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk || \
-    (grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk && \
+    ((grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk || \
+      grep -q 'PLATFORM_VERSION := 6.' %{android_root}/build/core/version_defaults.mk) && \
      grep -q '^BOARD_USES_QCOM_HARDWARE := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk)); then
 
     echo Found QCOM_BSP
