@@ -152,7 +152,12 @@ buildmw libhybris || die
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe
 buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
 buildmw ngfd-plugin-droid-vibrator || die
+# hack until upstream is sane
+if (grep -q 'PLATFORM_VERSION := 6.' $ANDROID_ROOT/build/core/version_defaults.mk); then
+buildmw "https://github.com/sledges/pulseaudio-modules-droid.git" android6 rpm/pulseaudio-modules-droid.spec || die
+else
 buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die
+fi
 buildmw qt5-feedback-haptics-droid-vibrator || die
 buildmw qt5-qpa-hwcomposer-plugin qt-5.2 || die
 buildmw "https://github.com/mer-hybris/qtscenegraph-adaptation.git" rpm/qtscenegraph-adaptation-droid.spec || die
