@@ -139,17 +139,17 @@ buildconfigs
 fi
 
 if [ "$BUILDMW" == "1" ]; then
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu domain sales
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu dr sdk
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref -f
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n install droid-hal-$DEVICE-devel
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref -f
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install droid-hal-$DEVICE-devel
 
 pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
 if [ "$BUILDMW_REPO" == "" ]; then
 buildmw libhybris || die
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n rm mesa-llvmpipe
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe
 buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
 buildmw ngfd-plugin-droid-vibrator || die
 buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die

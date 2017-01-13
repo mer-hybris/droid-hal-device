@@ -34,7 +34,7 @@
 
 source ~/.hadk.env
 
-ARCH="${PORT_ARCH:-armv7hl}"
+PORT_ARCH="${PORT_ARCH:-armv7hl}"
 BUILDALL=n
 LOG="/dev/null"
 
@@ -173,7 +173,7 @@ function build {
     fi
     for SPEC in $SPECS ; do
         minfo "Building $SPEC"
-        mb2 -s $SPEC -t $VENDOR-$DEVICE-$ARCH build >>$LOG 2>&1|| die "building of package failed"
+        mb2 -s $SPEC -t $VENDOR-$DEVICE-$PORT_ARCH build >>$LOG 2>&1|| die "building of package failed"
     done
 }
 
@@ -187,15 +187,15 @@ function deploy {
     rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm >>$LOG 2>&1|| die
     mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
     createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install zypper ref || die "can't update pkg info"
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't update pkg info"
     DO_NOT_INSTALL=$2
     if [ -z $DO_NOT_INSTALL ]; then
         # Force install due to Version unchanging in local builds,
         # and dup wouldn't work either
         # TODO: regexp match an RPM package filename to extract package name only,
         # so then it becomes possible to zypper install --force elegantly
-        sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper --non-interactive install --force $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper --non-interactive install --force $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
     fi
     minfo "Building of $PKG finished successfully"
 }
