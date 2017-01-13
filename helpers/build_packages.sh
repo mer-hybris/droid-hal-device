@@ -149,7 +149,6 @@ pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
 if [ "$BUILDMW_REPO" == "" ]; then
 buildmw libhybris || die
-sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe
 buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
 buildmw ngfd-plugin-droid-vibrator || die
 # hack until upstream is sane

@@ -190,6 +190,18 @@ function deploy {
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't update pkg info"
     DO_NOT_INSTALL=$2
+    if [ "$PKG" == "libhybris" ]; then
+        # If this is the first installation of libhybris simply remove mesa,
+        # otherwise proceed with force re-installation
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i mesa-llvmpipe > /dev/null
+        ret=$?
+        if [ $ret -eq 104 ]; then
+            DO_NOT_INSTALL=
+        else
+            DO_NOT_INSTALL=1
+            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe >>$LOG 2>&1|| die "cannot remove mesa to get libhybris"
+        fi
+    fi
     if [ -z $DO_NOT_INSTALL ]; then
         # Force install due to Version unchanging in local builds,
         # and dup wouldn't work either
