@@ -8,6 +8,7 @@
 # vendor_pretty: User-visible manufacturer name of the device
 # rpm_device: device name used rpm-side (eg in configs) : defaults to device
 # rpm_vendor: vendor name used rpm-side (eg in configs) : defaults to vendor
+# droid_target_aarch64: indicates that your device is 64bit ARM and has such Android base
 #
 # Device capabilities:
 # installable_zip: adds zip updater scripts (default for all SFE devices)
@@ -241,6 +242,18 @@ cp %{SOURCE40} %{SOURCE0}
 
 echo _target_cpu is %{_target_cpu}
 
+%if 0%{!?droid_target_aarch64:1}
+if (grep -q '^TARGET_ARCH := arm64' %{android_root}/device/*/*/BoardConfig*.mk); then
+    echo -e \
+         "\n" \
+         "IMPORTANT: some devices in your Android tree are 64bit targets. If your device is aarch64,\n" \
+         "           please define droid_target_aarch64 in your .spec\n" \
+         "NOTE: Currently there is no Sailfish OS ARM 64bit target, so leave PORT_ARCH as armv7hl\n" \
+         "      Mixed builds of 64bit Android+Linux Kernel and 32bit Sailfish OS work just fine."
+    exit 1
+fi
+%endif
+
 %if 0%{?_obs_build_project:1}
 
 # Set up kernel extra version for OBS kernel builds
@@ -332,6 +345,9 @@ echo install $(cat tmp/units/all-units.txt)
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
+%if 0%{?droid_target_aarch64:1}
+mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib64-dev-alog/
+%endif
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
@@ -369,6 +385,9 @@ rm -f $RPM_BUILD_ROOT/sbin/modprobe
 sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
 
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
+%if 0%{?droid_target_aarch64:1}
+cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
+%endif
 # Remove kernel modules if installed under /system/lib/modules
 rm -rf $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/modules
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
@@ -397,7 +416,8 @@ cat <<EOF >> $HDRS/android-config.h.new
 EOF
 # Detect QCOM_BSP and add the define into android-config.h if needed
 if (grep -q '^TARGET_USES_QCOM_BSP := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk || \
-    (grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk && \
+    ((grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk || \
+      grep -q 'PLATFORM_VERSION := 6.' %{android_root}/build/core/version_defaults.mk) && \
      grep -q '^BOARD_USES_QCOM_HARDWARE := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk)); then
 
     echo Found QCOM_BSP
@@ -419,6 +439,9 @@ mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 # grep -l dev/alog %%{android_root}/out/target/product/%{device}/system/lib/*
 # libdsyscalls.so and libc.so are blacklisted
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
+%if 0%{?droid_target_aarch64:1}
+ln -s ../system/lib64/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib64-dev-alog/.
+%endif
 
 cp -a tmp/units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
 
@@ -600,6 +623,11 @@ fi
 %{_libexecdir}/droid-hybris/system/lib/
 # just /dev/alog/ libraries (for trying to run pure android apps)
 %{_libexecdir}/droid-hybris/lib-dev-alog/.
+# all of the above for 64bits
+%if 0%{?droid_target_aarch64:1}
+%{_libexecdir}/droid-hybris/system/lib64/
+%{_libexecdir}/droid-hybris/lib64-dev-alog/.
+%endif
 /lib/udev/rules.d/*
 # Droid config droppings
 /*.rc

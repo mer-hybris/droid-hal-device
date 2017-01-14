@@ -139,25 +139,38 @@ buildconfigs
 fi
 
 if [ "$BUILDMW" == "1" ]; then
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu domain sales
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install ssu dr sdk
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref -f
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n install droid-hal-$DEVICE-devel
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref -f
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install droid-hal-$DEVICE-devel
 
 pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
 if [ "$BUILDMW_REPO" == "" ]; then
+# hack until upstream is sane
+if (grep -q 'PLATFORM_VERSION := 6.' $ANDROID_ROOT/build/core/version_defaults.mk); then
+buildmw libhybris mm64-rpm || die
+buildmw "https://github.com/sledges/pulseaudio-modules-droid.git" android6 rpm/pulseaudio-modules-droid.spec || die
+else
 buildmw libhybris || die
-sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper -n rm mesa-llvmpipe
+buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die
+fi
 buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
 buildmw ngfd-plugin-droid-vibrator || die
-buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die
 buildmw qt5-feedback-haptics-droid-vibrator || die
 buildmw qt5-qpa-hwcomposer-plugin qt-5.2 || die
 buildmw "https://github.com/mer-hybris/qtscenegraph-adaptation.git" rpm/qtscenegraph-adaptation-droid.spec || die
 buildmw "https://git.merproject.org/mer-core/sensorfw.git" rpm/sensorfw-qt5-hybris.spec || die
 buildmw geoclue-providers-hybris || die
+# build kf5bluezqt-bluez4 if not yet provided by Sailfish OS itself
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se kf5bluezqt-bluez4 > /dev/null
+ret=$?
+if [ $ret -eq 104 ]; then
+    buildmw "https://git.merproject.org/mer-core/kf5bluezqt.git" rpm/kf5bluezqt-bluez4.spec || die
+    # pull device's bluez4 configs correctly
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
+fi
 else
 buildmw $BUILDMW_REPO $BUILDSPEC_FILE || die
 fi
