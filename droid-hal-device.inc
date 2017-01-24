@@ -103,6 +103,9 @@ Group:		System
 BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
+%if 0%{?straggler_files:1}
+Requires:       droid-hal-%{rpm_device}-detritus
+%endif
 # These are only required if building on OBS
 %if 0%{?_obs_build_project:1}
 BuildRequires:  ubu-trusty
@@ -246,7 +249,7 @@ if (grep -q '^TARGET_ARCH := arm64' %{android_root}/device/*/*/BoardConfig*.mk);
     echo -e \
          "\n" \
          "IMPORTANT: some devices in your Android tree are 64bit targets. If your device is aarch64,\n" \
-         "           please define droid_target_aarch64 in your .spec\n" \
+         "           please define droid_target_aarch64 in your .spec, otherwise define droid_target_armv7hl\n" \
          "NOTE: Currently there is no Sailfish OS ARM 64bit target, so leave PORT_ARCH as armv7hl\n" \
          "      Mixed builds of 64bit Android+Linux Kernel and 32bit Sailfish OS work just fine."
     exit 1
