@@ -479,6 +479,17 @@ cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 # This ghost file must exist in the installroot
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
 
+echo "#!/bin/sh" > $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh
+if (grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk || \
+    grep -q 'PLATFORM_VERSION := 6.' %{android_root}/build/core/version_defaults.mk) && \
+   grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
+
+    cat >> $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh <<EOF
+/usr/bin/groupadd-user inet || :
+EOF
+
+fi
+
 # Kernel and module installation; to
 # /boot and modules to /lib as normal
 KERNEL_RELEASE=$(cat out/target/product/%{device}/*/*/include/config/kernel.release)
@@ -559,12 +570,7 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 /usr/bin/groupadd-user camera || :
 /usr/bin/groupadd-user media || :
 
-if (grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk || \
-    grep -q 'PLATFORM_VERSION := 6.' %{android_root}/build/core/version_defaults.mk) && \
-   grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
-
-    /usr/bin/groupadd-user inet || :
-fi
+./generated-post-scripts.sh || :
 
 # To add additional groups define a HA config, one can define those as part
 # of additional_post_scripts macro.
@@ -613,6 +619,7 @@ fi
 # init-debug
 %attr(755,root,root) /init-debug
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
+%attr(755, root, root) %{_libdir}/droid/generated-post-scripts.sh
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
 
