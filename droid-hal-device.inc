@@ -9,6 +9,9 @@
 # rpm_device: device name used rpm-side (eg in configs) : defaults to device
 # rpm_vendor: vendor name used rpm-side (eg in configs) : defaults to vendor
 # droid_target_aarch64: indicates that your device is 64bit ARM and has such Android base
+# droid_target_armv7hl: indicates that your device is 32bit ARM. Only to be used
+#                       with Android 6+ trees, where 64bit architecture is also
+#                       available
 #
 # Device capabilities:
 # installable_zip: adds zip updater scripts (default for all SFE devices)
@@ -238,7 +241,7 @@ cp %{SOURCE40} %{SOURCE0}
 
 echo _target_cpu is %{_target_cpu}
 
-%if 0%{!?droid_target_aarch64:1}
+%if 0%{!?droid_target_aarch64:1} && 0%{!?droid_target_armv7hl:1}
 if (grep -q '^TARGET_ARCH := arm64' %{android_root}/device/*/*/BoardConfig*.mk); then
     echo -e \
          "\n" \
