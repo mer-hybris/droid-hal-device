@@ -27,10 +27,6 @@
 # straggler_files: any files that don't get packaged automatically, also needs droid-hal-$DEVICE-detritus in patterns
 # provides_own_headers: extract-headers.sh script is not run, but android-config.h is generated.
 
-# IMPORTANT if you want to comment out any macros in your .spec, delete the %
-# sign, otherwise they will remain defined! E.g.:
-#define some_macro "I'll not be defined because I don't have % in the front"
-
 
 # Set defaults if not defined already:
 %if 0%{!?rpm_device:1}
