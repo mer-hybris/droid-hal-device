@@ -2,7 +2,7 @@
 ANDROID_ROOT ?= ..
 
 # List of local tools we need to build
-TOOLS := apply-permissions usergroupgen
+TOOLS := usergroupgen
 MKBOOTIMG_MK ?= $(shell pwd)/mkbootimg.mk
 IMG2SIMG_MK ?= $(shell pwd)/img2simg.mk
 SIMG2IMG_MK ?= $(shell pwd)/simg2img.mk
