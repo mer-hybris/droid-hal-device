@@ -29,6 +29,8 @@
 # pre_actions: command to execute on OBS before `. build/envsetup.sh`, such as choosing correct Java VM
 # straggler_files: any files that don't get packaged automatically, also needs droid-hal-$DEVICE-detritus in patterns
 # provides_own_headers: extract-headers.sh script is not run, but android-config.h is generated.
+# header_patches: If header_patches directory exists apply *.patch files to extracted headers. If provides_own_headers
+#                 is defined it disables patch applying.
 
 
 # Set defaults if not defined already:
@@ -403,6 +405,9 @@ mkdir -p $HDRS
 echo "Extracting headers for hybris"
 # This is copied from libhybris and should be kept in-sync:
 %{dhd_path}/helpers/extract-headers.sh -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
+if test -d "%{android_root}/rpm/header_patches"; then
+    %{dhd_path}/helpers/patch-headers.sh "$HDRS" "%{android_root}/rpm/header_patches"/*.patch
+fi
 %else
 pushd %{android_root}/rpm/droid-headers 1>/dev/null
 make install DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} INCLUDEDIR=%{_libdir}/droid-devel/droid-headers
