@@ -32,8 +32,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-source ~/.hadk.env
-
 PORT_ARCH="${PORT_ARCH:-armv7hl}"
 BUILDALL=n
 LOG="/dev/null"
@@ -58,6 +56,20 @@ function die {
     fi
     exit 1
 }
+
+if [ -z $DEVICE ]; then
+    die 'Error: $DEVICE is undefined. Please run hadk'
+fi
+
+mkdir -p $ANDROID_ROOT/hybris/mw
+zypper se -i createrepo > /dev/null
+ret=$?
+if [ $ret -eq 104 ]; then
+   minfo Installing required Platform SDK packages
+   sudo zypper in android-tools createrepo zip
+fi
+LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
+mkdir -p $LOCAL_REPO
 
 function initlog {
     LOGPATH=`pwd`

@@ -46,15 +46,6 @@ function usage() {
     exit 1
 }
 
-if [ -z $DEVICE ]; then
-    echo 'Error: $DEVICE is undefined. Please run hadk'
-    exit 1
-fi
-if [[ ! -d rpm/helpers && ! -d rpm/dhd ]]; then
-    echo $0: launch this script from the $ANDROID_ROOT directory
-    exit 1
-fi
-
 OPTIONS=$(getopt -o hdcm::vb:s: -l help,droid-hal,configs,mw::,version,build:,spec: -- "$@")
 
 if [ $? -ne 0 ]; then
@@ -103,23 +94,13 @@ if [ $# -ne 0 ]; then
     exit 1
 fi
 
-# utilities
-. $ANDROID_ROOT/rpm/dhd/helpers/util.sh
-
-
-if [ ! -d rpm/dhd ]; then
-    echo "rpm/dhd/ does not exist, please run migrate first."
+if [[ ! -d rpm/dhd ]]; then
+    echo $0: 'launch this script from the $ANDROID_ROOT directory'
     exit 1
 fi
-mkdir -p $ANDROID_ROOT/hybris/mw
-zypper se -i createrepo > /dev/null
-ret=$?
-if [ $ret -eq 104 ]; then
-   minfo Installing required Platform SDK packages
-   sudo zypper in android-tools createrepo zip
-fi
-LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
-mkdir -p $LOCAL_REPO
+# utilities
+. ./rpm/dhd/helpers/util.sh
+
 if [ "$BUILDDHD" == "1" ]; then
 builddhd
 fi
