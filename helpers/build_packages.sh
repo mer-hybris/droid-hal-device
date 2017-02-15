@@ -129,7 +129,7 @@ if [ -n "$(grep '%define community_adaptation' $ANDROID_ROOT/hybris/droid-config
     ret=$?
     if [ $ret -eq 104 ]; then
         BUILDALL=y
-        buildmw https://github.com/mer-hybris/community-adaptation.git rpm/community-adaptation-devel.spec || die
+        buildmw https://github.com/mer-hybris/community-adaptation.git rpm/community-adaptation-localbuild.spec || die
         BUILDALL=n
     elif [ $ret -ne 0 ]; then
         die "Could not determine if community-adaptation package is available, exiting."
