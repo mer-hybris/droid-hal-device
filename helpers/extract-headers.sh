@@ -190,6 +190,7 @@ extract_headers_to hardware \
 
 extract_headers_to hardware_legacy \
     hardware/libhardware_legacy/include/hardware_legacy/vibrator.h \
+    hardware/libhardware_legacy/include/hardware_legacy/wifi.h \
     hardware/libhardware_legacy/include/hardware_legacy/audio_policy_conf.h
 
 extract_headers_to cutils \
