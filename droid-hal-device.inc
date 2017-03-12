@@ -115,6 +115,8 @@ BuildRequires:  sudo-for-abuild
 %endif
 %systemd_requires
 %{_oneshot_requires_post}
+# Allow device specific requires to be defined using dhd_requires
+%{?dhd_requires}
 
 %description
 %{summary}.
