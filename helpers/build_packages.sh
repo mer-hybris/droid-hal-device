@@ -139,10 +139,10 @@ buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseau
 buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
 buildmw ngfd-plugin-droid-vibrator || die
 buildmw qt5-feedback-haptics-droid-vibrator || die
-buildmw qt5-qpa-hwcomposer-plugin qt-5.2 || die
+buildmw qt5-qpa-hwcomposer-plugin || die
 buildmw "https://github.com/mer-hybris/qtscenegraph-adaptation.git" rpm/qtscenegraph-adaptation-droid.spec || die
 buildmw "https://git.merproject.org/mer-core/sensorfw.git" rpm/sensorfw-qt5-hybris.spec || die
-buildmw geoclue-providers-hybris || die
+buildmw geoclue-providers-hybris jb36857 || die
 # build kf5bluezqt-bluez4 if not yet provided by Sailfish OS itself
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se kf5bluezqt-bluez4 > /dev/null
 ret=$?
