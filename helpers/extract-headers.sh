@@ -190,6 +190,7 @@ extract_headers_to hardware \
 
 extract_headers_to hardware_legacy \
     hardware/libhardware_legacy/include/hardware_legacy/vibrator.h \
+    hardware/libhardware_legacy/include/hardware_legacy/wifi.h \
     hardware/libhardware_legacy/include/hardware_legacy/audio_policy_conf.h
 
 extract_headers_to cutils \
@@ -222,6 +223,12 @@ check_header_exists bionic/libc/kernel/uapi/linux/sync.h && \
         bionic/libc/kernel/uapi/linux/sync.h \
         bionic/libc/kernel/uapi/linux/sw_sync.h
 
+check_header_exists bionic/libc/include/android/dlext.h && \
+    extract_headers_to android \
+        bionic/libc/include/android/dlext.h \
+        bionic/libc/include/android/api-level.h \
+        bionic/libc/include/android/set_abort_message.h
+
 check_header_exists system/core/libsync/include/sync/sync.h && \
     extract_headers_to sync \
         system/core/libsync/include/sync
@@ -232,7 +239,8 @@ check_header_exists external/libnfc-nxp/inc/phNfcConfig.h && \
         external/libnfc-nxp/src
 
 extract_headers_to private \
-    system/core/include/private/android_filesystem_config.h
+    system/core/include/private/android_filesystem_config.h \
+    bionic/libc/private
 
 
 # In order to make it easier to trace back the origins of headers, fetch
@@ -242,9 +250,11 @@ NOW=$(LC_ALL=C date)
 
 # Add here all sub-projects of AOSP/CM from which headers are extracted
 GIT_PROJECTS="
+    bionic
     hardware/libhardware
     hardware/libhardware_legacy
     system/core
+    system/media
     external/kernel-headers
     external/libnfc-nxp
 "

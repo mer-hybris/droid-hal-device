@@ -32,9 +32,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-source ~/.hadk.env
-
-ARCH="${PORT_ARCH:-armv7hl}"
+PORT_ARCH="${PORT_ARCH:-armv7hl}"
 BUILDALL=n
 LOG="/dev/null"
 
@@ -59,49 +57,54 @@ function die {
     exit 1
 }
 
+if [ -z $DEVICE ]; then
+    die 'Error: $DEVICE is undefined. Please run hadk'
+fi
+
+mkdir -p $ANDROID_ROOT/hybris/mw
+zypper se -i createrepo > /dev/null
+ret=$?
+if [ $ret -eq 104 ]; then
+   minfo Installing required Platform SDK packages
+   sudo zypper in android-tools createrepo zip
+fi
+LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
+mkdir -p $LOCAL_REPO
+
+function initlog {
+    LOGPATH=`pwd`
+    if [ -n "$2" ]; then
+        LOGPATH=$2
+    fi
+    LOG="$LOGPATH/$1.log"
+    [ -f "$LOG" ] && rm "$LOG"
+}
+
 function buildconfigs() {
-    cd hybris/droid-configs
-    mb2 -t $VENDOR-$DEVICE-$ARCH \
-        -s rpm/droid-config-$DEVICE.spec \
-         build || die
-    mv -v RPMS/*.rpm $LOCAL_REPO || die
+    PKG=droid-configs
+    cd hybris/$PKG
+    initlog $PKG $(dirname `pwd`)
+    build rpm/droid-config-$DEVICE.spec
+    deploy $PKG do_not_install
     cd ../../
 
-    createrepo $LOCAL_REPO
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      zypper ref
-
-    hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
+    hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh >>$LOG 2>&1|| die "error while processing patterns"
 }
 
 function builddhd() {
-    mb2 -t $VENDOR-$DEVICE-$ARCH -s rpm/droid-hal-$DEVICE.spec build || die
-
-    mv -v RPMS/*$DEVICE* $LOCAL_REPO
-    createrepo $LOCAL_REPO
-
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      ssu ar local-$DEVICE-hal file://$LOCAL_REPO
-
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      zypper ref
-
-    # pickup any changes in case dhd has been rebuilt before
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      zypper dup --from local-$DEVICE-hal
+    PKG=droid-hal-$DEVICE
+    initlog $PKG
+    build rpm/$PKG.spec
+    deploy $PKG do_not_install
 }
 
 function buildversion() {
-    cd hybris/droid-hal-version-$DEVICE
-    mb2 -t $VENDOR-$DEVICE-$ARCH \
-      -s rpm/droid-hal-version-$DEVICE.spec \
-      build || die
-    mv -v RPMS/*.rpm $LOCAL_REPO
+    PKG=droid-hal-version-$DEVICE
+    cd hybris/$PKG
+    initlog $PKG $(dirname `pwd`)
+    build rpm/$PKG.spec
+    deploy $PKG do_not_install
     cd ../../
-
-    createrepo $LOCAL_REPO
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -m sdk-install \
-      zypper ref
 }
 
 function yesnoall() {
@@ -111,10 +114,10 @@ function yesnoall() {
     read -r -p "${1:-} [Y/n/all]" REPLY
     REPLY=${REPLY:-y}
     case $REPLY in
-       [yY])
+    [yY]*)
        true
        ;;
-    [aA])
+    [aA]*)
        BUILDALL=y
        true
        ;;
@@ -122,11 +125,6 @@ function yesnoall() {
        false
        ;;
     esac
-}
-
-function initlog {
-    LOG="`pwd`/$1.log"
-    [ -f "$LOG" ] && rm "$LOG"
 }
 
 function buildmw {
@@ -156,7 +154,7 @@ function buildmw {
             minfo "No git url specified, assuming $GIT_URL"
         fi
 
-        cd "$ANDROID_ROOT/hybris/mw" || die
+        pushd "$ANDROID_ROOT/hybris/mw" > /dev/null || die
 
         initlog $PKG
 
@@ -175,12 +173,9 @@ function buildmw {
         deploy $PKG
 
         popd > /dev/null
+        popd > /dev/null
     fi
-    echo
 }
-
-# Code portions above can eventually be refactored by re-using build and deploy
-# functions below
 
 function build {
     SPECS=$1
@@ -190,7 +185,7 @@ function build {
     fi
     for SPEC in $SPECS ; do
         minfo "Building $SPEC"
-        mb2 -s $SPEC -t $VENDOR-$DEVICE-$ARCH build >>$LOG 2>&1|| die "building of package failed"
+        mb2 -s $SPEC -t $VENDOR-$DEVICE-$PORT_ARCH build >>$LOG 2>&1|| die "building of package failed"
     done
 }
 
@@ -204,12 +199,28 @@ function deploy {
     rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm >>$LOG 2>&1|| die
     mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
     createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper ref >>$LOG 2>&1|| die "can't update pkg info"
-    # Force install due to Version unchanging in local builds,
-    # and dup wouldn't work either
-    # TODO: regexp match an RPM package filename to extract package name only,
-    # so then it becomes possible to zypper install --force elegantly
-    sb2 -t $VENDOR-$DEVICE-$ARCH -R -msdk-install zypper --non-interactive install --force $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't update pkg info"
+    DO_NOT_INSTALL=$2
+    if [ "$PKG" == "libhybris" ]; then
+        # If this is the first installation of libhybris simply remove mesa,
+        # otherwise proceed with force re-installation
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i mesa-llvmpipe > /dev/null
+        ret=$?
+        if [ $ret -eq 104 ]; then
+            DO_NOT_INSTALL=
+        else
+            DO_NOT_INSTALL=1
+            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe >>$LOG 2>&1|| die "cannot remove mesa to get libhybris"
+        fi
+    fi
+    if [ -z $DO_NOT_INSTALL ]; then
+        # Force install due to Version unchanging in local builds,
+        # and dup wouldn't work either
+        # TODO: regexp match an RPM package filename to extract package name only,
+        # so then it becomes possible to zypper install --force elegantly
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper --non-interactive install --force $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
+    fi
     minfo "Building of $PKG finished successfully"
 }
 
@@ -219,7 +230,7 @@ function buildpkg {
     fi
     pushd $1 > /dev/null || die "Path not found: $1"
     PKG=$(basename $1)
-    initlog $PKG
+    initlog $PKG $(dirname `pwd`)
     build $2
     deploy $PKG
     popd > /dev/null

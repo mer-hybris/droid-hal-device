@@ -8,6 +8,10 @@
 # vendor_pretty: User-visible manufacturer name of the device
 # rpm_device: device name used rpm-side (eg in configs) : defaults to device
 # rpm_vendor: vendor name used rpm-side (eg in configs) : defaults to vendor
+# droid_target_aarch64: indicates that your device is 64bit ARM and has such Android base
+# droid_target_armv7hl: indicates that your device is 32bit ARM. Only to be used
+#                       with Android 6+ trees, where 64bit architecture is also
+#                       available
 #
 # Device capabilities:
 # installable_zip: adds zip updater scripts (default for all SFE devices)
@@ -25,10 +29,8 @@
 # pre_actions: command to execute on OBS before `. build/envsetup.sh`, such as choosing correct Java VM
 # straggler_files: any files that don't get packaged automatically, also needs droid-hal-$DEVICE-detritus in patterns
 # provides_own_headers: extract-headers.sh script is not run, but android-config.h is generated.
-
-# IMPORTANT if you want to comment out any macros in your .spec, delete the %
-# sign, otherwise they will remain defined! E.g.:
-#define some_macro "I'll not be defined because I don't have % in the front"
+# header_patches: If header_patches directory exists apply *.patch files to extracted headers. If provides_own_headers
+#                 is defined it disables patch applying.
 
 
 # Set defaults if not defined already:
@@ -103,6 +105,9 @@ Group:		System
 BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
+%if 0%{?straggler_files:1}
+Requires:       droid-hal-%{rpm_device}-detritus
+%endif
 # These are only required if building on OBS
 %if 0%{?_obs_build_project:1}
 BuildRequires:  ubu-trusty
@@ -241,6 +246,18 @@ cp %{SOURCE40} %{SOURCE0}
 
 echo _target_cpu is %{_target_cpu}
 
+%if 0%{!?droid_target_aarch64:1} && 0%{!?droid_target_armv7hl:1}
+if (grep -q '^TARGET_ARCH := arm64' %{android_root}/device/*/*/BoardConfig*.mk); then
+    echo -e \
+         "\n" \
+         "IMPORTANT: some devices in your Android tree are 64bit targets. If your device is aarch64,\n" \
+         "           please define droid_target_aarch64 in your .spec, otherwise define droid_target_armv7hl\n" \
+         "NOTE: Currently there is no Sailfish OS ARM 64bit target, so leave PORT_ARCH as armv7hl\n" \
+         "      Mixed builds of 64bit Android+Linux Kernel and 32bit Sailfish OS work just fine."
+    exit 1
+fi
+%endif
+
 %if 0%{?_obs_build_project:1}
 
 # Set up kernel extra version for OBS kernel builds
@@ -306,7 +323,7 @@ FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{
 shopt -u nullglob
 
 
-%{dhd_path}/helpers/makefstab --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config %{?makefstab_skip_entries} --outputdir tmp/units
+%{dhd_path}/helpers/makefstab --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config /dev/usb-ffs/adb %{?makefstab_skip_entries} --outputdir tmp/units
 
 echo Fixing up mount points
 if [ -f rpm/fixup-mountpoints ];
@@ -337,6 +354,9 @@ echo install $(cat tmp/units/all-units.txt)
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
+%if 0%{?droid_target_aarch64:1}
+mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib64-dev-alog/
+%endif
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
@@ -374,6 +394,9 @@ rm -f $RPM_BUILD_ROOT/sbin/modprobe
 sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
 
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
+%if 0%{?droid_target_aarch64:1}
+cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
+%endif
 # Remove kernel modules if installed under /system/lib/modules
 rm -rf $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/modules
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
@@ -387,6 +410,9 @@ mkdir -p $HDRS
 echo "Extracting headers for hybris"
 # This is copied from libhybris and should be kept in-sync:
 %{dhd_path}/helpers/extract-headers.sh -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
+if test -d "%{android_root}/rpm/header_patches"; then
+    %{dhd_path}/helpers/patch-headers.sh "$HDRS" "%{android_root}/rpm/header_patches"/*.patch
+fi
 %else
 pushd %{android_root}/rpm/droid-headers 1>/dev/null
 make install DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} INCLUDEDIR=%{_libdir}/droid-devel/droid-headers
@@ -402,7 +428,8 @@ cat <<EOF >> $HDRS/android-config.h.new
 EOF
 # Detect QCOM_BSP and add the define into android-config.h if needed
 if (grep -q '^TARGET_USES_QCOM_BSP := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk || \
-    (grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk && \
+    ((grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk || \
+      grep -q 'PLATFORM_VERSION := 6.' %{android_root}/build/core/version_defaults.mk) && \
      grep -q '^BOARD_USES_QCOM_HARDWARE := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk)); then
 
     echo Found QCOM_BSP
@@ -424,6 +451,9 @@ mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
 # grep -l dev/alog %%{android_root}/out/target/product/%{device}/system/lib/*
 # libdsyscalls.so and libc.so are blacklisted
 ln -s ../system/lib/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/.
+%if 0%{?droid_target_aarch64:1}
+ln -s ../system/lib64/{liblog.so,libcutils.so} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib64-dev-alog/.
+%endif
 
 cp -a tmp/units/*.mount $RPM_BUILD_ROOT/%{_unitdir}
 
@@ -460,6 +490,17 @@ cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
 # This ghost file must exist in the installroot
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
+
+echo "#!/bin/sh" > $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh
+if (grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk || \
+    grep -q 'PLATFORM_VERSION := 6.' %{android_root}/build/core/version_defaults.mk) && \
+   grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
+
+    cat >> $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh <<EOF
+/usr/bin/groupadd-user inet || :
+EOF
+
+fi
 
 # Kernel and module installation; to
 # /boot and modules to /lib as normal
@@ -540,6 +581,9 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 /usr/bin/groupadd-user input || :
 /usr/bin/groupadd-user camera || :
 /usr/bin/groupadd-user media || :
+/usr/bin/groupadd-user mtp || :
+
+./generated-post-scripts.sh || :
 
 # To add additional groups define a HA config, one can define those as part
 # of additional_post_scripts macro.
@@ -588,6 +632,7 @@ fi
 # init-debug
 %attr(755,root,root) /init-debug
 %ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
+%attr(755, root, root) %{_libdir}/droid/generated-post-scripts.sh
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
 
@@ -598,6 +643,11 @@ fi
 %{_libexecdir}/droid-hybris/system/lib/
 # just /dev/alog/ libraries (for trying to run pure android apps)
 %{_libexecdir}/droid-hybris/lib-dev-alog/.
+# all of the above for 64bits
+%if 0%{?droid_target_aarch64:1}
+%{_libexecdir}/droid-hybris/system/lib64/
+%{_libexecdir}/droid-hybris/lib64-dev-alog/.
+%endif
 /lib/udev/rules.d/*
 # Droid config droppings
 /*.rc
