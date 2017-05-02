@@ -352,7 +352,7 @@ FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{
 shopt -u nullglob
 
 
-%{dhd_path}/helpers/makefstab --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config /dev/usb-ffs/adb %{?makefstab_skip_entries} --outputdir tmp/units
+%{dhd_path}/helpers/makefstab --files $FSTAB_FILES  --skip auto /acct /boot /cache /data /misc /recovery /staging /storage/usbdisk /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config /dev/usb-ffs/adb /tmp %{?makefstab_skip_entries} --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
@@ -416,6 +416,8 @@ rm -f $RPM_BUILD_ROOT/sbin/modprobe
 
 # Now remove the mount commands from any .rc files as they're included in .mount unit files now
 sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
+# remove the creation of /tmp to prevent wrong permissons 
+sed -i -e '/^[[:space:]]*mkdir[[:space:]]\/tmp[[:space:]]*/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
 
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 %if 0%{?droid_target_aarch64:1}
