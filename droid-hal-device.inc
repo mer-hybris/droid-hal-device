@@ -2,35 +2,62 @@
 # where macros are defined:
 #
 # Device information:
-# device: should be the CM codename or the AOSP TARGET_PRODUCT
-# vendor: determine the droid-side directory used for ./device/<vendor>/<device>
-# device_pretty: User-visible model name of the device
-# vendor_pretty: User-visible manufacturer name of the device
-# rpm_device: device name used rpm-side (eg in configs) : defaults to device
-# rpm_vendor: vendor name used rpm-side (eg in configs) : defaults to vendor
-# droid_target_aarch64: indicates that your device is 64bit ARM and has such Android base
-# droid_target_armv7hl: indicates that your device is 32bit ARM. Only to be used
-#                       with Android 6+ trees, where 64bit architecture is also
-#                       available
+# device:            should be the CM codename or the AOSP TARGET_PRODUCT
+# vendor:            determine the droid-side directory used for
+#                      ./device/<vendor>/<device>
+# device_pretty:     user-visible model name of the device
+# vendor_pretty:     user-visible manufacturer name of the device
+# rpm_device:        device name used rpm-side (eg in configs)
+#                      defaults to device
+# rpm_vendor:        vendor name used rpm-side (eg in configs)
+#                      defaults to vendor
+# droid_target_aarch64:
+#                    indicates that your device is 64bit ARM and has such
+#                      Android base
+# droid_target_armv7hl:
+#                    indicates that your device is 32bit ARM. Only to be used
+#                    with Android 6+ trees, where 64bit architecture is also
+#                      available
 #
 # Device capabilities:
-# installable_zip: adds zip updater scripts (default for all SFE devices)
-# enable_kernel_update: ability to flash kernel partition, inspect the usage of this macro
-# enable_bootloader_update: ability to flash aboot partition, inspect the usage of this macro
+# installable_zip:   adds zip updater scripts (default for all SFE devices)
+# enable_kernel_update:
+#                    ability to flash kernel partition, inspect the usage of
+#                      this macro
+# enable_bootloader_update:
+#                    ability to flash aboot partition, inspect the usage of this
+#                      macro
 #
 # Miscellaneous:
-# hadk_make_target: the target used when running make in the HABUILD_SDK on the OBS. Defaults to "hybris-hal"
-# device_target_cpu: Used for native builds. Normally the nested droid build env will do an old-fashioned cross-compile and produce non-x86 binaries (default armv7hl). This can be set to tell OBS what arch the binaries are. Eg Android for Intel arch must set this.
-# device_variant: for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
-# makefstab_skip_entries: Allow entries into the makefstab unit creation to be skipped
-# have_custom_img_boot: Defined when img-boot is packaged separately from droid-hal-device
-# have_custom_img_recovery: Defined when img-recovery is packaged separately from droid-hal-device
-# bootloader_binary: Define bootloader binary name when aboot is packaged separately from droid-hal-device
-# pre_actions: command to execute on OBS before `. build/envsetup.sh`, such as choosing correct Java VM
-# straggler_files: any files that don't get packaged automatically, also needs droid-hal-$DEVICE-detritus in patterns
-# provides_own_headers: extract-headers.sh script is not run, but android-config.h is generated.
-# header_patches: If header_patches directory exists apply *.patch files to extracted headers. If provides_own_headers
-#                 is defined it disables patch applying.
+# hadk_make_target:  the target used when running make in the HABUILD_SDK on the
+#                      OBS. Defaults to "hybris-hal"
+# device_target_cpu: used for native builds. Normally the nested droid build env
+#                      will do an old-fashioned cross-compile and produce
+#                      non-x86 binaries (default armv7hl). This can be set to
+#                      tell OBS what arch the binaries are. E.g. Android for
+#                      Intel arch must set this
+# device_variant:    for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
+# makefstab_skip_entries:
+#                    allow entries into the makefstab unit creation to be
+#                      skipped
+# have_custom_img_boot:
+#                    defined when img-boot is packaged separately from
+#                      droid-hal-device
+# have_custom_img_recovery:
+#                    defined when img-recovery is packaged separately
+#                      from droid-hal-device
+# bootloader_binary: define bootloader binary name when aboot is packaged
+#                      separately from droid-hal-device
+# pre_actions:       command to execute on OBS before `. build/envsetup.sh`,
+#                      such as choosing correct Java VM
+# straggler_files:   any files that don't get packaged automatically, also needs
+#                      droid-hal-$DEVICE-detritus in patterns
+# provides_own_headers:
+#                    extract-headers.sh script is not run, but android-config.h
+#                      is generated
+# header_patches:    if header_patches directory exists apply *.patch files to
+#                      extracted headers. If provides_own_headers is defined it
+#                      disables patch applying
 
 
 # Set defaults if not defined already:
