@@ -37,8 +37,8 @@
 #                      tell OBS what arch the binaries are. E.g. Android for
 #                      Intel arch must set this
 # device_variant:    for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
-# lunch_prefix:      cases where the lunch combo has a prefix. For example, if
-#                      it's "aosp_$DEVICE-userdebug", set this flag to "aosp_"
+# lunch_device:      cases where the lunch combo is different from device name.
+#                      For example, it's "aosp_f5121" for the "suzu" device
 # makefstab_skip_entries:
 #                    allow entries into the makefstab unit creation to be
 #                      skipped
@@ -300,7 +300,7 @@ fi
 
 # Hadk style build of android on OBS 
 echo Running droid build in HABUILD_SDK
-ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; %{?pre_actions}%{!?pre_actions:true}; source build/envsetup.sh; lunch %{?lunch_prefix}%{device}%{?device_variant}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
+ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; %{?pre_actions}%{!?pre_actions:true}; source build/envsetup.sh; lunch %{?lunch_device}%{!?lunch_device:%{device}}%{?device_variant}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
 %endif
 
 # Make a tmp location for built installables
