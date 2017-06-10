@@ -3,7 +3,7 @@ if [ ! -f ./out/target/product/${DEVICE}/system/lib/libdroidmedia.so ]; then
     exit 1
 fi
 
-pkg=droidmedia-0.0.0
+pkg=droidmedia-"${1:-0.0.0}"
 fold=hybris/mw/$pkg
 rm -rf $fold
 mkdir $fold
