@@ -488,7 +488,13 @@ cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 ln -s /dev/null $RPM_BUILD_ROOT/etc/udev/rules.d/60-persistent-v4l.rules 
 
 # Install init-debug which will provide usb access and non-blocking telnet
-cp -a %{android_root}/hybris/hybris-boot/init-script $RPM_BUILD_ROOT/init-debug
+INIT_SCRIPT=%{android_root}/hybris/hybris-boot/init-script
+
+if test -f $INIT_SCRIPT; then
+cp -a $INIT_SCRIPT $RPM_BUILD_ROOT/init-debug
+else
+cp -a %{android_root}/hybris/hybris-boot/hb/init-script $RPM_BUILD_ROOT/init-debug
+fi
 
 # droid user support This may be better done by passing a list of
 # users/groups and running 'ensure_usergroups_exist newlist oldlist'
