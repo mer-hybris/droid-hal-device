@@ -287,6 +287,11 @@ if (grep -q '^TARGET_ARCH := arm64' %{android_root}/device/*/*/BoardConfig*.mk);
 fi
 %endif
 
+ANDROID_VERSION_MAJOR=$(grep 'PLATFORM_VERSION := ' \
+                          %{android_root}/build/core/version_defaults.mk \
+                          | awk '{print $3}' \
+                          | awk -F'.' '{print $1}')
+
 %if 0%{?_obs_build_project:1}
 
 # Set up kernel extra version for OBS kernel builds
@@ -454,8 +459,7 @@ cat <<EOF >> $HDRS/android-config.h.new
 EOF
 # Detect QCOM_BSP and add the define into android-config.h if needed
 if (grep -q '^TARGET_USES_QCOM_BSP := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk || \
-    ((grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk || \
-      grep -q 'PLATFORM_VERSION := 6.' %{android_root}/build/core/version_defaults.mk) && \
+   ([ $ANDROID_VERSION_MAJOR -ge "5" ] && \
      grep -q '^BOARD_USES_QCOM_HARDWARE := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk)); then
 
     echo Found QCOM_BSP
@@ -524,8 +528,7 @@ cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
 
 echo "#!/bin/sh" > $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh
-if (grep -q 'PLATFORM_VERSION := 5.' %{android_root}/build/core/version_defaults.mk || \
-    grep -q 'PLATFORM_VERSION := 6.' %{android_root}/build/core/version_defaults.mk) && \
+if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
    grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
 
     cat >> $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh <<EOF
