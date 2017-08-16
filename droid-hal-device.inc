@@ -287,11 +287,6 @@ if (grep -q '^TARGET_ARCH := arm64' %{android_root}/device/*/*/BoardConfig*.mk);
 fi
 %endif
 
-ANDROID_VERSION_MAJOR=$(grep 'PLATFORM_VERSION := ' \
-                          %{android_root}/build/core/version_defaults.mk \
-                          | awk '{print $3}' \
-                          | awk -F'.' '{print $1}')
-
 %if 0%{?_obs_build_project:1}
 
 # Set up kernel extra version for OBS kernel builds
@@ -379,6 +374,12 @@ EOF
 
 ################
 %install
+
+ANDROID_VERSION_MAJOR=$(grep 'PLATFORM_VERSION := ' \
+                          %{android_root}/build/core/version_defaults.mk \
+                          | awk '{print $3}' \
+                          | awk -F'.' '{print $1}')
+
 echo install $(cat tmp/units/all-units.txt)
 rm -rf $RPM_BUILD_ROOT
 # Create dir structure
