@@ -43,24 +43,34 @@ ls
 tar -xvf %name-%version.tgz
 %install
 
-mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/lib/
+if [ -f out/target/product/*/system/lib64/libaudioflingerglue.so ]; then
+DROIDLIB=lib64
+else
+DROIDLIB=lib
+fi
+
+mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 mkdir -p $RPM_BUILD_ROOT/%{_includedir}/audioflingerglue/
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/audioflingerglue/
 pushd %name-%version
-cp out/target/product/*/system/lib/libaudioflingerglue.so \
-    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/lib/
+cp out/target/product/*/system/$DROIDLIB/libaudioflingerglue.so \
+    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 
 cp out/target/product/*/system/bin/miniafservice \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 
 cp external/audioflingerglue/*.h $RPM_BUILD_ROOT/%{_includedir}/audioflingerglue/
-cp external/audioflingerglue/hybris.c $RPM_BUILD_ROOT/%{_datadir}/audioflingerglue/
+sed -e "s/@TARGET_LIB_ARCH@/$DROIDLIB/" external/audioflingerglue/hybris.c.in > \
+    $RPM_BUILD_ROOT/%{_datadir}/audioflingerglue/hybris.c
 
 popd
-%files
+
+LIBAFSOLOC=$RPM_BUILD_ROOT/file.list
+echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libaudioflingerglue.so > %{LIBAFSOLOC}
+ 
+%files -f %{LIBAFSOLOC}
 %defattr(-,root,root,-)
-%{_libexecdir}/droid-hybris/system/lib/libaudioflingerglue.so
 %{_libexecdir}/droid-hybris/system/bin/miniafservice
 
 %files devel
