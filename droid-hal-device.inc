@@ -315,6 +315,14 @@ hybris/mer-kernel-check/mer_verify_kernel_config \
 # Check if local overrides for tool mk files exist, otherwise dhd defaults are used
 if test -f rpm/helpers/mkbootimg.mk; then
     export MKBOOTIMG_MK=$(pwd)/rpm/helpers/mkbootimg.mk
+else
+    # Starting from Android 7 mkbootimg is a python program so build only for older Android versions
+    if [ $(grep 'PLATFORM_VERSION := ' \
+                          %{android_root}/build/core/version_defaults.mk \
+                          | awk '{print $3}' \
+                          | awk -F'.' '{print $1}') -lt "7" ]; then
+        export MKBOOTIMG_MK=$(pwd)/rpm/dhd/helpers/mkbootimg.mk
+    fi
 fi
 
 if test -f rpm/helpers/simg2img.mk; then
@@ -415,7 +423,7 @@ cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BU
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
 %endif
 
-cp -a %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT/
+rsync -av %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT --exclude etc
 
 # We'll use the mer provided modprobe so clean that out of the way
 rm -f $RPM_BUILD_ROOT/sbin/modprobe
@@ -425,6 +433,11 @@ sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device 
 # remove the creation of /tmp to prevent wrong permissons 
 sed -i -e '/^[[:space:]]*mkdir[[:space:]]\/tmp[[:space:]]*/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
 
+if [ $ANDROID_VERSION_MAJOR -ge "7" ]; then
+mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init
+cp -a %{android_root}/out/target/product/%{device}/system/etc/init/servicemanager.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
+echo "%{_libexecdir}/droid-hybris/system/etc/init/servicemanager.rc" > tmp/droid-hal.files
+fi
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 %if 0%{?droid_target_aarch64:1}
 cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
@@ -467,6 +480,7 @@ if (grep -q '^TARGET_USES_QCOM_BSP := true' %{android_root}/device/%{vendor}/*/B
     cat <<EOF >> $HDRS/android-config.h.new
 /* Added by automatic QCOM_BSP detection */
 #define QCOM_BSP 1
+#define QTI_BSP 1
 EOF
 fi
 sed '0,/CONFIG GOES HERE/d' $HDRS/android-config.h >> $HDRS/android-config.h.new
@@ -512,7 +526,10 @@ install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/dr
 # Remove cruft
 rm -f $RPM_BUILD_ROOT/fstab.*
 rm -f $RPM_BUILD_ROOT/*goldfish*
-rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,property,seapp}_contexts
+rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,seapp}_contexts
+if [ $ANDROID_VERSION_MAJOR -lt "7" ]; then
+rm -f $RPM_BUILD_ROOT/property_contexts
+fi
 rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 
 # Name this so droid-system-packager's droid-hal-startup.sh can find it
@@ -657,7 +674,7 @@ fi
 ################################################################
 # Begin files section
 
-%files
+%files -f tmp/droid-hal.files
 %defattr(-,root,root,-)
 /sbin/*
 # This binary should probably move to /sbin/

@@ -3,7 +3,12 @@ ANDROID_ROOT ?= ..
 
 # List of local tools we need to build
 TOOLS := usergroupgen
-MKBOOTIMG_MK ?= $(shell pwd)/mkbootimg.mk
+
+ifdef $(MKBOOTIMG_MK)
+MKBOOTIMG := mkbootimg
+MKBOOTIMG_CLEAN := $(ANDROID_ROOT)/system/core/mkbootimg/mkbootimg
+endif
+
 IMG2SIMG_MK ?= $(shell pwd)/img2simg.mk
 SIMG2IMG_MK ?= $(shell pwd)/simg2img.mk
 
@@ -13,14 +18,16 @@ CFLAGS += -I$(ANDROID_ROOT)/system/core/include/private/
 # C99 support
 CFLAGS += -std=c99
 
-all: $(TOOLS) image_tools
+all: $(TOOLS) $(MKBOOTIMG) image_tools
+
+mkbootimg:
+	make -f $(MKBOOTIMG_MK) -C $(ANDROID_ROOT)/system/core/mkbootimg/
 
 image_tools:
-	make -f $(MKBOOTIMG_MK) -C $(ANDROID_ROOT)/system/core/mkbootimg/
 	make -f $(IMG2SIMG_MK) -C $(ANDROID_ROOT)/system/core/libsparse/
 	make -f $(SIMG2IMG_MK) -C $(ANDROID_ROOT)/system/core/libsparse/
 clean:
-	rm -f $(TOOLS) $(ANDROID_ROOT)/system/core/mkbootimg/mkbootimg \
+	rm -f $(TOOLS) $(MKBOOTIMG_CLEAN) \
 	$(ANDROID_ROOT)/system/core/libsparse/img2simg \
 	$(ANDROID_ROOT)/system/core/libsparse/simg2img
 
