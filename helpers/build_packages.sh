@@ -132,6 +132,8 @@ if [ "$BUILDMW_REPO" == "" ]; then
 # hack until upstream is sane
 if (grep -q 'PLATFORM_VERSION := 6.' $ANDROID_ROOT/build/core/version_defaults.mk); then
 buildmw libhybris mm64-rpm || die
+elif (grep -q 'PLATFORM_VERSION := 7.' $ANDROID_ROOT/build/core/version_defaults.mk); then
+buildmw libhybris n64-rpm || die
 else
 buildmw libhybris || die
 fi
