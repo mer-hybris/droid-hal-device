@@ -188,7 +188,7 @@ EOF
 extract_headers_to hardware \
     hardware/libhardware/include/hardware
 
-check_header_exists hardware/libhardware/include/hardware/vibrator.h && \
+check_header_exists hardware/libhardware_legacy/include/hardware_legacy/vibrator.h && \
     extract_headers_to hardware_legacy \
         hardware/libhardware_legacy/include/hardware_legacy/vibrator.h
 

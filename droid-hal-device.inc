@@ -437,6 +437,8 @@ if [ $ANDROID_VERSION_MAJOR -ge "7" ]; then
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init
 cp -a %{android_root}/out/target/product/%{device}/system/etc/init/servicemanager.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
 echo "%{_libexecdir}/droid-hybris/system/etc/init/servicemanager.rc" > tmp/droid-hal.files
+else
+echo "" > tmp/droid-hal.files
 fi
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 %if 0%{?droid_target_aarch64:1}
