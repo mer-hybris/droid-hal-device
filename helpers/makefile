@@ -4,7 +4,7 @@ ANDROID_ROOT ?= ..
 # List of local tools we need to build
 TOOLS := usergroupgen
 
-ifdef $(MKBOOTIMG_MK)
+ifdef MKBOOTIMG_MK
 MKBOOTIMG := mkbootimg
 MKBOOTIMG_CLEAN := $(ANDROID_ROOT)/system/core/mkbootimg/mkbootimg
 endif
