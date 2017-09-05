@@ -116,6 +116,12 @@ if [ -n "$(grep '%define community_adaptation' $ANDROID_ROOT/hybris/droid-config
         die "Could not determine if community-adaptation package is available, exiting."
     fi
 fi
+# avoid a SIGSEGV on exit of libhybris client
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R ls /system/build.prop > /dev/null
+ret=$?
+if [ $ret -ne 0 ]; then
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R bash -c "mkdir -p /system; echo ro.build.version.sdk=99 > /system/build.prop"
+fi
 buildconfigs
 fi
 
