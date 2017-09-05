@@ -136,7 +136,9 @@ pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
 if [ "$BUILDMW_REPO" == "" ]; then
 # hack until upstream is sane
-if (grep -q 'PLATFORM_VERSION := 6.' $ANDROID_ROOT/build/core/version_defaults.mk); then
+if [[ " f5121 " == *" $DEVICE "* ]]; then
+buildmw libhybris minimalhooks || die
+elif (grep -q 'PLATFORM_VERSION := 6.' $ANDROID_ROOT/build/core/version_defaults.mk); then
 buildmw libhybris mm64-rpm || die
 elif (grep -q 'PLATFORM_VERSION := 7.' $ANDROID_ROOT/build/core/version_defaults.mk); then
 buildmw libhybris n64-rpm || die
