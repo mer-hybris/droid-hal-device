@@ -447,6 +447,7 @@ cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%
 # Remove kernel modules if installed under /system/lib/modules
 rm -rf $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/modules
 cp -a %{android_root}/out/target/product/%{device}/obj/{lib,include} $RPM_BUILD_ROOT%{_libdir}/droid-devel/
+rm -rf $RPM_BUILD_ROOT%{_libdir}/droid-devel/lib/*.so.toc
 cp -a %{android_root}/out/target/product/%{device}/symbols $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 
 HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
