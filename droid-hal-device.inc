@@ -136,6 +136,7 @@ Group:		System
 BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
+BuildRequires:  rsync
 %if 0%{?straggler_files:1}
 Requires:       droid-hal-%{rpm_device}-detritus
 %endif
