@@ -60,8 +60,6 @@
 # header_patches:    if header_patches directory exists apply *.patch files to
 #                      extracted headers. If provides_own_headers is defined it
 #                      disables patch applying
-# obs_requires:      used when any additional build requirements need to be
-#                      passed to OBS
 
 
 # Set defaults if not defined already:
@@ -143,7 +141,6 @@ Requires:       droid-hal-%{rpm_device}-detritus
 %if 0%{?_obs_build_project:1}
 BuildRequires:  ubu-trusty
 BuildRequires:  sudo-for-abuild
-%{?obs_requires}
 %endif
 %systemd_requires
 %{_oneshot_requires_post}
