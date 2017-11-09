@@ -649,6 +649,7 @@ cp -f droid-user-remove.sh droid-user-remove.sh.installed
 /usr/bin/groupadd-user camera || :
 /usr/bin/groupadd-user media || :
 /usr/bin/groupadd-user mtp || :
+/usr/bin/groupadd-user bluetooth || :
 
 ./generated-post-scripts.sh || :
 
