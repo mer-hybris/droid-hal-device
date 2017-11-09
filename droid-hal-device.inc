@@ -421,7 +421,11 @@ shopt -u nullglob
 %{dhd_path}/helpers/makefstab --files $FSTAB_FILES  --skip auto none /acct /boot /cache /data /misc /recovery /staging /storage/sdcard1 /storage/usbdisk /storage/usbotg /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config /dev/usb-ffs/adb /tmp %{?makefstab_skip_entries} --outputdir tmp/units
 
 echo Fixing up mount points
-hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
+if test -f hybris/fixup-mountpoints; then
+    hybris/fixup-mountpoints %{device} tmp/units/*
+else
+    hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
+fi
 
 echo Creating hw-release
 # based on http://www.freedesktop.org/software/systemd/man/os-release.html
