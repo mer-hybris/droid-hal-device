@@ -72,6 +72,12 @@ such_macro supports spaces\
 %{nil}
 
 # Available multi-line macros:
+# android_config:    any custom defines you would like to pass to the underlying
+#                      Android. Available options for e.g. libhybris:
+#   #define WANT_ADRENO_QUIRKS 1
+#                    use this if SFOS Browser has shaders crash on a 64bit device
+#   #define MALI_QUIRKS 1
+#                    use this if your device has a Mali GPU
 # straggler_files:   any files that don't get packaged automatically, also needs
 #                      droid-hal-$DEVICE-detritus in patterns
 
