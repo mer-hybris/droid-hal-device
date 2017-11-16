@@ -52,8 +52,6 @@
 #                      separately from droid-hal-device
 # pre_actions:       command to execute on OBS before `. build/envsetup.sh`,
 #                      such as choosing correct Java VM
-# straggler_files:   any files that don't get packaged automatically, also needs
-#                      droid-hal-$DEVICE-detritus in patterns
 # provides_own_headers:
 #                    extract-headers.sh script is not run, but android-config.h
 #                      is generated
@@ -62,6 +60,20 @@
 #                      disables patch applying
 # have_vendor_src_for_obs:
 #                    include a separately packaged vendor source for OBS builds
+#
+# Multi-line macros:
+# Such macros are defined in the .spec file as follows:
+
+%define example_multiline_macro\
+line1\
+line2\
+such_macro supports spaces\
+#define also_supports "C-style definitions"\
+%{nil}
+
+# Available multi-line macros:
+# straggler_files:   any files that don't get packaged automatically, also needs
+#                      droid-hal-$DEVICE-detritus in patterns
 
 
 # Set defaults if not defined already:
