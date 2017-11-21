@@ -135,16 +135,7 @@ sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install droid-hal-$
 pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
 if [ "$BUILDMW_REPO" == "" ]; then
-# hack until upstream is sane
-if [[ " f5121 " == *" $DEVICE "* ]]; then
-buildmw libhybris minimalhooks || die
-elif (grep -q 'PLATFORM_VERSION := 6.' $ANDROID_ROOT/build/core/version_defaults.mk); then
-buildmw libhybris mm64-rpm || die
-elif (grep -q 'PLATFORM_VERSION := 7.' $ANDROID_ROOT/build/core/version_defaults.mk); then
-buildmw libhybris n64-rpm || die
-else
 buildmw libhybris || die
-fi
 buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die
 buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
 buildmw ngfd-plugin-droid-vibrator || die
