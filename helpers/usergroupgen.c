@@ -27,7 +27,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "android_filesystem_config.h"
+#include "generated_android_filesystem_config.h"
 #include <stdio.h>
 
 int main(int argc, char *argv[])

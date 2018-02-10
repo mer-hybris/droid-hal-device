@@ -100,7 +100,8 @@ function builddhd() {
 
 function buildversion() {
     PKG=droid-hal-version-$DEVICE
-    cd hybris/$PKG
+    dir=$(dirname $(find hybris -name $PKG.spec))
+    cd $dir/..
     initlog $PKG $(dirname `pwd`)
     build rpm/$PKG.spec
     deploy $PKG do_not_install

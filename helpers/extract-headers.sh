@@ -66,7 +66,7 @@ if [ x$MAJOR = x -o x$MINOR = x -o x$PATCH = x ]; then
     fi
 
     IFS="." read MAJOR MINOR PATCH PATCH2 PATCH3 <<EOF
-$(IFS="." awk '/PLATFORM_VERSION := ([0-9.]+)/ { print $3; }' < $VERSION_DEFAULTS)
+$(IFS="." awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' < $VERSION_DEFAULTS)
 EOF
     if [ x$PATCH = x ]; then
          PATCH=0
@@ -111,11 +111,11 @@ extract_headers_to() {
         if [ -d $SOURCE_PATH ]; then
             for file in $SOURCE_PATH/*; do
                 echo "    $1/$(basename $file)"
-                cp $file $TARGET_DIRECTORY/
+                cp -L $file $TARGET_DIRECTORY/
             done
         else
             echo "    $1"
-            cp $SOURCE_PATH $TARGET_DIRECTORY/
+            cp -L $SOURCE_PATH $TARGET_DIRECTORY/
         fi
         shift
     done
@@ -192,8 +192,15 @@ check_header_exists hardware/libhardware_legacy/include/hardware_legacy/vibrator
     extract_headers_to hardware_legacy \
         hardware/libhardware_legacy/include/hardware_legacy/vibrator.h
 
+check_header_exists hardware/libhardware_legacy/include/hardware_legacy/wifi.h && \
+    extract_headers_to hardware_legacy \
+        hardware/libhardware_legacy/include/hardware_legacy/wifi.h
+
+check_header_exists frameworks/opt/net/wifi/libwifi_hal/include/hardware_legacy/wifi.h && \
+    extract_headers_to hardware_legacy \
+        frameworks/opt/net/wifi/libwifi_hal/include/hardware_legacy/wifi.h
+
 extract_headers_to hardware_legacy \
-    hardware/libhardware_legacy/include/hardware_legacy/wifi.h \
     hardware/libhardware_legacy/include/hardware_legacy/audio_policy_conf.h
 
 extract_headers_to cutils \
@@ -226,6 +233,10 @@ check_header_exists bionic/libc/kernel/uapi/linux/sync.h && \
         bionic/libc/kernel/uapi/linux/sync.h \
         bionic/libc/kernel/uapi/linux/sw_sync.h
 
+check_header_exists bionic/libc/kernel/uapi/linux/sync_file.h && \
+    extract_headers_to linux \
+        bionic/libc/kernel/uapi/linux/sync_file.h
+
 check_header_exists bionic/libc/include/android/dlext.h && \
     extract_headers_to android \
         bionic/libc/include/android/dlext.h \
@@ -235,6 +246,10 @@ check_header_exists bionic/libc/include/android/dlext.h && \
 check_header_exists system/core/libsync/include/sync/sync.h && \
     extract_headers_to sync \
         system/core/libsync/include/sync
+
+check_header_exists system/core/libsync/include/ndk/sync.h && \
+    extract_headers_to ndk \
+        system/core/libsync/include/ndk
 
 check_header_exists external/libnfc-nxp/inc/phNfcConfig.h && \
     extract_headers_to libnfc-nxp \
@@ -249,6 +264,25 @@ extract_headers_to private \
     system/core/include/private/android_filesystem_config.h \
     bionic/libc/private
 
+check_header_exists frameworks/native/libs/nativewindow/include/android/native_window.h && \
+    extract_headers_to android \
+        frameworks/native/libs/nativewindow/include/android
+
+check_header_exists frameworks/native/libs/arect/include/android/rect.h && \
+    extract_headers_to android \
+        frameworks/native/libs/arect/include/android/rect.h
+
+check_header_exists frameworks/native/libs/nativebase/include/nativebase/nativebase.h && \
+    extract_headers_to nativebase \
+        frameworks/native/libs/nativebase/include/nativebase/nativebase.h
+
+check_header_exists frameworks/native/libs/nativewindow/include/system/window.h && \
+    extract_headers_to system \
+        frameworks/native/libs/nativewindow/include/system/window.h
+
+check_header_exists frameworks/native/libs/nativewindow/include/vndk/window.h && \
+    extract_headers_to vndk \
+        frameworks/native/libs/nativewindow/include/vndk
 
 # In order to make it easier to trace back the origins of headers, fetch
 # some repository information from the Git source tree (if available).

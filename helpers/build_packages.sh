@@ -141,6 +141,7 @@ buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
 buildmw ngfd-plugin-droid-vibrator rpm/ngfd-plugin-native-vibrator.spec || die
 buildmw qt5-feedback-haptics-droid-vibrator rpm/qt5-feedback-haptics-native-vibrator.spec || die
 buildmw qt5-qpa-hwcomposer-plugin || die
+buildmw qt5-qpa-surfaceflinger-plugin || die
 buildmw "https://git.merproject.org/mer-core/qtscenegraph-adaptation.git" rpm/qtscenegraph-adaptation-droid.spec || die
 buildmw "https://git.merproject.org/mer-core/sensorfw.git" rpm/sensorfw-qt5-hybris.spec || die
 buildmw geoclue-providers-hybris || die

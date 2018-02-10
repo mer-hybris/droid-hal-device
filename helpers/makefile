@@ -13,7 +13,7 @@ IMG2SIMG_MK ?= $(shell pwd)/img2simg.mk
 SIMG2IMG_MK ?= $(shell pwd)/simg2img.mk
 
 # Include directories
-CFLAGS += -I$(ANDROID_ROOT)/system/core/include/private/
+CFLAGS += -I$(ANDROID_ROOT)/system/core/include/ -I$(ANDROID_ROOT)/
 
 # C99 support
 CFLAGS += -std=c99
