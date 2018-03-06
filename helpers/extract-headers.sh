@@ -241,6 +241,10 @@ check_header_exists external/libnfc-nxp/inc/phNfcConfig.h && \
         external/libnfc-nxp/inc \
         external/libnfc-nxp/src
 
+check_header_exists system/media/radio/include/system/radio_metadata.h && \
+    extract_headers_to system \
+        system/media/radio/include/system/radio_metadata.h
+
 extract_headers_to private \
     system/core/include/private/android_filesystem_config.h \
     bionic/libc/private
