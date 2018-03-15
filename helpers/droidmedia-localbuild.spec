@@ -60,6 +60,9 @@ pushd %name-%version
 cp out/target/product/*/system/lib/libdroidmedia.so \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/lib/
 
+cp out/target/product/*/system/lib/libminisf.so \
+    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/lib/
+
 cp out/target/product/*/system/bin/minimediaservice \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 
@@ -73,6 +76,7 @@ popd
 %files
 %defattr(-,root,root,-)
 %{_libexecdir}/droid-hybris/system/lib/libdroidmedia.so
+%{_libexecdir}/droid-hybris/system/lib/libminisf.so
 %{_libexecdir}/droid-hybris/system/bin/minimediaservice
 %{_libexecdir}/droid-hybris/system/bin/minisfservice
 
