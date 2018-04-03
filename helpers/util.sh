@@ -160,13 +160,12 @@ function buildmw {
 
         if [ ! -d $PKG ] ; then
             minfo "Source code directory doesn't exist, cloning repository"
-            git clone $GIT_URL $GIT_BRANCH >>$LOG 2>&1|| die "cloning of $GIT_URL failed"
+            git clone --recurse-submodules $GIT_URL $GIT_BRANCH >>$LOG 2>&1|| die "cloning of $GIT_URL failed"
         fi
 
         pushd $PKG > /dev/null || die
         minfo "pulling updates..."
         git pull >>$LOG 2>&1|| die "pulling of updates failed"
-        git submodule update >>$LOG 2>&1|| die "pulling of updates failed"
 
         build $1
 
