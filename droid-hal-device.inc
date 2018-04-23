@@ -42,6 +42,8 @@
 # makefstab_skip_entries:
 #                    allow entries into the makefstab unit creation to be
 #                      skipped
+# initrc_skip_files:
+#                    do not process *rc files given in this list
 # have_custom_img_boot:
 #                    defined when img-boot is packaged separately from
 #                      droid-hal-device
@@ -457,10 +459,15 @@ rsync -av %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT --
 # We'll use the mer provided modprobe so clean that out of the way
 rm -f $RPM_BUILD_ROOT/sbin/modprobe
 
+%if 0%{?initrc_skip_files:1}
+RC_FILES=$(find $RPM_BUILD_ROOT -maxdepth 1 -name "*rc" $(printf "! -name %s " $(echo %{?initrc_skip_files})))
+%else
+RC_FILES=$(ls $RPM_BUILD_ROOT/*rc)
+%endif
 # Now remove the mount commands from any .rc files as they're included in .mount unit files now
-sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
+sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RC_FILES
 # remove the creation of /tmp to prevent wrong permissons 
-sed -i -e '/^[[:space:]]*mkdir[[:space:]]\/tmp[[:space:]]*/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
+sed -i -e '/^[[:space:]]*mkdir[[:space:]]\/tmp[[:space:]]*/s/^/# Removed during droid-hal-device build : /' $RC_FILES
 
 if [ $ANDROID_VERSION_MAJOR -ge "7" ]; then
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init
@@ -568,7 +575,7 @@ rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 mkdir -p $RPM_BUILD_ROOT/sbin
 mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 # Rename any symlinks to droid's /init 
-find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "ln -s" ./droid-hal-init {} \;
+find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir rm {} \; -execdir ln -s ./droid-hal-init {} \;
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # for use in the -devel package
