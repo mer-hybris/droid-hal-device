@@ -155,18 +155,28 @@ function buildmw {
             minfo "No git url specified, assuming $GIT_URL"
         fi
 
-        pushd "$ANDROID_ROOT/hybris/mw" > /dev/null || die
+        if [ -d "$ANDROID_ROOT/external/$PKG" ]; then
+            pushd "$ANDROID_ROOT/external" > /dev/null || die
 
-        initlog $PKG
+            minfo "Source code directory exists in \$ANDROID_ROOT/external. Building the existing version. Make sure to update this version by updating the manifest, if required."
 
-        if [ ! -d $PKG ] ; then
-            minfo "Source code directory doesn't exist, cloning repository"
-            git clone --recurse-submodules $GIT_URL $GIT_BRANCH >>$LOG 2>&1|| die "cloning of $GIT_URL failed"
+            initlog $PKG
+
+            pushd $PKG > /dev/null || die
+        else
+            pushd "$ANDROID_ROOT/hybris/mw" > /dev/null || die
+
+            initlog $PKG
+
+            if [ ! -d $PKG ] ; then
+                minfo "Source code directory doesn't exist, cloning repository"
+                git clone --recurse-submodules $GIT_URL $GIT_BRANCH >>$LOG 2>&1|| die "cloning of $GIT_URL failed"
+            fi
+
+            pushd $PKG > /dev/null || die
+            minfo "pulling updates..."
+            git pull >>$LOG 2>&1|| die "pulling of updates failed"
         fi
-
-        pushd $PKG > /dev/null || die
-        minfo "pulling updates..."
-        git pull >>$LOG 2>&1|| die "pulling of updates failed"
 
         build $1
 
