@@ -32,16 +32,18 @@
 
 int main(int argc, char *argv[])
 {
+    int add, i;
+
     if (argc != 2 || (strcmp(argv[1], "remove") != 0 &&
                       strcmp(argv[1], "add") != 0)) {
         fprintf(stderr, "Usage: %s [add|remove]\n", argv[0]);
         return 1;
     }
 
-    int add = (strcmp(argv[1], "add") == 0);
+    add = (strcmp(argv[1], "add") == 0);
 
     printf("#!/bin/sh\n");
-    for (int i = 0; i < android_id_count; i++) {
+    for (i = 0; i < android_id_count; i++) {
         if (android_ids[i].aid == 0) {
             /* Skip creating/removing the root user */
             continue;
