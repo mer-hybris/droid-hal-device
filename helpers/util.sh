@@ -35,6 +35,7 @@
 PORT_ARCH="${PORT_ARCH:-armv7hl}"
 BUILDALL=n
 LOG="/dev/null"
+CREATEREPO="createrepo_c"
 
 function minfo {
     echo -e "\e[01;34m* $* \e[00m"
@@ -62,11 +63,26 @@ if [ -z $DEVICE ]; then
 fi
 
 mkdir -p $ANDROID_ROOT/hybris/mw
-zypper se -i createrepo > /dev/null
+zypper se -i createrepo_c > /dev/null
 ret=$?
 if [ $ret -eq 104 ]; then
-   minfo Installing required Platform SDK packages
-   sudo zypper in android-tools createrepo zip
+    ANDROID_TOOLS=""
+    zypper se createrepo_c > /dev/null
+    ret=$?
+    if [ $ret -eq 104 ]; then # SDK older than 2.2.0
+        CREATEREPO="createrepo"
+        zypper se -i createrepo > /dev/null
+        ret=$?
+        if [ $ret -eq 104 ]; then
+            ANDROID_TOOLS="android-tools"
+        fi
+    else
+        ANDROID_TOOLS="android-tools-hadk"
+    fi
+    if [ -n "$ANDROID_TOOLS" ]; then
+        minfo Installing required Platform SDK packages
+        sudo zypper in $ANDROID_TOOLS $CREATEREPO zip tar
+    fi
 fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
@@ -197,7 +213,7 @@ function deploy {
     mkdir -p "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die
     rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm >>$LOG 2>&1|| die
     mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
-    createrepo "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
+    $CREATEREPO "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't update pkg info"
     DO_NOT_INSTALL=$2
