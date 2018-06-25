@@ -102,7 +102,12 @@ function buildconfigs() {
     initlog $PKG $(dirname `pwd`)
     build rpm/droid-config-$DEVICE.spec
     deploy $PKG do_not_install
-    cd ../../
+    # installroot no longer exists since Platform SDK 2.2.0, let's put KS back
+    rm -rf installroot
+    mkdir installroot
+    cd installroot
+    rpm2cpio $ANDROID_ROOT/droid-local-repo/$DEVICE/droid-configs/droid-config-$DEVICE-ssu-kickstarts-1-1.armv7hl.rpm | cpio -idv &> /dev/null
+    cd ../../../
 
     hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh >>$LOG 2>&1|| die "error while processing patterns"
 }
