@@ -25,6 +25,45 @@ while (@ARGV) {
   }
 }
 
+sub write_unit {
+  my ($opdir, $uname, $secontext, $m_flagsandoptions, $typ, $source, $mnt_target, $fil, $cont) = @_;
+  open(UNIT, ">$opdir/$uname.mount") or die "Couldn't write to $outputdir/$uname.mount\n";
+
+  $secontext = "";
+  if ($m_flagsandoptions =~ s/(context=[^,]*)//) {
+    $secontext = $1;
+  }
+  # tidy up in case we left leading,trailing or paired ,s
+  $m_flagsandoptions =~ s/,,/,/;
+  $m_flagsandoptions =~ s/^,//;
+  $m_flagsandoptions =~ s/,$//;
+
+  print UNIT <<"END" ;
+[Unit]
+Description=Droid mount for $mnt_target
+Before=local-fs.target systemd-modules-load.service
+
+[Mount]
+What=$source
+Where=$mnt_target
+Type=$typ
+Options=$m_flagsandoptions
+# Options had SELinux context option:  $secontext
+
+# Default is 90 which makes mount period too long in case of
+# errors so drop it down a notch.
+TimeoutSec=10
+
+[Install]
+WantedBy=local-fs.target
+
+# From $fil :
+# $cont
+END
+  print "Wrote $uname.unit\n";
+  close UNIT;
+}
+
 for my $file (@files) {
   open(FILE, "<$file") or die "Can't read from $file\n";
   next if $file =~ /goldfish/;
@@ -102,44 +141,26 @@ for my $file (@files) {
     # transformation. This escaping is reversible.
     $unitname =~ s/^-//;
     $unitname =~ s/-$//;
+
+    # if unitname is "" that means it was intended to be mounted as /.
+    # in Android 8 this is the system partition which we need to treat
+    # specially.
+    if ( $unitname eq "" ) {
+        $unitname = "system_root";
+        $mnt_point = "/system_root";
+    }
+
     if (-f "$unitname.mount" ) {
       print "Error, $unitname.mount already exists\n";
       exit 1;
     }
-    open(UNIT, ">$outputdir/$unitname.mount") or die "Couldn't write to $outputdir/$unitname.mount\n";
 
-    $secontext = "";
-    if ($mnt_flagsandoptions =~ s/(context=[^,]*)//) {
-      $secontext = $1;
+    write_unit($outputdir, $unitname, $secontext, $mnt_flagsandoptions, $type, $src, $mnt_point, $file, $_);
+
+    # in case of an Android 8 root partition, bind mount /system_root/system
+    # to /system to make sure everything is in the proper place.
+    if ( $unitname eq "system_root" ) {
+      write_unit($outputdir, "system", $secontext, "bind", "none", "/system_root/system", "/system", $file, $_);
     }
-    # tidy up in case we left leading,trailing or paired ,s
-    $mnt_flagsandoptions =~ s/,,/,/;
-    $mnt_flagsandoptions =~ s/^,//;
-    $mnt_flagsandoptions =~ s/,$//;
-
-    print UNIT <<"END" ;
-[Unit]
-Description=Droid mount for $mnt_point
-Before=local-fs.target systemd-modules-load.service
-
-[Mount]
-What=$src
-Where=$mnt_point
-Type=$type
-Options=$mnt_flagsandoptions
-# Options had SELinux context option:  $secontext
-
-# Default is 90 which makes mount period too long in case of
-# errors so drop it down a notch.
-TimeoutSec=10
-
-[Install]
-WantedBy=local-fs.target
-
-# From $file :
-# $_
-END
-    print "Wrote $unitname.unit\n";
-    close UNIT;
   }
 }

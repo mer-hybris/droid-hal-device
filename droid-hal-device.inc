@@ -155,6 +155,8 @@ BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  rsync
+# starting from Android 8
+BuildRequires:  python
 %if 0%{?straggler_files:1}
 Requires:       droid-hal-%{rpm_device}-detritus
 %endif
@@ -341,15 +343,17 @@ echo Verifying kernel config
 hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/*/.config
 
+
+ANDROID_VERSION_MAJOR=$(awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' \
+                          < %{android_root}/build/core/version_defaults.mk \
+                          | awk -F'.' '{print $1}')
+
 # Check if local overrides for tool mk files exist, otherwise dhd defaults are used
 if test -f rpm/helpers/mkbootimg.mk; then
     export MKBOOTIMG_MK=$(pwd)/rpm/helpers/mkbootimg.mk
 else
     # Starting from Android 7 mkbootimg is a python program so build only for older Android versions
-    if [ $(grep 'PLATFORM_VERSION := ' \
-                          %{android_root}/build/core/version_defaults.mk \
-                          | awk '{print $3}' \
-                          | awk -F'.' '{print $1}') -lt "7" ]; then
+    if [ $ANDROID_VERSION_MAJOR -lt "7" ]; then
         export MKBOOTIMG_MK=$(pwd)/rpm/dhd/helpers/mkbootimg.mk
     fi
 fi
@@ -364,7 +368,37 @@ fi
 
 echo Building local tools
 ANDROID_ROOT=$(readlink -e %{android_root})
-(cd %{dhd_path}/helpers; make ANDROID_ROOT=$ANDROID_ROOT)
+
+if [ $ANDROID_VERSION_MAJOR -ge "8" ]; then
+    $ANDROID_ROOT/build/make/tools/fs_config/fs_config_generator.py aidarray \
+        $ANDROID_ROOT/system/core/libcutils/include/private/android_filesystem_config.h \
+        > generated_android_filesystem_config.h
+else
+    echo "#include <private/android_filesystem_config.h>;" > generated_android_filesystem_config.h
+fi
+
+USE_STD_C99=1
+
+# files have changed in android >=8 so we need to supply different ones to the
+# makefile. we also need the cstring workaround thus handling both issues here
+# at once
+if [ $ANDROID_VERSION_MAJOR -ge "8" ]; then
+    # sparse_read.cpp doesn't include cstring and therefore fails for us
+    # workaround:
+    echo "#include <cstring>" > $ANDROID_ROOT/system/core/libsparse/sparse_read_fix.cpp
+    echo "#include \"sparse_read.cpp\"" >> $ANDROID_ROOT/system/core/libsparse/sparse_read_fix.cpp
+    IMG2SIMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read_fix.cpp img2simg.c ../base/stringprintf.cpp"
+    SIMG2IMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read_fix.cpp simg2img.c ../base/stringprintf.cpp"
+
+    USE_STD_C99=0
+else
+    IMG2SIMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read.c img2simg.c"
+    SIMG2IMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read.c simg2img.c"
+fi
+
+pushd %{dhd_path}/helpers
+make USE_STD_C99=$USE_STD_C99 ANDROID_ROOT=$ANDROID_ROOT IMG2SIMG_SOURCES="$IMG2SIMG_SOURCES" SIMG2IMG_SOURCES="$SIMG2IMG_SOURCES"
+popd
 
 echo Building uid scripts
 %{dhd_path}/helpers/usergroupgen add > %{dhd_path}/helpers/droid-user-add.sh
@@ -376,6 +410,7 @@ mkdir tmp/udev.rules
 %{dhd_path}/helpers/makeudev \
     %{android_root}/out/target/product/%{device}/root/ueventd.rc \
     $(ls %{android_root}/out/target/product/%{device}/root/ueventd.*.rc | grep -v .goldfish.rc) \
+    %{android_root}/out/target/product/%{device}/vendor/ueventd.rc \
         > tmp/udev.rules/999-android-system.rules
 
 echo Building mount units
@@ -385,7 +420,7 @@ mkdir tmp/units
 # skip various mounts which are not wanted (This is just in case they creep in)
 # First handle stupid spec quoting rules to get some args for makefstab
 shopt -s nullglob
-FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc)"
+FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab.*)"
 shopt -u nullglob
 
 
@@ -412,9 +447,8 @@ EOF
 ################
 %install
 
-ANDROID_VERSION_MAJOR=$(grep 'PLATFORM_VERSION := ' \
-                          %{android_root}/build/core/version_defaults.mk \
-                          | awk '{print $3}' \
+ANDROID_VERSION_MAJOR=$(awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' \
+                          < %{android_root}/build/core/version_defaults.mk \
                           | awk -F'.' '{print $1}')
 
 echo install $(cat tmp/units/all-units.txt)
@@ -452,7 +486,7 @@ cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BU
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
 %endif
 
-rsync -av %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT --exclude etc
+rsync -av %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT --exclude etc --exclude 'init.zygote*'
 
 # We'll use the mer provided modprobe so clean that out of the way
 rm -f $RPM_BUILD_ROOT/sbin/modprobe
@@ -568,7 +602,7 @@ rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 mkdir -p $RPM_BUILD_ROOT/sbin
 mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 # Rename any symlinks to droid's /init 
-find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir echo rm {} \; -execdir echo "ln -s" ./droid-hal-init {} \;
+find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir rm {} \; -execdir ln -s ./droid-hal-init {} \;
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # for use in the -devel package
