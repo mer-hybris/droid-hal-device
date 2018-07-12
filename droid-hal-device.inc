@@ -390,11 +390,12 @@ if [ $ANDROID_VERSION_MAJOR -ge "8" ]; then
     IMG2SIMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read_fix.cpp img2simg.c ../base/stringprintf.cpp"
     SIMG2IMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read_fix.cpp simg2img.c ../base/stringprintf.cpp"
 
-    USE_STD_C99=0
 else
     IMG2SIMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read.c img2simg.c"
     SIMG2IMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read.c simg2img.c"
 fi
+
+USE_STD_C99=0
 
 pushd %{dhd_path}/helpers
 make USE_STD_C99=$USE_STD_C99 ANDROID_ROOT=$ANDROID_ROOT IMG2SIMG_SOURCES="$IMG2SIMG_SOURCES" SIMG2IMG_SOURCES="$SIMG2IMG_SOURCES"
