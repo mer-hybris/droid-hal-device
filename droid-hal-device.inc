@@ -586,10 +586,7 @@ install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/dr
 # Remove cruft
 rm -f $RPM_BUILD_ROOT/fstab.*
 rm -f $RPM_BUILD_ROOT/*goldfish*
-rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,seapp}_contexts
-if [ $ANDROID_VERSION_MAJOR -lt "7" ]; then
-rm -f $RPM_BUILD_ROOT/property_contexts
-fi
+rm -rf $RPM_BUILD_ROOT/{proc,sys,dev} $RPM_BUILD_ROOT/seapp_contexts
 rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 
 # Name this so droid-system-packager's droid-hal-startup.sh can find it
