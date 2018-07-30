@@ -15,11 +15,6 @@ SIMG2IMG_MK ?= $(shell pwd)/simg2img.mk
 # Include directories
 CFLAGS += -I$(ANDROID_ROOT)/system/core/include/ -I$(ANDROID_ROOT)/
 
-ifeq ($(USE_STD_C99),1)
-# C99 support
-CFLAGS += -std=c99
-endif
-
 all: $(TOOLS) $(MKBOOTIMG) image_tools
 
 mkbootimg:
