@@ -130,7 +130,7 @@ sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref -f
-sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install droid-hal-$DEVICE-devel
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install --allow-unsigned-rpm droid-hal-$DEVICE-devel
 
 pushd $ANDROID_ROOT/hybris/mw > /dev/null
 

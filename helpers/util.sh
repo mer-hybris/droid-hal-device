@@ -250,7 +250,7 @@ function deploy {
         # and dup wouldn't work either
         # TODO: regexp match an RPM package filename to extract package name only,
         # so then it becomes possible to zypper install --force elegantly
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper --non-interactive install --force $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper --non-interactive install --force --allow-unsigned-rpm $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
     fi
     minfo "Building of $PKG finished successfully"
 }
