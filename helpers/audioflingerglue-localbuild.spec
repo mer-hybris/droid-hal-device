@@ -13,6 +13,7 @@ Version:       0.0.1
 Release:       1
 Group:         System/Libraries
 License:       ASL 2.0
+BuildRequires: tar
 Source0:       %{name}-%{version}.tgz
 AutoReqProv:   no
 
