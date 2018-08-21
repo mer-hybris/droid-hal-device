@@ -36,6 +36,7 @@ PORT_ARCH="${PORT_ARCH:-armv7hl}"
 BUILDALL=n
 LOG="/dev/null"
 CREATEREPO="createrepo_c"
+ALLOW_UNSIGNED_RPM=""
 
 function minfo {
     echo -e "\e[01;34m* $* \e[00m"
@@ -81,11 +82,15 @@ if [ $ret -eq 104 ]; then
     fi
     if [ -n "$ANDROID_TOOLS" ]; then
         minfo Installing required Platform SDK packages
-        sudo zypper in $ANDROID_TOOLS $CREATEREPO zip tar
+        sudo zypper in $ANDROID_TOOLS $CREATEREPO zip tar rpm-python
     fi
 fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
+
+# These lines can be reverted when everyone'll have jumped on at least 2.2.2 targets
+sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper in -h | \
+  fgrep -q -- --allow-unsigned-rpm && ALLOW_UNSIGNED_RPM="--allow-unsigned-rpm"
 
 function initlog {
     LOGPATH=`pwd`
@@ -250,7 +255,7 @@ function deploy {
         # and dup wouldn't work either
         # TODO: regexp match an RPM package filename to extract package name only,
         # so then it becomes possible to zypper install --force elegantly
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper --non-interactive install --force --allow-unsigned-rpm $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper --non-interactive install --force $ALLOW_UNSIGNED_RPM $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
     fi
     minfo "Building of $PKG finished successfully"
 }

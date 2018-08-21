@@ -12,6 +12,7 @@ Version:       0.0.0
 Release:       1
 Group:         System/Libraries
 License:       ASL 2.0
+BuildRequires: tar
 #BuildRequires: ubu-trusty
 #BuildRequires: sudo-for-abuild
 #BuildRequires: droid-bin-src-full
