@@ -5,8 +5,6 @@
 # device:            should be the CM codename or the AOSP TARGET_PRODUCT
 # vendor:            determine the droid-side directory used for
 #                      ./device/<vendor>/<device>
-# device_pretty:     user-visible model name of the device
-# vendor_pretty:     user-visible manufacturer name of the device
 # rpm_device:        device name used rpm-side (eg in configs)
 #                      defaults to device
 # rpm_vendor:        vendor name used rpm-side (eg in configs)
