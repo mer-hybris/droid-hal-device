@@ -132,6 +132,8 @@ sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref -f
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
 
+android_version_major=$(sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R cat /usr/lib/droid-devel/droid-headers/android-version.h |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
+
 pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
 if [ "$BUILDMW_REPO" == "" ]; then
@@ -144,7 +146,11 @@ buildmw qt5-qpa-hwcomposer-plugin || die
 buildmw qt5-qpa-surfaceflinger-plugin || die
 buildmw "https://git.merproject.org/mer-core/qtscenegraph-adaptation.git" rpm/qtscenegraph-adaptation-droid.spec || die
 buildmw "https://git.merproject.org/mer-core/sensorfw.git" rpm/sensorfw-qt5-hybris.spec || die
-buildmw geoclue-providers-hybris || die
+if [ $android_version_major -ge 8 ]; then
+buildmw geoclue-providers-hybris rpm/geoclue-providers-hybris-binder.spec || die
+else
+buildmw geoclue-providers-hybris rpm/geoclue-providers-hybris.spec || die
+fi
 # build kf5bluezqt-bluez4 if not yet provided by Sailfish OS itself
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se kf5bluezqt-bluez4 > /dev/null
 ret=$?
