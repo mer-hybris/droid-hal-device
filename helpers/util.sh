@@ -103,10 +103,17 @@ function initlog {
 
 function buildconfigs() {
     PKG=droid-configs
+    METAPKG=metapkg
     cd hybris/$PKG
     initlog $PKG $(dirname `pwd`)
     build rpm/droid-config-$DEVICE.spec
+
+    if [ -f $METAPKG ]; then
+      build $METAPKG/*.spec
+    fi
+
     deploy $PKG do_not_install
+
     # installroot no longer exists since Platform SDK 2.2.0, let's put KS back
     rm -rf installroot
     mkdir installroot

@@ -10,11 +10,11 @@ fi
 
 CONFIG_DIR=hybris/droid-configs
 ROOTFS_DIR=sparse
-PATTERNS_DIR=droid-configs-device/patterns
-PATTERNS_DEVICE_DIR=patterns
-PATTERNS_TEMPLATES_DIR=$CONFIG_DIR/$PATTERNS_DIR/templates
+METAPKG_DIR=droid-configs-device/metapkg
+METAPKG_DEVICE_DIR=metapkg
+METAPKG_TEMPLATES_DIR=$CONFIG_DIR/$METAPKG_DIR/templates
 
-if [ ! -d $PATTERNS_TEMPLATES_DIR ]; then
+if [ ! -d $METAPKG_TEMPLATES_DIR ]; then
     echo $0: launch this script from the $ANDROID_ROOT directory
     exit 1
 fi
@@ -35,19 +35,19 @@ else
     mkdir -p $ROOTFS_DIR
 fi
 
-echo $PATTERNS_DEVICE_DIR/
+echo $METAPKG_DEVICE_DIR/
 
-mkdir -p $PATTERNS_DEVICE_DIR
+mkdir -p $METAPKG_DEVICE_DIR
 
-for pattern in $(find $PATTERNS_DIR/templates -name *.yaml); do
-    PATTERNS_FILE=$(echo $PATTERNS_DEVICE_DIR/$(basename $pattern) | sed -e "s|@DEVICE@|$DEVICE|g")
-    echo $PATTERNS_FILE
-    cat <<'EOF' >$PATTERNS_FILE
+for metapkg in $(find $METAPKG_DIR/templates -name *.spec); do
+    METAPKG_FILE=$(echo $METAPKG_DEVICE_DIR/$(basename $metapkg) | sed -e "s|@DEVICE@|$DEVICE|g")
+    echo $METAPKG_FILE
+    cat <<'EOF' >$METAPKG_FILE
 # Feel free to disable non-critical HA parts during devel by commenting lines out
 # Generated in hadk by executing: rpm/dhd/helpers/add_new_device.sh
 
 EOF
-    sed -e 's|@DEVICE@|'$DEVICE'|g' $pattern >>$PATTERNS_FILE
+    sed -e 's|@DEVICE@|'$DEVICE'|g' $metapkg >>$METAPKG_FILE
 done
 
 cd -
