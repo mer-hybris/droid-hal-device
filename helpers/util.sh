@@ -120,7 +120,11 @@ function buildconfigs() {
 function builddhd() {
     PKG=droid-hal-$DEVICE
     initlog $PKG
-    build rpm/$PKG.spec
+    if [ -e "rpm/droid-hal-$HABUILD_DEVICE.spec" ]; then
+        build rpm/droid-hal-$HABUILD_DEVICE.spec
+    else
+        build rpm/droid-hal-$DEVICE.spec
+    fi
     deploy $PKG do_not_install
 }
 
