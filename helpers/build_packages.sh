@@ -117,7 +117,7 @@ if [ "$BUILDCONFIGS" == "1" ]; then
         fi
     fi
     # avoid a SIGSEGV on exit of libhybris client
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R ls /system/build.prop > /dev/null
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R ls /system/build.prop &> /dev/null
     ret=$?
     if [ $ret -ne 0 ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R bash -c "mkdir -p /system; echo ro.build.version.sdk=99 > /system/build.prop"
@@ -130,14 +130,27 @@ if [ "$BUILDMW" == "1" ]; then
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref -f
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
+
+    if [ "$FAMILY" == "" ]; then
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
+    else
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
+    fi
 
     android_version_major=$(sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R cat /usr/lib/droid-devel/droid-headers/android-version.h |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
 
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
     if [ "$BUILDMW_REPO" == "" ]; then
-        buildmw libhybris || die
+        if [ $android_version_major -ge 8 ]; then
+            buildmw libhybris android8-initial || die
+            buildmw "https://git.merproject.org/mer-core/libglibutil.git" || die
+            buildmw "https://github.com/mer-hybris/libgbinder" || die
+            buildmw "https://github.com/mer-hybris/bluebinder" || die
+            buildmw "https://github.com/mer-hybris/ofono-ril-binder-plugin" || die
+        else
+            buildmw libhybris || die
+        fi
         buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die
         buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
         buildmw ngfd-plugin-droid-vibrator rpm/ngfd-plugin-native-vibrator.spec || die
