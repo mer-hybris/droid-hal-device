@@ -631,6 +631,7 @@ fi
 MOD_DIR=$RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE
 mkdir -p $MOD_DIR
 cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/. || true
+cp -a out/target/product/%{device}/vendor/lib/modules/. $MOD_DIR/. || true
 cp -a out/target/product/%{device}/obj/*/modules.builtin $MOD_DIR/. || true
 cp -a out/target/product/%{device}/obj/*/modules.order $MOD_DIR/. || true
 
