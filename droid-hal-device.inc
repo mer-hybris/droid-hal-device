@@ -414,7 +414,7 @@ mkdir tmp/units
 # skip various mounts which are not wanted (This is just in case they creep in)
 # First handle stupid spec quoting rules to get some args for makefstab
 shopt -s nullglob
-FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab.* %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab.*)"
+FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab*)"
 shopt -u nullglob
 
 
