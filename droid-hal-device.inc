@@ -187,6 +187,10 @@ BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  rsync
+%if 0%{?with_system_keys:1}
+BuildRequires:  system-keys-kernel
+BuildRequires:  system-keys-bootloader
+%endif
 # starting from Android 8
 BuildRequires:  python
 %{?custom_build_requires}
@@ -382,6 +386,25 @@ if (grep -q '^TARGET_ARCH := arm64' %{android_root}/device/*/*/BoardConfig*.mk);
          "NOTE: Currently there is no Sailfish OS ARM 64bit target, so leave PORT_ARCH as armv7hl\n" \
          "      Mixed builds of 64bit Android+Linux Kernel and 32bit Sailfish OS work just fine."
     exit 1
+fi
+%endif
+
+%if 0%{?with_system_keys:1}
+KERNEL_DIRS=$(find %android_root -maxdepth 1 -type d \( -name "kernel-*.*" -o -name "kernel" \) &&
+              find %android_root -maxdepth 2 -type d -path "*/linux/kernel")
+
+# Copy trusted keys into kernel source directory
+echo "$KERNEL_DIRS" |
+while IFS= read -r kernel; do
+    cp -r /etc/keys/kernel/* ${kernel}/
+done
+
+# Override aboot OEM keystore
+if [ -d bootable/bootloader/lk/include ]; then
+    cp /etc/keys/bootloader/oem_keystore.h bootable/bootloader/lk/include
+fi
+if [ -d vendor/mediatek/proprietary/bootable/bootloader/lk/include ]; then
+    cp /etc/keys/bootloader/oem_keystore.h vendor/mediatek/proprietary/bootable/bootloader/lk/include
 fi
 %endif
 
