@@ -595,7 +595,12 @@ rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 mkdir -p $RPM_BUILD_ROOT/sbin
 mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
 # Rename any symlinks to droid's /init 
-find $RPM_BUILD_ROOT/sbin/ -lname ../init -execdir rm {} \; -execdir ln -s ./droid-hal-init {} \;
+for link in $(find $RPM_BUILD_ROOT/sbin/ -type l); do
+    if [ "$(readlink $link)" == "../init" ]; then
+        rm "$link"
+        ln -s ./droid-hal-init "$link"
+    fi
+done
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # for use in the -devel package
