@@ -405,6 +405,7 @@ mkdir tmp/udev.rules
     %{android_root}/out/target/product/%{device}/root/ueventd.rc \
     $(ls %{android_root}/out/target/product/%{device}/root/ueventd.*.rc | grep -v .goldfish.rc) \
     %{android_root}/out/target/product/%{device}/vendor/ueventd.rc \
+    %{android_root}/out/target/product/%{device}/system/vendor/ueventd.rc \
         > tmp/udev.rules/999-android-system.rules
 
 echo Building mount units
@@ -414,7 +415,7 @@ mkdir tmp/units
 # skip various mounts which are not wanted (This is just in case they creep in)
 # First handle stupid spec quoting rules to get some args for makefstab
 shopt -s nullglob
-FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab*)"
+FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab* %{android_root}/out/target/product/%{device}/system/vendor/etc/fstab*)"
 shopt -u nullglob
 
 
