@@ -208,6 +208,13 @@ function buildmw {
             git pull >>$LOG 2>&1|| die "pulling of updates failed"
         fi
 
+        if [ "$PKG" == "libhybris" ]; then
+            minfo "enabling debugging in libhybris..."
+            sed "s/%{?qa_stage_devel:--enable-debug}/--enable-debug/g" -i rpm/libhybris.spec
+            sed "s/%{?qa_stage_devel:--enable-trace}/--enable-trace/g" -i rpm/libhybris.spec
+            sed "s/%{?qa_stage_devel:--enable-arm-tracing}/--enable-arm-tracing/g" -i rpm/libhybris.spec
+        fi
+
         build $1
 
         deploy $PKG

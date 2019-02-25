@@ -142,15 +142,14 @@ if [ "$BUILDMW" == "1" ]; then
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
     if [ "$BUILDMW_REPO" == "" ]; then
+        buildmw libhybris || die
+
         if [ $android_version_major -ge 8 ]; then
-            buildmw libhybris android8-initial || die
             buildmw "https://git.merproject.org/mer-core/libglibutil.git" || die
             buildmw "https://github.com/mer-hybris/libgbinder" || die
             buildmw "https://github.com/mer-hybris/libgbinder-radio" || die
             buildmw "https://github.com/mer-hybris/bluebinder" || die
             buildmw "https://github.com/mer-hybris/ofono-ril-binder-plugin" || die
-        else
-            buildmw libhybris || die
         fi
         buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die
         buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
