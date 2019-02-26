@@ -62,6 +62,7 @@ if [ "$#" == "1" ]; then
     BUILDVERSION=1
 fi
 
+BUILDSPEC_FILE=()
 while true; do
     case "$1" in
       -h|--help) usage ;;
@@ -79,7 +80,7 @@ while true; do
           shift;;
       -s|--spec) BUILDSPEC=1
           case "$2" in
-              *) BUILDSPEC_FILE=$2;;
+              *) BUILDSPEC_FILE+=("$2");;
           esac
           shift;;
       -v|--version) BUILDVERSION=1 ;;
@@ -110,7 +111,8 @@ if [ "$BUILDCONFIGS" == "1" ]; then
         ret=$?
         if [ $ret -eq 104 ]; then
             BUILDALL=y
-            buildmw https://github.com/mer-hybris/community-adaptation.git rpm/community-adaptation-localbuild.spec || die
+            buildmw -u "https://github.com/mer-hybris/community-adaptation.git" \
+                    -s rpm/community-adaptation-localbuild.spec || die
             BUILDALL=n
         elif [ $ret -ne 0 ]; then
             die "Could not determine if community-adaptation package is available, exiting."
@@ -142,38 +144,51 @@ if [ "$BUILDMW" == "1" ]; then
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
     if [ "$BUILDMW_REPO" == "" ]; then
-        buildmw libhybris || die
+        buildmw -u "https://github.com/mer-hybris/libhybris" || die
 
         if [ $android_version_major -ge 8 ]; then
-            buildmw "https://git.merproject.org/mer-core/libglibutil.git" || die
-            buildmw "https://github.com/mer-hybris/libgbinder" || die
-            buildmw "https://github.com/mer-hybris/libgbinder-radio" || die
-            buildmw "https://github.com/mer-hybris/bluebinder" || die
-            buildmw "https://github.com/mer-hybris/ofono-ril-binder-plugin" || die
+            buildmw -u "https://git.merproject.org/mer-core/libglibutil.git" || die
+            buildmw -u "https://github.com/mer-hybris/libgbinder" || die
+            buildmw -u "https://github.com/mer-hybris/libgbinder-radio" || die
+            buildmw -u "https://github.com/mer-hybris/bluebinder" || die
+            buildmw -u "https://github.com/mer-hybris/ofono-ril-binder-plugin" || die
         fi
-        buildmw "https://github.com/mer-hybris/pulseaudio-modules-droid.git" rpm/pulseaudio-modules-droid.spec || die
-        buildmw "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
-        buildmw ngfd-plugin-droid-vibrator rpm/ngfd-plugin-native-vibrator.spec || die
-        buildmw qt5-feedback-haptics-droid-vibrator rpm/qt5-feedback-haptics-native-vibrator.spec || die
-        buildmw qt5-qpa-hwcomposer-plugin || die
-        buildmw qt5-qpa-surfaceflinger-plugin || die
-        buildmw "https://git.merproject.org/mer-core/qtscenegraph-adaptation.git" rpm/qtscenegraph-adaptation-droid.spec || die
-        buildmw "https://git.merproject.org/mer-core/sensorfw.git" rpm/sensorfw-qt5-hybris.spec || die
+        buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid.git" \
+                -s rpm/pulseaudio-modules-droid.spec || die
+        buildmw -u "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
+        buildmw -u "https://github.com/mer-hybris/ngfd-plugin-droid-vibrator" \
+                -s rpm/ngfd-plugin-native-vibrator.spec || die
+        buildmw -u "https://github.com/mer-hybris/qt5-feedback-haptics-droid-vibrator" \
+                -s rpm/qt5-feedback-haptics-native-vibrator.spec || die
+        buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
+        buildmw -u "https://github.com/mer-hybris/qt5-qpa-surfaceflinger-plugin" || die
+        buildmw -u "https://git.merproject.org/mer-core/qtscenegraph-adaptation.git" \
+                -s rpm/qtscenegraph-adaptation-droid.spec || die
+        buildmw -u "https://git.merproject.org/mer-core/sensorfw.git" \
+                -s rpm/sensorfw-qt5-hybris.spec || die
         if [ $android_version_major -ge 8 ]; then
-            buildmw geoclue-providers-hybris rpm/geoclue-providers-hybris-binder.spec || die
+            buildmw -u "https://gitub.com/mer-hybris/geoclue-providers-hybris" \
+                    -s rpm/geoclue-providers-hybris-binder.spec || die
         else
-            buildmw geoclue-providers-hybris rpm/geoclue-providers-hybris.spec || die
+            buildmw -u "https://github.com/mer-hybris/geoclue-providers-hybris" \
+                    -s rpm/geoclue-providers-hybris.spec || die
         fi
         # build kf5bluezqt-bluez4 if not yet provided by Sailfish OS itself
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se kf5bluezqt-bluez4 > /dev/null
         ret=$?
         if [ $ret -eq 104 ]; then
-            buildmw "https://git.merproject.org/mer-core/kf5bluezqt.git" rpm/kf5bluezqt-bluez4.spec || die
+            buildmw -u "https://git.merproject.org/mer-core/kf5bluezqt.git" \
+                    -s rpm/kf5bluezqt-bluez4.spec || die
             # pull device's bluez4 configs correctly
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
         fi
     else
-        buildmw $BUILDMW_REPO $BUILDSPEC_FILE || die
+        if [[ -z "$BUILDSPEC_FILE" ]]; then
+            buildmw -u $BUILDMW_REPO || die
+        else
+            # Supply all given spec files from $BUILDSPEC_FILE array prefixed with "-s"
+            buildmw -u $BUILDMW_REPO "${BUILDSPEC_FILE[@]/#/-s }" || die
+        fi
     fi
     popd > /dev/null
 fi
@@ -187,7 +202,7 @@ if [ "$BUILDPKG" == "1" ]; then
     if [ -z $BUILDPKG_PATH ]; then
        echo "--build requires an argument (path to package)"
     else
-        buildpkg $BUILDPKG_PATH $BUILDSPEC_FILE
+        buildpkg $BUILDPKG_PATH ${BUILDSPEC_FILE[@]}
     fi
 fi
 

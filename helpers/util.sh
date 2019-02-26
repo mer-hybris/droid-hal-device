@@ -158,15 +158,29 @@ function yesnoall() {
     esac
 }
 
-function buildmw {
+function buildmw() {
+    # Usage:
+    #  -u     URL to use. Will check whether a folder with the same name as the
+    #         git repo is already present in $ANDROID_ROOT/external/* and
+    #         re-use that one.
+    #  -b     Branch to use. If none supplied, use default.
+    #  -s     .spec file to use. Can be supplied multiple times.
+    #         If empty, will use all .spec files from $PKG/rpm/*.
 
-    GIT_URL="$1"
-    shift
-    GIT_BRANCH=""
-    if [[ "$1" != "" && "$1" != *.spec ]]; then
-        GIT_BRANCH="-b $1"
-        shift;
-    fi
+    local GIT_URL=""
+    local GIT_BRANCH=""
+    local MW_BUILDSPEC=""
+    # This is important for getopt or it will fail on the second invocation!
+    local OPTIND
+    while getopts 'u:b:s:' _flag
+    do
+        case "${_flag}" in
+            u) GIT_URL="$OPTARG" ;;
+            b) GIT_BRANCH="-b $OPTARG" ;;
+            s) MW_BUILDSPEC+="$OPTARG " ;;
+            *) echo "buildmw(): Unexpected option $_flag"; exit 1; ;;
+        esac
+    done
 
     [ -z "$GIT_URL" ] && die "Please give me the git URL (or directory name, if it's already installed)."
 
@@ -215,7 +229,7 @@ function buildmw {
             sed "s/%{?qa_stage_devel:--enable-arm-tracing}/--enable-arm-tracing/g" -i rpm/libhybris.spec
         fi
 
-        build $1
+        build "$MW_BUILDSPEC"
 
         deploy $PKG
 
@@ -225,7 +239,7 @@ function buildmw {
 }
 
 function build {
-    SPECS=$1
+    SPECS=$@
     if [ -z "$SPECS" ]; then
         minfo "No spec file for package building specified, building all I can find."
         SPECS="rpm/*.spec"
@@ -278,7 +292,8 @@ function buildpkg {
     pushd $1 > /dev/null || die "Path not found: $1"
     PKG=$(basename $1)
     initlog $PKG $(dirname `pwd`)
-    build $2
+    shift
+    build $@
     deploy $PKG
     popd > /dev/null
 }
