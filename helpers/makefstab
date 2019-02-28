@@ -157,10 +157,17 @@ for my $file (@files) {
 
     write_unit($outputdir, $unitname, $secontext, $mnt_flagsandoptions, $type, $src, $mnt_point, $file, $_);
 
-    # in case of an Android 8 root partition, bind mount /system_root/system
+    # In case of an Android 8 root partition, bind mount /system_root/system
     # to /system to make sure everything is in the proper place.
     if ( $unitname eq "system_root" ) {
       write_unit($outputdir, "system", $secontext, "bind", "none", "/system_root/system", "/system", $file, $_);
     }
+
+    # In case of a legacy partition layout without a dedicated /vendor partition,
+    # bind mount /system/vendor to /vendor to make sure everything is in the proper place.
+    if ( $unitname eq "system" ) {
+      write_unit($outputdir, "systemvendorlegacy", $secontext, "bind", "none", "/system/vendor", "/vendor", $file, $_);
+    }
+
   }
 }
