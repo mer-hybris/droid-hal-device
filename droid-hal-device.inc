@@ -228,7 +228,7 @@ Requires: oneshot
 Summary: Boot img for droid-hal device: %{rpm_device}
 %if 0%{?enable_kernel_update:1}
 # The device flashing info and scripts is now in droid-configs
-Requires(post): droid-config-%{rpm_device}-flashing
+Requires(post): droid-config-flashing
 %endif
 
 %description img-boot
@@ -253,7 +253,7 @@ Group:  System
 Summary: Bootloader for %{device} hw
 %if 0%{?enable_bootloader_update:1}
 # The device flashing info and scripts is now in droid-configs
-Requires(post): droid-config-%{rpm_device}-flashing
+Requires(post): droid-config-flashing
 %endif
 
 %description aboot
