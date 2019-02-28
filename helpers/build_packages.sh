@@ -148,6 +148,7 @@ if [ "$BUILDMW" == "1" ]; then
 
         if [ $android_version_major -ge 8 ]; then
             buildmw -u "https://git.merproject.org/mer-core/libglibutil.git" || die
+            buildmw -u "https://github.com/mer-hybris/libgrilio" || die
             buildmw -u "https://github.com/mer-hybris/libgbinder" || die
             buildmw -u "https://github.com/mer-hybris/libgbinder-radio" || die
             buildmw -u "https://github.com/mer-hybris/bluebinder" || die
