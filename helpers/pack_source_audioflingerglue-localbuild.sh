@@ -7,7 +7,7 @@ else
     exit 1
 fi
 
-pkg=audioflingerglue-0.0.1
+pkg=audioflingerglue-"${1:-0.0.0}"
 fold=hybris/mw/$pkg
 rm -rf $fold
 mkdir $fold

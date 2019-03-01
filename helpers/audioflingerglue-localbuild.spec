@@ -9,7 +9,7 @@
 
 Name:          audioflingerglue
 Summary:       Android AudioFlinger glue library
-Version:       0.0.1
+Version:       0.0.0
 Release:       1
 Group:         System/Libraries
 License:       ASL 2.0
