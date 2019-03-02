@@ -47,7 +47,7 @@ function usage() {
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::vb:s: -l help,droid-hal,configs,mw::,version,build:,spec: -- "$@")
+OPTIONS=$(getopt -o hdcm::vb:s:D -l help,droid-hal,configs,mw::,version,build:,spec:,dont-install -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -69,6 +69,7 @@ while true; do
       -h|--help) usage ;;
       -d|--droid-hal) BUILDDHD=1 ;;
       -c|--configs) BUILDCONFIGS=1 ;;
+      -D|--dont-install) DO_NOT_INSTALL=1;;
       -m|--mw) BUILDMW=1
           case "$2" in
               *) BUILDMW_REPO=$2;;

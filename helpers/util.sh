@@ -231,7 +231,7 @@ function buildmw() {
 
         build "$MW_BUILDSPEC"
 
-        deploy $PKG
+        deploy $PKG $DO_NOT_INSTALL
 
         popd > /dev/null
         popd > /dev/null
@@ -299,7 +299,7 @@ function buildpkg {
     initlog $PKG $(dirname `pwd`)
     shift
     build $@
-    deploy $PKG
+    deploy $PKG "$DO_NOT_INSTALL"
     popd > /dev/null
 }
 
