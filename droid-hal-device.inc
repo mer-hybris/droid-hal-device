@@ -507,6 +507,15 @@ rm -rf $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/modules
 cp -a %{android_root}/out/target/product/%{device}/obj/include $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 rm -rf $RPM_BUILD_ROOT%{_libdir}/droid-devel/lib/*.so.toc
 
+# Omit audioflingerglue bits, they get packaged via audioflingerglue-localbuild
+rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/{lib,lib64}/libaudioflingerglue.so
+rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/bin/miniafservice
+# Omit droidmedia bits, they get packaged via droidmedia-localbuild
+rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/{lib,lib64}/libdroidmedia.so
+rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/{lib,lib64}/libminisf.so
+rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/bin/minimediaservice
+rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/bin/minisfservice
+
 HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
 mkdir -p $HDRS
 
