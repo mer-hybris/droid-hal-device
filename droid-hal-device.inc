@@ -336,10 +336,14 @@ ubu-chroot -r /srv/mer/sdks/ubu "cd %android_root; %{?pre_actions}%{!?pre_action
 rm -rf tmp
 mkdir tmp
 
+%if %{without mer_verify_kernel_config}
 echo Verifying kernel config
 # AOSP seems to use .../obj/kernel/.config not obj/KERNEL_OBJ/.config like CM : so wildcard it
 hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/*/.config
+%else
+echo "WARNING:You disable kernel check"
+%endif
 
 
 ANDROID_VERSION_MAJOR=$(awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' \
