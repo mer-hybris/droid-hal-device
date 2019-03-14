@@ -43,11 +43,14 @@ function usage() {
     echo "  -b, --build=PKG build one package (PKG can include path)"
     echo "  -s, --spec=SPEC optionally used with -m or -b"
     echo "                  can be supplied multiple times to build multiple .spec files at once"
+    echo "  -D, --do-not-install"
+    echo "                  useful when package is needed only in the final image"
+    echo "                  especially when it conflicts in an SDK target"
     echo " No options assumes building for all areas."
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::vb:s:D -l help,droid-hal,configs,mw::,version,build:,spec:,dont-install -- "$@")
+OPTIONS=$(getopt -o hdcm::vb:s:D -l help,droid-hal,configs,mw::,version,build:,spec:,do-not-install -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -69,7 +72,7 @@ while true; do
       -h|--help) usage ;;
       -d|--droid-hal) BUILDDHD=1 ;;
       -c|--configs) BUILDCONFIGS=1 ;;
-      -D|--dont-install) DO_NOT_INSTALL=1;;
+      -D|--do-not-install) DO_NOT_INSTALL=1;;
       -m|--mw) BUILDMW=1
           case "$2" in
               *) BUILDMW_REPO=$2;;
