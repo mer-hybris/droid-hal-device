@@ -169,7 +169,7 @@ if [ "$BUILDMW" == "1" ]; then
         buildmw -u "https://git.merproject.org/mer-core/sensorfw.git" \
                 -s rpm/sensorfw-qt5-hybris.spec || die
         if [ $android_version_major -ge 8 ]; then
-            buildmw -u "https://gitub.com/mer-hybris/geoclue-providers-hybris" \
+            buildmw -u "https://github.com/mer-hybris/geoclue-providers-hybris" \
                     -s rpm/geoclue-providers-hybris-binder.spec || die
         else
             buildmw -u "https://github.com/mer-hybris/geoclue-providers-hybris" \
