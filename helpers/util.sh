@@ -82,7 +82,7 @@ if [ $ret -eq 104 ]; then
     fi
     if [ -n "$ANDROID_TOOLS" ]; then
         minfo Installing required Platform SDK packages
-        sudo zypper in $ANDROID_TOOLS $CREATEREPO zip tar rpm-python
+        sudo zypper -n in $ANDROID_TOOLS $CREATEREPO zip tar rpm-python
     fi
 fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
