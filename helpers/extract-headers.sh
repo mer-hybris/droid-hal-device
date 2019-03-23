@@ -68,6 +68,9 @@ if [ x$MAJOR = x -o x$MINOR = x -o x$PATCH = x ]; then
     IFS="." read MAJOR MINOR PATCH PATCH2 PATCH3 <<EOF
 $(IFS="." awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' < $VERSION_DEFAULTS)
 EOF
+    if [ x$MINOR = x ]; then
+         MINOR=0
+    fi
     if [ x$PATCH = x ]; then
          PATCH=0
     fi
