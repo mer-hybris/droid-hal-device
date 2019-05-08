@@ -52,7 +52,7 @@ while (<>) {
     print "# sys rule\n";
     s{^/sys/}{};
     my ($dev, $key, $mode, $owner, $group) = split;
-    print qq{DEVPATH=="$dev/$key", RUN+="/bin/chmod $mode /sys/\$devpath;", RUN+="/bin/chown $owner /sys/\$devpath;", RUN+="/bin/chgrp $group /sys/\$devpath;"\n} ;
+    print qq{DEVPATH=="/$dev", RUN+="/bin/chmod $mode /sys/\$devpath/$key", RUN+="/bin/chown $owner:$group /sys/\$devpath/$key"\n} ;
     next;
   }
 
