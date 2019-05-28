@@ -373,7 +373,9 @@ if [ $ANDROID_VERSION_MAJOR -ge "8" ]; then
         > generated_android_filesystem_config.h
 else
     echo "#include <private/android_filesystem_config.h>;" > generated_android_filesystem_config.h
-    sed -i -e 's/CPPFLAGS+= -I..\/include/CPPFLAGS+= -I..\/include -std=gnu99/g' $MKBOOTIMG_MK
+    if [ ! -z "$MKBOOTIMG_MK" ]; then
+        sed -i -e 's/CPPFLAGS+= -I..\/include/CPPFLAGS+= -I..\/include -std=gnu99/g' $MKBOOTIMG_MK
+    fi
 fi
 
 # files have changed in android >=8 so we need to supply different ones to the
