@@ -33,7 +33,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-function usage() {
+usage() {
     echo "Usage: $0 [OPTION]..."
     echo "  -h, --help      you're reading it"
     echo "  -d, --droid-hal build droid-hal-device (rpm/)"

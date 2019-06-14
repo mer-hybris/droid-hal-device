@@ -38,15 +38,15 @@ LOG="/dev/null"
 CREATEREPO="createrepo_c"
 ALLOW_UNSIGNED_RPM=""
 
-function minfo {
+minfo() {
     echo -e "\e[01;34m* $* \e[00m"
 }
 
-function merror {
+merror() {
     echo -e "\e[01;31m!! $* \e[00m"
 }
 
-function die {
+die() {
     if [[ "$LOG" != "/dev/null" && -f "$LOG" ]] ; then
         tail -n20 "$LOG"
         minfo "Check $LOG for full log."
@@ -92,7 +92,7 @@ mkdir -p $LOCAL_REPO
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper in -h | \
   fgrep -q -- --allow-unsigned-rpm && ALLOW_UNSIGNED_RPM="--allow-unsigned-rpm"
 
-function initlog {
+initlog() {
     LOGPATH="$PWD"
     if [ -n "$2" ]; then
         LOGPATH=$2
@@ -101,7 +101,7 @@ function initlog {
     [ -f "$LOG" ] && rm "$LOG"
 }
 
-function buildconfigs() {
+buildconfigs() {
     PKG=droid-configs
     cd hybris/$PKG
     initlog $PKG $(dirname "$PWD")
@@ -117,7 +117,7 @@ function buildconfigs() {
     hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh >>$LOG 2>&1|| die "error while processing patterns"
 }
 
-function builddhd() {
+builddhd() {
     PKG=droid-hal-$DEVICE
     initlog $PKG
     if [ -e "rpm/droid-hal-$HABUILD_DEVICE.spec" ]; then
@@ -128,7 +128,7 @@ function builddhd() {
     deploy $PKG do_not_install
 }
 
-function buildversion() {
+buildversion() {
     PKG=droid-hal-version-$DEVICE
     dir=$(dirname $(find hybris -name $PKG.spec))
     cd $dir/..
@@ -138,7 +138,7 @@ function buildversion() {
     cd ../../
 }
 
-function yesnoall() {
+yesnoall() {
     if [ $BUILDALL == "y" ]; then
         return `true`
     fi
@@ -158,7 +158,7 @@ function yesnoall() {
     esac
 }
 
-function buildmw() {
+buildmw() {
     # Usage:
     #  -u     URL to use. Will check whether a folder with the same name as the
     #         git repo is already present in $ANDROID_ROOT/external/* and
@@ -238,7 +238,7 @@ function buildmw() {
     fi
 }
 
-function build {
+build() {
     SPECS=$@
     if [ -z "$SPECS" ]; then
         minfo "No spec file for package building specified, building all I can find."
@@ -254,7 +254,7 @@ function build {
     done
 }
 
-function deploy {
+deploy() {
     PKG=$1
     if [ -z "$PKG" ]; then
         die "Please provide a package name to build"
@@ -296,7 +296,7 @@ function deploy {
     minfo "Building of $PKG finished successfully"
 }
 
-function buildpkg {
+buildpkg() {
     if [ -z "$1" ]; then
         die "Please specify path to the package"
     fi
