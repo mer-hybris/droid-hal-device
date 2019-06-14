@@ -301,10 +301,10 @@ function buildpkg {
         die "Please specify path to the package"
     fi
     pushd $1 > /dev/null || die "Path not found: $1"
-    PKG=$(basename $1)
+    PKG=$(basename "$1")
     initlog $PKG $(dirname "$PWD")
     shift
-    build $@
+    build "$@"
     deploy $PKG "$DO_NOT_INSTALL"
     popd > /dev/null
 }
