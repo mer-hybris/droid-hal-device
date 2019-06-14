@@ -93,7 +93,7 @@ sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper in -h | \
   fgrep -q -- --allow-unsigned-rpm && ALLOW_UNSIGNED_RPM="--allow-unsigned-rpm"
 
 function initlog {
-    LOGPATH=`pwd`
+    LOGPATH="$PWD"
     if [ -n "$2" ]; then
         LOGPATH=$2
     fi
@@ -104,7 +104,7 @@ function initlog {
 function buildconfigs() {
     PKG=droid-configs
     cd hybris/$PKG
-    initlog $PKG $(dirname `pwd`)
+    initlog $PKG $(dirname "$PWD")
     build rpm/droid-config-$DEVICE.spec
     deploy $PKG do_not_install
     # installroot no longer exists since Platform SDK 2.2.0, let's put KS back
@@ -132,7 +132,7 @@ function buildversion() {
     PKG=droid-hal-version-$DEVICE
     dir=$(dirname $(find hybris -name $PKG.spec))
     cd $dir/..
-    initlog $PKG $(dirname `pwd`)
+    initlog $PKG $(dirname "$PWD")
     build rpm/$PKG.spec
     deploy $PKG do_not_install
     cd ../../
@@ -302,7 +302,7 @@ function buildpkg {
     fi
     pushd $1 > /dev/null || die "Path not found: $1"
     PKG=$(basename $1)
-    initlog $PKG $(dirname `pwd`)
+    initlog $PKG $(dirname "$PWD")
     shift
     build $@
     deploy $PKG "$DO_NOT_INSTALL"
