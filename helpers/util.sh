@@ -140,7 +140,7 @@ buildversion() {
 
 yesnoall() {
     if [ $BUILDALL == "y" ]; then
-        return `true`
+        return 0
     fi
     read -r -p "${1:-} [Y/n/all]" REPLY
     REPLY=${REPLY:-y}
