@@ -169,8 +169,13 @@ if [ "$BUILDMW" == "1" ]; then
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-surfaceflinger-plugin" || die
         buildmw -u "https://git.merproject.org/mer-core/qtscenegraph-adaptation.git" \
                 -s rpm/qtscenegraph-adaptation-droid.spec || die
-        buildmw -u "https://git.merproject.org/mer-core/sensorfw.git" \
-                -s rpm/sensorfw-qt5-hybris.spec || die
+        if [ $android_version_major -ge 9 ]; then
+            buildmw -u "https://git.merproject.org/mer-core/sensorfw.git" \
+                    -s rpm/sensorfw-qt5-binder.spec || die
+        else
+            buildmw -u "https://git.merproject.org/mer-core/sensorfw.git" \
+                    -s rpm/sensorfw-qt5-hybris.spec || die
+        fi
         if [ $android_version_major -ge 8 ]; then
             buildmw -u "https://github.com/mer-hybris/geoclue-providers-hybris" \
                     -s rpm/geoclue-providers-hybris-binder.spec || die
