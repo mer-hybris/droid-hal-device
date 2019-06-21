@@ -214,7 +214,7 @@ if [ "$BUILDPKG" == "1" ]; then
     if [ -z $BUILDPKG_PATH ]; then
        echo "--build requires an argument (path to package)"
     else
-        buildpkg $BUILDPKG_PATH ${BUILDSPEC_FILE[@]}
+        buildpkg $BUILDPKG_PATH "${BUILDSPEC_FILE[@]}"
     fi
 fi
 
