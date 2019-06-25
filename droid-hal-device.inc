@@ -599,6 +599,8 @@ install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/dr
 rm -f $RPM_BUILD_ROOT/fstab.*
 rm -f $RPM_BUILD_ROOT/*goldfish*
 rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,seapp}_contexts
+# remove odm subdirs in case they exist to avoid problems when installing droid-hal (odm is ro)
+rm -rf $RPM_BUILD_ROOT/odm/*
 if [ $ANDROID_VERSION_MAJOR -lt "7" ]; then
 rm -f $RPM_BUILD_ROOT/property_contexts
 fi
