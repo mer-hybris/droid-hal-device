@@ -277,7 +277,13 @@ function deploy {
             DO_NOT_INSTALL=
         else
             DO_NOT_INSTALL=1
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe >>$LOG 2>&1|| die "cannot remove mesa to get libhybris"
+            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe >>$LOG 2>&1
+            ret=$?
+            if [ $ret -eq 104 ]; then
+                minfo "Could not remove mesa-llvmpipe to install libhybris, assuming new mesa>=v19 and attempting alternative libhybris installation"
+                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n in --replacefiles libhybris-libEGL libhybris-libGLESv2 libhybris-libEGL-devel libhybris-libGLESv2-devel >>$LOG 2>&1|| die "could not install libhybris-{libEGL,libGLESv2}"
+                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe-libEGL mesa-llvmpipe-libGLESv2 mesa-llvmpipe-libEGL-devel mesa-llvmpipe-libGLESv2-devel >>$LOG 2>&1
+            fi
         fi
     fi
     if [ -z $DO_NOT_INSTALL ]; then
