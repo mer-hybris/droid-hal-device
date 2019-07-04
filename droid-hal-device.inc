@@ -17,6 +17,9 @@
 #                    with Android 6+ trees, where 64bit architecture is also
 #                      available
 #
+# droid_src_build:
+#                   indicates that this droid-hal package will be built using a
+#                   droid-src source package instead of a manifest based build.
 # Device capabilities:
 # installable_zip:   adds zip updater scripts (default for all SFE devices)
 # enable_kernel_update:
@@ -135,6 +138,10 @@ Release: 	1
 Release: 	%{rel_date}
 %endif
 Provides:	droid-hal
+%if 0%{?droid_src_build:1}
+Source0: %{name}-%{version}.tar.bz2
+BuildRequires: droid-bin-src-full
+%else
 # The repo sync service on OBS prepares a 'source tarball' of the rpm
 # dir since we currently have a complex setup with subdirs which OBS
 # doesn't like. This is not a problem for local builds.
@@ -145,6 +152,7 @@ Source40:       repo.tar.bzip2
 # Reserve Source50 onwards
 # Allow device specific sources to be defined using dhd_sources
 %{?dhd_sources}
+%endif
 
 Group:		System
 #BuildArch:	noarch
@@ -275,6 +283,14 @@ Summary: Straggler files for %{device} hw
 # No %%setup macro !!
 
 %if 0%{?_obs_build_project:1}
+%if 0%{?droid_src_build:1}
+sudo chown -R abuild:abuild /home/abuild/src/droid/
+mv /home/abuild/src/droid/* .
+rm -rf rpm
+tar -jxf %{SOURCE0}
+cp -r droid-hal*/* .
+rm -rf droid-hal*
+%else
 # The OBS does not have access to 'repo' so a service does the repo init/sync
 # and provides a (huge) tarball with the checked-out tree in it.
 # So now drop to android_root and pretend to do a repo sync
@@ -298,6 +314,7 @@ cp -ar /vendor .
 # got unpacked to ../SOURCES ... but we're used to having an rpm/ dir
 # So if rpm/ is missing then we use ../SOURCES :
 [ -d rpm ] || ln -s ../SOURCES rpm
+%endif
 %endif
 
 %build
@@ -599,6 +616,8 @@ install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/dr
 rm -f $RPM_BUILD_ROOT/fstab.*
 rm -f $RPM_BUILD_ROOT/*goldfish*
 rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,seapp}_contexts
+# remove odm subdirs in case they exist to avoid problems when installing droid-hal (odm is ro)
+rm -rf $RPM_BUILD_ROOT/odm/*
 if [ $ANDROID_VERSION_MAJOR -lt "7" ]; then
 rm -f $RPM_BUILD_ROOT/property_contexts
 fi
