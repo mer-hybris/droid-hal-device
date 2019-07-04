@@ -133,11 +133,6 @@ Version: 	0.0.6
 # timestamped releases are used only for HADK (mb2) builds
 %if 0%{?_obs_build_project:1}
 Release: 	1
-%else
-%define rel_date %(date +'%%Y%%m%%d%%H%%M')
-Release: 	%{rel_date}
-%endif
-Provides:	droid-hal
 %if 0%{?droid_src_build:1}
 Source0: %{name}-%{version}.tar.bz2
 BuildRequires: droid-bin-src-full
@@ -153,6 +148,11 @@ Source40:       repo.tar.bzip2
 # Allow device specific sources to be defined using dhd_sources
 %{?dhd_sources}
 %endif
+%else
+%define rel_date %(date +'%%Y%%m%%d%%H%%M')
+Release: 	%{rel_date}
+%endif
+Provides:	droid-hal
 
 Group:		System
 #BuildArch:	noarch
