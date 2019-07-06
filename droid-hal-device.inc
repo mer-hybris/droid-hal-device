@@ -501,7 +501,7 @@ cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BU
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
 %endif
 
-rsync -av %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT --exclude etc --exclude 'init.zygote*'
+rsync -av %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT --exclude bin --exclude etc --exclude 'init.zygote*'
 
 # We'll use the mer provided modprobe so clean that out of the way
 rm -f $RPM_BUILD_ROOT/sbin/modprobe
