@@ -616,16 +616,50 @@ fi
 install -D %{dhd_path}/helpers/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
 install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
 
-# Remove cruft
-rm -f $RPM_BUILD_ROOT/fstab.*
-rm -f $RPM_BUILD_ROOT/*goldfish*
-rm -rf $RPM_BUILD_ROOT/{proc,sys,dev,sepolicy} $RPM_BUILD_ROOT/{file,seapp}_contexts
+# Remove cruft, unless the file is listed in straggler_files
+
+_remove_cruft() {
+%if 0%{?straggler_files:1}
+    # Cheat a bit and use substring search for lookup
+    local straggler_lookup=
+    for straggler_file in $(echo "%{?straggler_files}" | xargs -n1); do
+        straggler_lookup="${straggler_lookup}<${straggler_file}>"
+    done
+
+    while [ $# -gt 0 ]; do
+        for _f in $(ls -1 -d ${RPM_BUILD_ROOT}${1} 2>/dev/null); do
+            local fn="${_f/#${RPM_BUILD_ROOT}}"
+            if [[ ! "${straggler_lookup}" =~ "<${fn//+/\\+}>" ]]; then
+                rm -rf ${_f}
+            fi
+        done
+        shift
+    done
+%else
+    while [ $# -gt 0 ]; do
+        rm -rf ${RPM_BUILD_ROOT}${1}
+        shift
+    done
+%endif
+}
+
+# Make sure to add the files in quotations so that string expansion is not done here.
 # remove odm subdirs in case they exist to avoid problems when installing droid-hal (odm is ro)
-rm -rf $RPM_BUILD_ROOT/odm/*
+_remove_cruft   "/fstab.*"          \
+                "/*goldfish*"       \
+                "/proc"             \
+                "/sys"              \
+                "/dev"              \
+                "/sepolicy"         \
+                "/file_contexts"    \
+                "/seapp_contexts"   \
+                "/charger"          \
+                "/res"              \
+                "/data"             \
+                "/odm/*"
 if [ $ANDROID_VERSION_MAJOR -lt "7" ]; then
-rm -f $RPM_BUILD_ROOT/property_contexts
+    _remove_cruft "/property_contexts"
 fi
-rm -rf $RPM_BUILD_ROOT/{charger,res,data}
 
 # Name this so droid-system-packager's droid-hal-startup.sh can find it
 mkdir -p $RPM_BUILD_ROOT/sbin
