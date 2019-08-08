@@ -9,6 +9,8 @@
 #                      defaults to device
 # rpm_vendor:        vendor name used rpm-side (eg in configs)
 #                      defaults to vendor
+# dhd_path:          path to droid-hal-device git submodule
+#                      defaults to rpm/dhd
 # droid_target_aarch64:
 #                    indicates that your device is 64bit ARM and has such
 #                      Android base
@@ -90,11 +92,13 @@ such_macro supports spaces\
 %if 0%{!?rpm_vendor:1}
 %define rpm_vendor %{vendor}
 %endif
+%if 0%{!?dhd_path:1}
+%define dhd_path rpm/dhd
+%endif
 
 %define __requires_exclude ^.*$
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
-%define dhd_path rpm/dhd
 
 # On the OBS this package should be built in the i486 scheduler against
 # mer/sailfish *_i486 targets.
