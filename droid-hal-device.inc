@@ -138,7 +138,6 @@ Version: 	0.0.6
 %if 0%{?_obs_build_project:1}
 Release: 	1
 %if 0%{?droid_src_build:1}
-Source0: %{name}-%{version}.tar.bz2
 BuildRequires: droid-bin-src-full
 %else
 # The repo sync service on OBS prepares a 'source tarball' of the rpm
