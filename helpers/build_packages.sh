@@ -157,6 +157,7 @@ if [ "$BUILDMW" == "1" ]; then
             buildmw -u "https://github.com/mer-hybris/libgbinder-radio" || die
             buildmw -u "https://github.com/mer-hybris/bluebinder" || die
             buildmw -u "https://github.com/mer-hybris/ofono-ril-binder-plugin" || die
+            buildmw -u "https://github.com/mer-hybris/nfcd-binder-plugin" || die
         fi
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid.git" \
                 -s rpm/pulseaudio-modules-droid.spec || die
