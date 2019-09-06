@@ -144,17 +144,17 @@ BuildRequires: droid-bin-src-full
 # dir since we currently have a complex setup with subdirs which OBS
 # doesn't like. This is not a problem for local builds.
 Source0: 	rpm.tar.bzip2
-# Ths actual droid source from the repo service when run on OBS.
+# This is actual droid source from the repo service when run on OBS.
 # local builds don't mind if this is missing
 Source40:       repo.tar.bzip2
-# Reserve Source50 onwards
-# Allow device specific sources to be defined using dhd_sources
-%{?dhd_sources}
 %endif
 %else
 %define rel_date %(date +'%%Y%%m%%d%%H%%M')
 Release: 	%{rel_date}
 %endif
+# Reserve Source50 onwards
+# Allow device specific sources to be defined using dhd_sources
+%{?dhd_sources}
 Provides:	droid-hal
 
 Group:		System
