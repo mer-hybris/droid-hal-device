@@ -157,6 +157,7 @@ Release: 	%{rel_date}
 # Allow device specific sources to be defined using dhd_sources
 %{?dhd_sources}
 Provides:	droid-hal
+Provides:	hardware-adaptation-setup
 
 Group:		System
 #BuildArch:	noarch
