@@ -94,12 +94,6 @@ while (<>) {
         print "# Known droid dir $std_subsystem_links{$sub}/ is for subsystem $sub\n";
         print qq{SYMLINK=="$dev", MODE="$mode", GROUP="$group", OWNER="$owner"\n} ;
         print qq{SUBSYSTEM=="$std_subsystem_links{$sub}", KERNEL=="$rest", MODE="$mode", GROUP="$group", OWNER="$owner"\n} ;
-        if ($sub eq "block") {
-          if ($rest =~ m{.*/(.*)}) {
-            # Make sure we set the permissions on the device, not on a symlink to it.
-            print qq{SUBSYSTEM=="$std_subsystem_links{$sub}", DEVLINKS=="* $rest *|$rest *|* $rest|$rest", MODE="$mode", GROUP="$group", OWNER="$owner"\n} ;
-          }
-        }
         next;
       }
 
