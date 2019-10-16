@@ -167,7 +167,6 @@ if [ "$BUILDMW" == "1" ]; then
         buildmw -u "https://github.com/mer-hybris/qt5-feedback-haptics-droid-vibrator" \
                 -s rpm/qt5-feedback-haptics-native-vibrator.spec || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
-        buildmw -u "https://github.com/mer-hybris/qt5-qpa-surfaceflinger-plugin" || die
         buildmw -u "https://git.merproject.org/mer-core/qtscenegraph-adaptation.git" \
                 -s rpm/qtscenegraph-adaptation-droid.spec || die
         if [ $android_version_major -ge 9 ]; then
