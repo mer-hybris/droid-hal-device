@@ -74,7 +74,7 @@ for my $file (@files) {
     chomp;
     my ($cmd, $src, $mnt_point, $type, $mnt_flagsandoptions, $fs_mgr_flags);
 
-    if (basename($file) =~ /.rc$/ ) {	# mount commands from rc files
+    if (basename($file) =~ /.rc$/ ) {    # mount commands from rc files
       next unless /^\s*mount\s+/;
       my $tmpopts;
       ($cmd, $type, $src, $mnt_point, $tmpopts) = split(" ", $_, 5);
@@ -85,13 +85,13 @@ for my $file (@files) {
       $fs_mgr_flags = "";
       $mnt_flagsandoptions = "";
       while (@opts) {
-	my $opt = shift @opts;
-	if ($opt =~ /^wait/) {
-	  # systemd waits for devices by default so just strip this option
-	  # See core/init/builtins.c ~ line 446 
-	} else {
-	  $mnt_flagsandoptions = "$mnt_flagsandoptions $opt";
-	}
+        my $opt = shift @opts;
+        if ($opt =~ /^wait/) {
+          # systemd waits for devices by default so just strip this option
+          # See core/init/builtins.c ~ line 446
+        } else {
+          $mnt_flagsandoptions = "$mnt_flagsandoptions $opt";
+        }
       }
       # and convert ' ' to ,:
       $fs_mgr_flags =~ s/\s+/,/g;
