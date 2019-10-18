@@ -155,7 +155,7 @@ if [ "$BUILDMW" = "1" ]; then
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
 
         if [ $android_version_major -ge 8 ]; then
-            buildmw -u "https://git.merproject.org/mer-core/libglibutil.git" || die
+            buildmw -u "https://git.sailfishos.org/mer-core/libglibutil.git" || die
             buildmw -u "https://github.com/mer-hybris/libgbinder" || die
             buildmw -u "https://github.com/mer-hybris/libgbinder-radio" || die
             buildmw -u "https://github.com/mer-hybris/bluebinder" || die
@@ -170,13 +170,13 @@ if [ "$BUILDMW" = "1" ]; then
         buildmw -u "https://github.com/mer-hybris/qt5-feedback-haptics-droid-vibrator" \
                 -s rpm/qt5-feedback-haptics-native-vibrator.spec || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
-        buildmw -u "https://git.merproject.org/mer-core/qtscenegraph-adaptation.git" \
+        buildmw -u "https://git.sailfishos.org/mer-core/qtscenegraph-adaptation.git" \
                 -s rpm/qtscenegraph-adaptation-droid.spec || die
         if [ $android_version_major -ge 9 ]; then
-            buildmw -u "https://git.merproject.org/mer-core/sensorfw.git" \
+            buildmw -u "https://git.sailfishos.org/mer-core/sensorfw.git" \
                     -s rpm/sensorfw-qt5-binder.spec || die
         else
-            buildmw -u "https://git.merproject.org/mer-core/sensorfw.git" \
+            buildmw -u "https://git.sailfishos.org/mer-core/sensorfw.git" \
                     -s rpm/sensorfw-qt5-hybris.spec || die
         fi
         if [ $android_version_major -ge 8 ]; then
@@ -190,7 +190,7 @@ if [ "$BUILDMW" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se kf5bluezqt-bluez4 > /dev/null
         ret=$?
         if [ $ret -eq 104 ]; then
-            buildmw -u "https://git.merproject.org/mer-core/kf5bluezqt.git" \
+            buildmw -u "https://git.sailfishos.org/mer-core/kf5bluezqt.git" \
                     -s rpm/kf5bluezqt-bluez4.spec || die
             # pull device's bluez4 configs correctly
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
