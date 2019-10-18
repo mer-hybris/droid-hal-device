@@ -34,19 +34,21 @@
 #
 
 usage() {
-    echo "Usage: $0 [OPTION]..."
-    echo "  -h, --help      you're reading it"
-    echo "  -d, --droid-hal build droid-hal-device (rpm/)"
-    echo "  -c, --configs   build droid-configs"
-    echo "  -m, --mw[=REPO] build HW middleware packages or REPO"
-    echo "  -v, --version   build droid-hal-version"
-    echo "  -b, --build=PKG build one package (PKG can include path)"
-    echo "  -s, --spec=SPEC optionally used with -m or -b"
-    echo "                  can be supplied multiple times to build multiple .spec files at once"
-    echo "  -D, --do-not-install"
-    echo "                  useful when package is needed only in the final image"
-    echo "                  especially when it conflicts in an SDK target"
-    echo " No options assumes building for all areas."
+    cat <<EOF
+Usage: $0 [OPTION]..."
+   -h, --help      you're reading it
+   -d, --droid-hal build droid-hal-device (rpm/)
+   -c, --configs   build droid-configs
+   -m, --mw[=REPO] build HW middleware packages or REPO
+   -v, --version   build droid-hal-version
+   -b, --build=PKG build one package (PKG can include path)
+   -s, --spec=SPEC optionally used with -m or -b
+                   can be supplied multiple times to build multiple .spec files at once
+   -D, --do-not-install
+                   useful when package is needed only in the final image
+                   especially when it conflicts in an SDK target
+ No options assumes building for all areas.
+EOF
     exit 1
 }
 
