@@ -102,17 +102,17 @@ if [ $# -ne 0 ]; then
     exit 1
 fi
 
-if [[ ! -d rpm/dhd ]]; then
+if [ ! -d rpm/dhd ]; then
     echo $0: 'launch this script from the $ANDROID_ROOT directory'
     exit 1
 fi
 # utilities
 . ./rpm/dhd/helpers/util.sh
 
-if [ "$BUILDDHD" == "1" ]; then
+if [ "$BUILDDHD" = "1" ]; then
     builddhd
 fi
-if [ "$BUILDCONFIGS" == "1" ]; then
+if [ "$BUILDCONFIGS" = "1" ]; then
     if [ -n "$(grep '%define community_adaptation' $ANDROID_ROOT/hybris/droid-configs/rpm/droid-config-$DEVICE.spec)" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i community-adaptation > /dev/null
         ret=$?
@@ -134,7 +134,7 @@ if [ "$BUILDCONFIGS" == "1" ]; then
     buildconfigs
 fi
 
-if [ "$BUILDMW" == "1" ]; then
+if [ "$BUILDMW" = "1" ]; then
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
@@ -150,7 +150,7 @@ if [ "$BUILDMW" == "1" ]; then
 
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
-    if [ "$BUILDMW_REPO" == "" ]; then
+    if [ "$BUILDMW_REPO" = "" ]; then
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
 
         if [ $android_version_major -ge 8 ]; then
@@ -195,7 +195,7 @@ if [ "$BUILDMW" == "1" ]; then
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
         fi
     else
-        if [[ -z "$BUILDSPEC_FILE" ]]; then
+        if [ -z "$BUILDSPEC_FILE" ]; then
             buildmw -u $BUILDMW_REPO || die
         else
             # Supply all given spec files from $BUILDSPEC_FILE array prefixed with "-s"
@@ -205,12 +205,12 @@ if [ "$BUILDMW" == "1" ]; then
     popd > /dev/null
 fi
 
-if [ "$BUILDVERSION" == "1" ]; then
+if [ "$BUILDVERSION" = "1" ]; then
     buildversion
     echo "----------------------DONE! Now proceed on creating the rootfs------------------"
 fi
 
-if [ "$BUILDPKG" == "1" ]; then
+if [ "$BUILDPKG" = "1" ]; then
     if [ -z $BUILDPKG_PATH ]; then
        echo "--build requires an argument (path to package)"
     else
