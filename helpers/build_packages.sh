@@ -47,12 +47,13 @@ Usage: $0 [OPTION]..."
    -D, --do-not-install
                    useful when package is needed only in the final image
                    especially when it conflicts in an SDK target
+   -p, --pull      do \`git pull\` before building each mw repo
  No options assumes building for all areas.
 EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::vb:s:D -l help,droid-hal,configs,mw::,version,build:,spec:,do-not-install -- "$@")
+OPTIONS=$(getopt -o hdcm::vb:s:Dp -l help,droid-hal,configs,mw::,version,build:,spec:,do-not-install,pull -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -92,6 +93,7 @@ while true; do
           esac
           shift;;
       -v|--version) BUILDVERSION=1 ;;
+      -p|--pull) UPDATE_MW_REPOS=1 ;;
       --)        shift ; break ;;
       *)         echo "unknown option: $1" ; exit 1 ;;
     esac
