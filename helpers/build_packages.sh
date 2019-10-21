@@ -33,20 +33,22 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-function usage() {
-    echo "Usage: $0 [OPTION]..."
-    echo "  -h, --help      you're reading it"
-    echo "  -d, --droid-hal build droid-hal-device (rpm/)"
-    echo "  -c, --configs   build droid-configs"
-    echo "  -m, --mw[=REPO] build HW middleware packages or REPO"
-    echo "  -v, --version   build droid-hal-version"
-    echo "  -b, --build=PKG build one package (PKG can include path)"
-    echo "  -s, --spec=SPEC optionally used with -m or -b"
-    echo "                  can be supplied multiple times to build multiple .spec files at once"
-    echo "  -D, --do-not-install"
-    echo "                  useful when package is needed only in the final image"
-    echo "                  especially when it conflicts in an SDK target"
-    echo " No options assumes building for all areas."
+usage() {
+    cat <<EOF
+Usage: $0 [OPTION]..."
+   -h, --help      you're reading it
+   -d, --droid-hal build droid-hal-device (rpm/)
+   -c, --configs   build droid-configs
+   -m, --mw[=REPO] build HW middleware packages or REPO
+   -v, --version   build droid-hal-version
+   -b, --build=PKG build one package (PKG can include path)
+   -s, --spec=SPEC optionally used with -m or -b
+                   can be supplied multiple times to build multiple .spec files at once
+   -D, --do-not-install
+                   useful when package is needed only in the final image
+                   especially when it conflicts in an SDK target
+ No options assumes building for all areas.
+EOF
     exit 1
 }
 
@@ -100,17 +102,17 @@ if [ $# -ne 0 ]; then
     exit 1
 fi
 
-if [[ ! -d rpm/dhd ]]; then
+if [ ! -d rpm/dhd ]; then
     echo $0: 'launch this script from the $ANDROID_ROOT directory'
     exit 1
 fi
 # utilities
 . ./rpm/dhd/helpers/util.sh
 
-if [ "$BUILDDHD" == "1" ]; then
+if [ "$BUILDDHD" = "1" ]; then
     builddhd
 fi
-if [ "$BUILDCONFIGS" == "1" ]; then
+if [ "$BUILDCONFIGS" = "1" ]; then
     if [ -n "$(grep '%define community_adaptation' $ANDROID_ROOT/hybris/droid-configs/rpm/droid-config-$DEVICE.spec)" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i community-adaptation > /dev/null
         ret=$?
@@ -132,7 +134,7 @@ if [ "$BUILDCONFIGS" == "1" ]; then
     buildconfigs
 fi
 
-if [ "$BUILDMW" == "1" ]; then
+if [ "$BUILDMW" = "1" ]; then
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
@@ -148,7 +150,7 @@ if [ "$BUILDMW" == "1" ]; then
 
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
-    if [ "$BUILDMW_REPO" == "" ]; then
+    if [ "$BUILDMW_REPO" = "" ]; then
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
 
         if [ $android_version_major -ge 8 ]; then
@@ -193,7 +195,7 @@ if [ "$BUILDMW" == "1" ]; then
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
         fi
     else
-        if [[ -z "$BUILDSPEC_FILE" ]]; then
+        if [ -z "$BUILDSPEC_FILE" ]; then
             buildmw -u $BUILDMW_REPO || die
         else
             # Supply all given spec files from $BUILDSPEC_FILE array prefixed with "-s"
@@ -203,16 +205,16 @@ if [ "$BUILDMW" == "1" ]; then
     popd > /dev/null
 fi
 
-if [ "$BUILDVERSION" == "1" ]; then
+if [ "$BUILDVERSION" = "1" ]; then
     buildversion
     echo "----------------------DONE! Now proceed on creating the rootfs------------------"
 fi
 
-if [ "$BUILDPKG" == "1" ]; then
+if [ "$BUILDPKG" = "1" ]; then
     if [ -z $BUILDPKG_PATH ]; then
        echo "--build requires an argument (path to package)"
     else
-        buildpkg $BUILDPKG_PATH ${BUILDSPEC_FILE[@]}
+        buildpkg $BUILDPKG_PATH "${BUILDSPEC_FILE[@]}"
     fi
 fi
 

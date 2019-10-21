@@ -38,15 +38,15 @@ LOG="/dev/null"
 CREATEREPO="createrepo_c"
 ALLOW_UNSIGNED_RPM=""
 
-function minfo {
+minfo() {
     echo -e "\e[01;34m* $* \e[00m"
 }
 
-function merror {
+merror() {
     echo -e "\e[01;31m!! $* \e[00m"
 }
 
-function die {
+die() {
     if [[ "$LOG" != "/dev/null" && -f "$LOG" ]] ; then
         tail -n20 "$LOG"
         minfo "Check $LOG for full log."
@@ -92,8 +92,8 @@ mkdir -p $LOCAL_REPO
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper in -h | \
   fgrep -q -- --allow-unsigned-rpm && ALLOW_UNSIGNED_RPM="--allow-unsigned-rpm"
 
-function initlog {
-    LOGPATH=`pwd`
+initlog() {
+    LOGPATH="$PWD"
     if [ -n "$2" ]; then
         LOGPATH=$2
     fi
@@ -101,10 +101,10 @@ function initlog {
     [ -f "$LOG" ] && rm "$LOG"
 }
 
-function buildconfigs() {
+buildconfigs() {
     PKG=droid-configs
     cd hybris/$PKG
-    initlog $PKG $(dirname `pwd`)
+    initlog $PKG $(dirname "$PWD")
     build rpm/droid-config-$DEVICE.spec
     deploy $PKG do_not_install
     # installroot no longer exists since Platform SDK 2.2.0, let's put KS back
@@ -117,7 +117,7 @@ function buildconfigs() {
     hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh >>$LOG 2>&1|| die "error while processing patterns"
 }
 
-function builddhd() {
+builddhd() {
     PKG=droid-hal-$DEVICE
     initlog $PKG
     if [ -e "rpm/droid-hal-$HABUILD_DEVICE.spec" ]; then
@@ -128,19 +128,19 @@ function builddhd() {
     deploy $PKG do_not_install
 }
 
-function buildversion() {
+buildversion() {
     PKG=droid-hal-version-$DEVICE
     dir=$(dirname $(find hybris -name $PKG.spec))
     cd $dir/..
-    initlog $PKG $(dirname `pwd`)
+    initlog $PKG $(dirname "$PWD")
     build rpm/$PKG.spec
     deploy $PKG do_not_install
     cd ../../
 }
 
-function yesnoall() {
-    if [ $BUILDALL == "y" ]; then
-        return `true`
+yesnoall() {
+    if [ $BUILDALL = "y" ]; then
+        return 0
     fi
     read -r -p "${1:-} [Y/n/all]" REPLY
     REPLY=${REPLY:-y}
@@ -158,7 +158,7 @@ function yesnoall() {
     esac
 }
 
-function buildmw() {
+buildmw() {
     # Usage:
     #  -u     URL to use. Will check whether a folder with the same name as the
     #         git repo is already present in $ANDROID_ROOT/external/* and
@@ -186,8 +186,8 @@ function buildmw() {
 
 
     PKG="$(basename ${GIT_URL%.git})"
-    yesnoall "Build $PKG?"
-    if [ $? == "0" ]; then
+
+    if yesnoall "Build $PKG?" ; then
         # Remove this warning when ngfd-plugin-droid-vibrator will get rid of CMake
         if [ "$GIT_URL" = "ngfd-plugin-droid-vibrator" ]; then
             merror "WARNING: ngfd-plugin-droid-vibrator build is known to halt under various scenarios!"
@@ -222,7 +222,7 @@ function buildmw() {
             git pull >>$LOG 2>&1|| die "pulling of updates failed"
         fi
 
-        if [ "$PKG" == "libhybris" ]; then
+        if [ "$PKG" = "libhybris" ]; then
             minfo "enabling debugging in libhybris..."
             sed "s/%{?qa_stage_devel:--enable-debug}/--enable-debug/g" -i rpm/libhybris.spec
             sed "s/%{?qa_stage_devel:--enable-trace}/--enable-trace/g" -i rpm/libhybris.spec
@@ -238,7 +238,7 @@ function buildmw() {
     fi
 }
 
-function build {
+build() {
     SPECS=$@
     if [ -z "$SPECS" ]; then
         minfo "No spec file for package building specified, building all I can find."
@@ -254,7 +254,7 @@ function build {
     done
 }
 
-function deploy {
+deploy() {
     PKG=$1
     if [ -z "$PKG" ]; then
         die "Please provide a package name to build"
@@ -268,7 +268,7 @@ function deploy {
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't update pkg info"
     DO_NOT_INSTALL=$2
-    if [ "$PKG" == "libhybris" ]; then
+    if [ "$PKG" = "libhybris" ]; then
         # If this is the first installation of libhybris simply remove mesa,
         # otherwise proceed with force re-installation
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i mesa-llvmpipe > /dev/null
@@ -296,15 +296,15 @@ function deploy {
     minfo "Building of $PKG finished successfully"
 }
 
-function buildpkg {
+buildpkg() {
     if [ -z "$1" ]; then
         die "Please specify path to the package"
     fi
     pushd $1 > /dev/null || die "Path not found: $1"
-    PKG=$(basename $1)
-    initlog $PKG $(dirname `pwd`)
+    PKG=$(basename "$1")
+    initlog $PKG $(dirname "$PWD")
     shift
-    build $@
+    build "$@"
     deploy $PKG "$DO_NOT_INSTALL"
     popd > /dev/null
 }
