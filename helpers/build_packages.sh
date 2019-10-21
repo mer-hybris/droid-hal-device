@@ -139,7 +139,7 @@ if [ "$BUILDMW" = "1" ]; then
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref -f
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref
 
     if [ "$FAMILY" == "" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
