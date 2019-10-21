@@ -153,7 +153,65 @@ if [ "$BUILDMW" = "1" ]; then
 
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
-    if [ "$BUILDMW_REPO" = "" ]; then
+    manifest_lookup=$ANDROID_ROOT
+    while true; do
+        manifest=$manifest_lookup/.repo/manifest.xml
+        if [ -f "$manifest" ] || [ "$manifest_lookup" = "$(dirname "$manifest_lookup")" ]; then
+            break
+        fi
+        manifest=""
+        manifest_lookup=$(dirname "$manifest_lookup")
+    done
+
+    if [ ! "$BUILDMW_REPO" = "" ]; then
+        # No point in asking when only one mw package is being built
+        BUILDMW_QUIET=1
+        if [ -z "$BUILDSPEC_FILE" ]; then
+            buildmw -u "$BUILDMW_REPO" || die
+        else
+            # Supply all given spec files from $BUILDSPEC_FILE array prefixed with "-s"
+            buildmw -u "$BUILDMW_REPO" "${BUILDSPEC_FILE[@]/#/-s }" || die
+        fi
+    elif [ -n "$manifest" ] &&
+         grep -ql hybris/mw $manifest; then
+        buildmw_cmds=()
+        bifs=$IFS
+        while IFS= read -r line; do
+            if [[ $line = *"hybris/mw"* ]]; then
+                IFS="= "$'\t'
+                for tok in $line; do
+                    word=$(echo "$tok" | cut -d \" -f2 | cut -d \' -f2)
+                    if [ "$preword" = "path" ]; then
+                        if [ "$(basename $(dirname "$word"))" = "mw" ]; then
+                            # Only build first level projects
+                            mw=$(basename "$word")
+                        fi
+                    elif [ "$preword" = "spec" ]; then
+                        spec=$word
+                    fi
+                    preword=$word
+                done
+                if [ ! -z "$mw" ]; then
+                    if [ -z "$spec" ]; then
+                        buildmw_cmds+=("$mw")
+                    else
+                        buildmw_cmds+=("$mw:$spec")
+                        spec=
+                    fi
+                    mw=
+                fi
+            fi
+        done < "$manifest"
+        IFS=$bifs
+        for bcmd in "${buildmw_cmds[@]}"; do
+            bcmdsplit=(); while read -rd:; do bcmdsplit+=("$REPLY"); done <<< "$bcmd:"
+            if [ ! -z "${bcmdsplit[1]}" ]; then
+                buildmw -u "${bcmdsplit[0]}" -s "${bcmdsplit[1]}" || die
+            elif [ ! -z "${bcmdsplit[0]}" ]; then
+                buildmw -u "${bcmdsplit[0]}" || die
+            fi
+        done
+    else
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
 
         if [ $android_version_major -ge 8 ]; then
@@ -196,15 +254,6 @@ if [ "$BUILDMW" = "1" ]; then
                     -s rpm/kf5bluezqt-bluez4.spec || die
             # pull device's bluez4 configs correctly
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
-        fi
-    else
-        # No point in asking when only one mw package is being built
-        BUILDMW_QUIET=1
-        if [ -z "$BUILDSPEC_FILE" ]; then
-            buildmw -u $BUILDMW_REPO || die
-        else
-            # Supply all given spec files from $BUILDSPEC_FILE array prefixed with "-s"
-            buildmw -u $BUILDMW_REPO "${BUILDSPEC_FILE[@]/#/-s }" || die
         fi
     fi
     popd > /dev/null
