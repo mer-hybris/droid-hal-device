@@ -9,8 +9,8 @@ fi
 # utilities
 . ./rpm/dhd/helpers/util.sh
 
-BUILDALL=y
+BUILDMW_QUIET=1
 buildmw -u "https://github.com/sailfishos/yamui" || die
 buildmw -u "https://github.com/sailfishos/initrd-helpers/" || die
 buildmw -u "https://github.com/sailfishos/hw-ramdisk" || die
-BUILDALL=n
+BUILDMW_QUIET=
