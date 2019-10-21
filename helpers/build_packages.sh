@@ -135,6 +135,7 @@ if [ "$BUILDCONFIGS" = "1" ]; then
 fi
 
 if [ "$BUILDMW" = "1" ]; then
+
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
@@ -151,6 +152,7 @@ if [ "$BUILDMW" = "1" ]; then
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
     if [ "$BUILDMW_REPO" = "" ]; then
+        BUILDMW_ASK=y
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
 
         if [ $android_version_major -ge 8 ]; then
