@@ -76,6 +76,7 @@ while true; do
       -c|--configs) BUILDCONFIGS=1 ;;
       -D|--do-not-install) DO_NOT_INSTALL=1;;
       -m|--mw) BUILDMW=1
+          BUILDMW_ASK=1
           case "$2" in
               *) BUILDMW_REPO=$2;;
           esac
@@ -117,10 +118,10 @@ if [ "$BUILDCONFIGS" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i community-adaptation > /dev/null
         ret=$?
         if [ $ret -eq 104 ]; then
-            BUILDALL=y
+            BUILDMW_QUIET=1
             buildmw -u "https://github.com/mer-hybris/community-adaptation.git" \
                     -s rpm/community-adaptation-localbuild.spec || die
-            BUILDALL=n
+            BUILDMW_QUIET=
         elif [ $ret -ne 0 ]; then
             die "Could not determine if community-adaptation package is available, exiting."
         fi
@@ -195,6 +196,8 @@ if [ "$BUILDMW" = "1" ]; then
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
         fi
     else
+        # No point in asking when only one mw package is being built
+        BUILDMW_QUIET=1
         if [ -z "$BUILDSPEC_FILE" ]; then
             buildmw -u $BUILDMW_REPO || die
         else

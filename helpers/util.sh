@@ -33,7 +33,6 @@
 #
 
 PORT_ARCH="${PORT_ARCH:-armv7hl}"
-BUILDALL=n
 LOG="/dev/null"
 CREATEREPO="createrepo_c"
 ALLOW_UNSIGNED_RPM=""
@@ -138,8 +137,8 @@ buildversion() {
     cd ../../
 }
 
-yesnoall() {
-    if [ $BUILDALL = "y" ]; then
+buildmwquery() {
+    if [ "$BUILDMW_ASK" = "" ] || [ "$BUILDMW_QUIET" = "1" ]; then
         return 0
     fi
     read -r -p "${1:-} [Y/n/all]" REPLY
@@ -149,7 +148,7 @@ yesnoall() {
        true
        ;;
     [aA]*)
-       BUILDALL=y
+       BUILDMW_ASK=
        true
        ;;
     *)
@@ -187,7 +186,7 @@ buildmw() {
 
     PKG="$(basename ${GIT_URL%.git})"
 
-    if yesnoall "Build $PKG?" ; then
+    if buildmwquery "Build $PKG?" ; then
         # Remove this warning when ngfd-plugin-droid-vibrator will get rid of CMake
         if [ "$GIT_URL" = "ngfd-plugin-droid-vibrator" ]; then
             merror "WARNING: ngfd-plugin-droid-vibrator build is known to halt under various scenarios!"
