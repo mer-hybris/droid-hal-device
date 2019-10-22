@@ -4,8 +4,8 @@
 # any change made (e.g. to patterns) could be simply picked up just by
 # re-running this script.
 #
-# Copyright (C) 2015 Alin Marin Elena <alin@elena.space>
-# Copyright (C) 2015 Jolla Ltd.
+# Copyright (c) 2015 Alin Marin Elena <alin@elena.space>
+# Copyright (c) 2015 - 2019 Jolla Ltd.
 # Contact: Simonas Leleiva <simonas.leleiva@jollamobile.com>
 #
 # All rights reserved.

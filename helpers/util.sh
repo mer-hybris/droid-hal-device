@@ -1,8 +1,8 @@
 #!/bin/bash
 # util.sh - all refactored bits/functions go here
 #
-# Copyright (C) 2015 Alin Marin Elena <alin@elena.space>
-# Copyright (C) 2015 Jolla Ltd.
+# Copyright (c) 2015 Alin Marin Elena <alin@elena.space>
+# Copyright (c) 2015 - 2019 Jolla Ltd.
 # Contact: Simonas Leleiva <simonas.leleiva@jollamobile.com>
 #
 # All rights reserved.
