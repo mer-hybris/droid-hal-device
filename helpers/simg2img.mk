@@ -2,7 +2,7 @@
 
 SIMG2IMG_SOURCES?= nosourcessupplied
 
-CXXFLAGS+= -std=c++0x
+CXXFLAGS+= -std=gnu++11
 
 CPPFLAGS+= -Iinclude
 CPPFLAGS+= -I../base/include
