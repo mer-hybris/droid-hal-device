@@ -168,6 +168,8 @@ BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  rsync
 # starting from Android 8
 BuildRequires:  python
+Requires(pre):  droid-hal-%{rpm_device}-users
+Requires:       droid-hal-%{rpm_device}-users
 %if 0%{?straggler_files:1}
 Requires:       droid-hal-%{rpm_device}-detritus
 %endif
@@ -195,6 +197,17 @@ Summary: Development files for droid-hal device: %{rpm_device}
 %description devel
 Device specific droid headers for %{rpm_device}.
 Needed by libhybris
+
+################
+%package users
+Group: Tools
+Requires: %{name} = %{version}-%{release}
+Provides: droid-hal-users
+Summary: Create users and groups for device: %{rpm_device}
+
+%description users
+This package provides android users and groups which are
+required by droid-hal/hybris based adaptations.
 
 ################
 %package tools
@@ -734,17 +747,48 @@ install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
 for u in $(cat %{_libdir}/droid/all-units.txt); do
 %systemd_preun $u
 done
-# Only run this during final cleanup
-if [ $1 -eq 0 ]; then
-    echo purging old droid users and groups
-    cat %{_libdir}/droid/droid.ids.created |while read name id; do
-        userdel -f $name
-        groupdel $name
-        sed -i "/^$name $id\$/d" droid.ids.created
-    done || :
-fi
 
-%pre
+%post
+for u in $(cat %{_libdir}/droid/all-units.txt); do
+%systemd_post $u
+done
+cd %{_libdir}/droid
+./generated-post-scripts.sh || :
+
+# To add additional groups define a HA config, one can define those as part
+# of additional_post_scripts macro.
+%{?additional_post_scripts}
+
+%post kernel-modules
+# This runs on the device at install or in mic chroot at img build
+# in chroot the kernel version is not known.
+for ver in $(cd /lib/modules; echo *); do
+  /sbin/depmod $ver || :
+done
+
+%if 0%{!?have_custom_img_boot:1}
+%if 0%{?enable_kernel_update:1}
+%post img-boot
+# This oneshot is enabled only during package upgrades, as initial
+# installation is done when we flash device.
+if [ $1 -ne 1 ] ; then
+  add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh
+fi
+%endif
+%endif
+
+%if 0%{?bootloader_binary:1}
+%if 0%{?enable_bootloader_update:1}
+%post aboot
+# This oneshot is enabled only during package upgrades, as initial
+# installation is done when we flash device.
+if [ $1 -ne 1 ] ; then
+  add-preinit-oneshot /var/lib/platform-updates/flash-aboot.sh
+fi
+%endif
+%endif
+
+%pre users
 #Compatibility with old droid-hal version - convert previous format
 #of droid-specific user/group information to current one.
 cd %{_libdir}/droid
@@ -759,10 +803,18 @@ if [ $1 -gt 1 -a \
   echo '#!/bin/sh' > droid-user-remove.sh.installed
 fi
 
-%post
-for u in $(cat %{_libdir}/droid/all-units.txt); do
-%systemd_post $u
-done
+%preun users
+# Only run this during final cleanup
+if [ $1 -eq 0 ]; then
+    echo purging old droid users and groups
+    cat %{_libdir}/droid/droid.ids.created |while read name id; do
+        userdel -f $name
+        groupdel $name
+        sed -i "/^$name $id\$/d" droid.ids.created
+    done || :
+fi
+
+%post users
 cd %{_libdir}/droid
 # Upgrade: Check which users and groups were changed
 # between the previous version of droid-hal and current
@@ -819,41 +871,6 @@ usermod -G pulse -a pulse || :
 usermod -G pulse-access -a root || :
 # End workaround
 
-./generated-post-scripts.sh || :
-
-# To add additional groups define a HA config, one can define those as part
-# of additional_post_scripts macro.
-%{?additional_post_scripts}
-
-%post kernel-modules
-# This runs on the device at install or in mic chroot at img build
-# in chroot the kernel version is not known.
-for ver in $(cd /lib/modules; echo *); do
-  /sbin/depmod $ver || :
-done
-
-%if 0%{!?have_custom_img_boot:1}
-%if 0%{?enable_kernel_update:1}
-%post img-boot
-# This oneshot is enabled only during package upgrades, as initial
-# installation is done when we flash device.
-if [ $1 -ne 1 ] ; then
-  add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh
-fi
-%endif
-%endif
-
-%if 0%{?bootloader_binary:1}
-%if 0%{?enable_bootloader_update:1}
-%post aboot
-# This oneshot is enabled only during package upgrades, as initial
-# installation is done when we flash device.
-if [ $1 -ne 1 ] ; then
-  add-preinit-oneshot /var/lib/platform-updates/flash-aboot.sh
-fi
-%endif
-%endif
-
 ################################################################
 # Begin files section
 
@@ -861,12 +878,10 @@ fi
 %defattr(-,root,root,-)
 /sbin/*
 # This binary should probably move to /sbin/
-%{_libdir}/droid/droid.ids
 %{_libdir}/droid/all-units.txt
 # Created in %%post
 # init-debug
 %attr(755,root,root) /init-debug
-%ghost %attr(755, root, root) %{_libdir}/droid/droid.ids.created
 %attr(755, root, root) %{_libdir}/droid/generated-post-scripts.sh
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
@@ -889,6 +904,10 @@ fi
 /default.prop
 # Disabling v4l.rules
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
+
+%files users
+%{_libdir}/droid/droid.ids
+%ghost %attr(755, root, root) %{_libdir}/droid/droid.ids.created
 
 %files devel
 %defattr(644,root,root,-)
