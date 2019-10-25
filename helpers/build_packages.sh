@@ -4,8 +4,8 @@
 # any change made (e.g. to patterns) could be simply picked up just by
 # re-running this script.
 #
-# Copyright (C) 2015 Alin Marin Elena <alin@elena.space>
-# Copyright (C) 2015 Jolla Ltd.
+# Copyright (c) 2015 Alin Marin Elena <alin@elena.space>
+# Copyright (c) 2015 - 2019 Jolla Ltd.
 # Contact: Simonas Leleiva <simonas.leleiva@jollamobile.com>
 #
 # All rights reserved.
@@ -47,12 +47,13 @@ Usage: $0 [OPTION]..."
    -D, --do-not-install
                    useful when package is needed only in the final image
                    especially when it conflicts in an SDK target
+   -p, --pull      do \`git pull\` before building each mw repo
  No options assumes building for all areas.
 EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::vb:s:D -l help,droid-hal,configs,mw::,version,build:,spec:,do-not-install -- "$@")
+OPTIONS=$(getopt -o hdcm::vb:s:Dp -l help,droid-hal,configs,mw::,version,build:,spec:,do-not-install,pull -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -92,6 +93,7 @@ while true; do
           esac
           shift;;
       -v|--version) BUILDVERSION=1 ;;
+      -p|--pull) UPDATE_MW_REPOS=1 ;;
       --)        shift ; break ;;
       *)         echo "unknown option: $1" ; exit 1 ;;
     esac
@@ -139,7 +141,7 @@ if [ "$BUILDMW" = "1" ]; then
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref -f
+    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref
 
     if [ "$FAMILY" == "" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
@@ -151,11 +153,69 @@ if [ "$BUILDMW" = "1" ]; then
 
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
-    if [ "$BUILDMW_REPO" = "" ]; then
+    manifest_lookup=$ANDROID_ROOT
+    while true; do
+        manifest=$manifest_lookup/.repo/manifest.xml
+        if [ -f "$manifest" ] || [ "$manifest_lookup" = "$(dirname "$manifest_lookup")" ]; then
+            break
+        fi
+        manifest=""
+        manifest_lookup=$(dirname "$manifest_lookup")
+    done
+
+    if [ ! "$BUILDMW_REPO" = "" ]; then
+        # No point in asking when only one mw package is being built
+        BUILDMW_QUIET=1
+        if [ -z "$BUILDSPEC_FILE" ]; then
+            buildmw -u "$BUILDMW_REPO" || die
+        else
+            # Supply all given spec files from $BUILDSPEC_FILE array prefixed with "-s"
+            buildmw -u "$BUILDMW_REPO" "${BUILDSPEC_FILE[@]/#/-s }" || die
+        fi
+    elif [ -n "$manifest" ] &&
+         grep -ql hybris/mw $manifest; then
+        buildmw_cmds=()
+        bifs=$IFS
+        while IFS= read -r line; do
+            if [[ $line = *"hybris/mw"* ]]; then
+                IFS="= "$'\t'
+                for tok in $line; do
+                    word=$(echo "$tok" | cut -d \" -f2 | cut -d \' -f2)
+                    if [ "$preword" = "path" ]; then
+                        if [ "$(basename $(dirname "$word"))" = "mw" ]; then
+                            # Only build first level projects
+                            mw=$(basename "$word")
+                        fi
+                    elif [ "$preword" = "spec" ]; then
+                        spec=$word
+                    fi
+                    preword=$word
+                done
+                if [ ! -z "$mw" ]; then
+                    if [ -z "$spec" ]; then
+                        buildmw_cmds+=("$mw")
+                    else
+                        buildmw_cmds+=("$mw:$spec")
+                        spec=
+                    fi
+                    mw=
+                fi
+            fi
+        done < "$manifest"
+        IFS=$bifs
+        for bcmd in "${buildmw_cmds[@]}"; do
+            bcmdsplit=(); while read -rd:; do bcmdsplit+=("$REPLY"); done <<< "$bcmd:"
+            if [ ! -z "${bcmdsplit[1]}" ]; then
+                buildmw -u "${bcmdsplit[0]}" -s "${bcmdsplit[1]}" || die
+            elif [ ! -z "${bcmdsplit[0]}" ]; then
+                buildmw -u "${bcmdsplit[0]}" || die
+            fi
+        done
+    else
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
 
         if [ $android_version_major -ge 8 ]; then
-            buildmw -u "https://git.merproject.org/mer-core/libglibutil.git" || die
+            buildmw -u "https://git.sailfishos.org/mer-core/libglibutil.git" || die
             buildmw -u "https://github.com/mer-hybris/libgbinder" || die
             buildmw -u "https://github.com/mer-hybris/libgbinder-radio" || die
             buildmw -u "https://github.com/mer-hybris/bluebinder" || die
@@ -170,13 +230,13 @@ if [ "$BUILDMW" = "1" ]; then
         buildmw -u "https://github.com/mer-hybris/qt5-feedback-haptics-droid-vibrator" \
                 -s rpm/qt5-feedback-haptics-native-vibrator.spec || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
-        buildmw -u "https://git.merproject.org/mer-core/qtscenegraph-adaptation.git" \
+        buildmw -u "https://git.sailfishos.org/mer-core/qtscenegraph-adaptation.git" \
                 -s rpm/qtscenegraph-adaptation-droid.spec || die
         if [ $android_version_major -ge 9 ]; then
-            buildmw -u "https://git.merproject.org/mer-core/sensorfw.git" \
+            buildmw -u "https://git.sailfishos.org/mer-core/sensorfw.git" \
                     -s rpm/sensorfw-qt5-binder.spec || die
         else
-            buildmw -u "https://git.merproject.org/mer-core/sensorfw.git" \
+            buildmw -u "https://git.sailfishos.org/mer-core/sensorfw.git" \
                     -s rpm/sensorfw-qt5-hybris.spec || die
         fi
         if [ $android_version_major -ge 8 ]; then
@@ -190,19 +250,10 @@ if [ "$BUILDMW" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se kf5bluezqt-bluez4 > /dev/null
         ret=$?
         if [ $ret -eq 104 ]; then
-            buildmw -u "https://git.merproject.org/mer-core/kf5bluezqt.git" \
+            buildmw -u "https://git.sailfishos.org/mer-core/kf5bluezqt.git" \
                     -s rpm/kf5bluezqt-bluez4.spec || die
             # pull device's bluez4 configs correctly
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
-        fi
-    else
-        # No point in asking when only one mw package is being built
-        BUILDMW_QUIET=1
-        if [ -z "$BUILDSPEC_FILE" ]; then
-            buildmw -u $BUILDMW_REPO || die
-        else
-            # Supply all given spec files from $BUILDSPEC_FILE array prefixed with "-s"
-            buildmw -u $BUILDMW_REPO "${BUILDSPEC_FILE[@]/#/-s }" || die
         fi
     fi
     popd > /dev/null

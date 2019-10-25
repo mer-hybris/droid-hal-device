@@ -1,8 +1,8 @@
 #!/bin/bash
 # util.sh - all refactored bits/functions go here
 #
-# Copyright (C) 2015 Alin Marin Elena <alin@elena.space>
-# Copyright (C) 2015 Jolla Ltd.
+# Copyright (c) 2015 Alin Marin Elena <alin@elena.space>
+# Copyright (c) 2015 - 2019 Jolla Ltd.
 # Contact: Simonas Leleiva <simonas.leleiva@jollamobile.com>
 #
 # All rights reserved.
@@ -217,8 +217,10 @@ buildmw() {
             fi
 
             pushd $PKG > /dev/null || die
-            minfo "pulling updates..."
-            git pull >>$LOG 2>&1|| die "pulling of updates failed"
+            if [ "$UPDATE_MW_REPOS" = "1" ]; then
+                minfo "pulling updates..."
+                git pull >>$LOG 2>&1|| die "pulling of updates failed"
+            fi
         fi
 
         if [ "$PKG" = "libhybris" ]; then
