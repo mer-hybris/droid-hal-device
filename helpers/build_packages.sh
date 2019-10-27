@@ -40,6 +40,7 @@ Usage: $0 [OPTION]..."
    -d, --droid-hal build droid-hal-device (rpm/)
    -c, --configs   build droid-configs
    -m, --mw[=REPO] build HW middleware packages or REPO
+   -g, --gg        build droidmedia, gst-droid, and audioflingerglue
    -v, --version   build droid-hal-version
    -b, --build=PKG build one package (PKG can include path)
    -s, --spec=SPEC optionally used with -m or -b
@@ -53,7 +54,7 @@ EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::vb:s:Dp -l help,droid-hal,configs,mw::,version,build:,spec:,do-not-install,pull -- "$@")
+OPTIONS=$(getopt -o hdcm::gvb:s:Dp -l help,droid-hal,configs,mw::,gg,version,build:,spec:,do-not-install,pull -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -66,6 +67,7 @@ if [ "$#" == "1" ]; then
     BUILDDHD=1
     BUILDCONFIGS=1
     BUILDMW=1
+    BUILDGG=1
     BUILDVERSION=1
 fi
 
@@ -82,6 +84,7 @@ while true; do
               *) BUILDMW_REPO=$2;;
           esac
           shift;;
+      -g|--gg) BUILDGG=1 ;;
       -b|--build) BUILDPKG=1
           case "$2" in
               *) BUILDPKG_PATH=$2;;
@@ -191,7 +194,9 @@ if [ "$BUILDMW" = "1" ]; then
                     fi
                     preword=$word
                 done
-                if [ ! -z "$mw" ]; then
+                if [ ! -z "$mw" ] \
+                   && [ ! "$mw" = "gst-droid" ] \
+                   && [ ! "$mw" = "pulseaudio-modules-droid-glue" ]; then
                     if [ -z "$spec" ]; then
                         buildmw_cmds+=("$mw")
                     else
@@ -224,6 +229,9 @@ if [ "$BUILDMW" = "1" ]; then
         fi
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid.git" \
                 -s rpm/pulseaudio-modules-droid.spec || die
+        if [ $android_version_major -ge 9 ]; then
+            buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
+        fi
         buildmw -u "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
         buildmw -u "https://github.com/mer-hybris/ngfd-plugin-droid-vibrator" \
                 -s rpm/ngfd-plugin-native-vibrator.spec || die
@@ -257,6 +265,56 @@ if [ "$BUILDMW" = "1" ]; then
         fi
     fi
     popd > /dev/null
+fi
+
+if [ "$BUILDGG" = "1" ]; then
+
+    # look for either DEVICE or HABUILD_DEVICE files, do not use wildcards as there could be other variants
+    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml 2>/dev/null)
+
+    if grep -q "^- gstreamer1.0-droid" $pattern_lookup &>/dev/null; then
+        droidmedia_version=$(git --git-dir external/droidmedia/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
+        if [ -z "$droidmedia_version" ]; then
+            # in case of shallow clone:
+            droidmedia_version=999.99999999.99
+        fi
+        rpm/dhd/helpers/pack_source_droidmedia-localbuild.sh "$droidmedia_version"
+        mkdir -p hybris/mw/droidmedia-localbuild/rpm
+        if [ -d .git ] && [ ! -d hybris/mw/droidmedia-localbuild/.git ]; then
+            # for the top-level .git adaptations such as Xperia 10 Android 9, otherwise mb2 will complain:
+            (cd hybris/mw/droidmedia-localbuild; git init; git commit --allow-empty -m "initial")
+        fi
+        cp rpm/dhd/helpers/droidmedia-localbuild.spec hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
+        sed -ie "s/0.0.0/$droidmedia_version/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
+        mv hybris/mw/droidmedia-"$droidmedia_version".tgz hybris/mw/droidmedia-localbuild
+        buildmw -u "droidmedia-localbuild" || die
+        buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
+    else
+        minfo "Not building droidmedia and gstreamer1.0-droid due to the latter not being in patterns"
+    fi
+
+    if grep -q "^- pulseaudio-modules-droid-hidl" $pattern_lookup &>/dev/null; then
+        minfo "Not building audioflingerglue and pulseaudio-modules-droid-glue due to pulseaudio-modules-droid-hidl in patterns"
+    elif grep -q "^- pulseaudio-modules-droid-glue" $pattern_lookup &>/dev/null; then
+        audioflingerglue_version=$(git --git-dir external/audioflingerglue/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
+        if [ -z "$audioflingerglue_version" ]; then
+            # in case of shallow clone:
+            audioflingerglue_version=999.0.0
+        fi
+        rpm/dhd/helpers/pack_source_audioflingerglue-localbuild.sh "$audioflingerglue_version"
+        mkdir -p hybris/mw/audioflingerglue-localbuild/rpm
+        if [ -d .git ] && [ ! -d hybris/mw/audioflingerglue-localbuild/.git ]; then
+            # for the top-level .git adaptations such as Xperia 10 Android 9, otherwise mb2 will complain:
+            (cd hybris/mw/audioflingerglue-localbuild; git init; git commit --allow-empty -m "initial")
+        fi
+        cp rpm/dhd/helpers/audioflingerglue-localbuild.spec hybris/mw/audioflingerglue-localbuild/rpm/audioflingerglue.spec
+        sed -ie "s/0.0.0/$audioflingerglue_version/" hybris/mw/audioflingerglue-localbuild/rpm/audioflingerglue.spec
+        mv hybris/mw/audioflingerglue-"$audioflingerglue_version".tgz hybris/mw/audioflingerglue-localbuild
+        buildmw -u "audioflingerglue-localbuild" || die
+        buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-glue.git" || die
+    else
+        minfo "Not building audioflingerglue and pulseaudio-modules-droid-glue due to the latter not being in patterns"
+    fi
 fi
 
 if [ "$BUILDVERSION" = "1" ]; then
