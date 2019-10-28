@@ -42,6 +42,7 @@ Usage: $0 [OPTION]..."
    -m, --mw[=REPO] build HW middleware packages or REPO
    -g, --gg        build droidmedia, gst-droid, and audioflingerglue
    -v, --version   build droid-hal-version
+   -i, --mic       build image
    -b, --build=PKG build one package (PKG can include path)
    -s, --spec=SPEC optionally used with -m or -b
                    can be supplied multiple times to build multiple .spec files at once
@@ -54,7 +55,7 @@ EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::gvb:s:Dp -l help,droid-hal,configs,mw::,gg,version,build:,spec:,do-not-install,pull -- "$@")
+OPTIONS=$(getopt -o hdcm::gvib:s:Dp -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,pull -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -69,6 +70,7 @@ if [ "$#" == "1" ]; then
     BUILDMW=1
     BUILDGG=1
     BUILDVERSION=1
+    BUILDIMAGE=1
 fi
 
 BUILDSPEC_FILE=()
@@ -96,6 +98,7 @@ while true; do
           esac
           shift;;
       -v|--version) BUILDVERSION=1 ;;
+      -i|--mic) BUILDIMAGE=1 ;;
       -p|--pull) UPDATE_MW_REPOS=1 ;;
       --)        shift ; break ;;
       *)         echo "unknown option: $1" ; exit 1 ;;
@@ -118,8 +121,15 @@ fi
 if [ "$BUILDDHD" = "1" ]; then
     builddhd
 fi
+
+if [ -n "$(grep '%define community_adaptation' $ANDROID_ROOT/hybris/droid-configs/rpm/droid-config-$DEVICE.spec)" ]; then
+    community_adaptation=1
+else
+    community_adaptation=0
+fi
+
 if [ "$BUILDCONFIGS" = "1" ]; then
-    if [ -n "$(grep '%define community_adaptation' $ANDROID_ROOT/hybris/droid-configs/rpm/droid-config-$DEVICE.spec)" ]; then
+    if [ "$community_adaptation" == "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i community-adaptation > /dev/null
         ret=$?
         if [ $ret -eq 104 ]; then
@@ -320,6 +330,30 @@ fi
 if [ "$BUILDVERSION" = "1" ]; then
     buildversion
     echo "----------------------DONE! Now proceed on creating the rootfs------------------"
+fi
+
+if [ "$BUILDIMAGE" = "1" ]; then
+    ks="Jolla-@RELEASE@-$DEVICE-@ARCH@.ks"
+    if [ "$community_adaptation" == "1" ]; then
+        ha_repo="repo --name=adaptation-community-common-$DEVICE-@RELEASE@"
+        ha_dev="repo --name=adaptation-community-$DEVICE-@RELEASE@"
+        sed "/$ha_repo/i$ha_dev --baseurl=file:\/\/$ANDROID_ROOT\/droid-local-repo\/$DEVICE" \
+            "$ANDROID_ROOT/hybris/droid-configs/installroot/usr/share/kickstarts/$ks" \
+            > "$ks"
+    else
+        ha_repo="repo --name=adaptation0-$DEVICE-@RELEASE@"
+        sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$ANDROID_ROOT/droid-local-repo/$DEVICE|" \
+            "$ANDROID_ROOT/hybris/droid-configs/installroot/usr/share/kickstarts/$ks" \
+            > "$ks"
+    fi
+    [ -n "$RELEASE" ] || die 'Please set the desired RELEASE variable in ~/.hadk.env to build an image for'
+    hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
+    sudo mic create fs --arch=$PORT_ARCH \
+        --tokenmap=ARCH:$PORT_ARCH,RELEASE:$RELEASE,EXTRA_NAME:"$EXTRA_NAME" \
+        --record-pkgs=name,url \
+        --outdir=sfe-$DEVICE-$RELEASE"$EXTRA_NAME" \
+        --pack-to=sfe-$DEVICE-$RELEASE"$EXTRA_NAME".tar.bz2 \
+        "$ANDROID_ROOT"/Jolla-@RELEASE@-$DEVICE-@ARCH@.ks
 fi
 
 if [ "$BUILDPKG" = "1" ]; then
