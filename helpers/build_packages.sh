@@ -49,21 +49,22 @@ Usage: $0 [OPTION]..."
    -D, --do-not-install
                    useful when package is needed only in the final image
                    especially when it conflicts in an SDK target
+   -o, --offline   build offline after all repos have been cloned or refreshed
+
  No options assumes building for all areas.
 EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::gvib:s:D -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install -- "$@")
+OPTIONS=$(getopt -o hdcm::gvib:s:Do -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,offline -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
     exit 1
 fi
 
-eval set -- $OPTIONS
-
-if [ "$#" == "1" ]; then
+# build all if none or only --offline parameter is in the cmdline
+if [[ $# -lt 2 && "$1" =~ ^(|-o|--offline)$ ]]; then
     BUILDDHD=1
     BUILDCONFIGS=1
     BUILDMW=1
@@ -71,6 +72,8 @@ if [ "$#" == "1" ]; then
     BUILDVERSION=1
     BUILDIMAGE=1
 fi
+
+eval set -- $OPTIONS
 
 BUILDSPEC_FILE=()
 while true; do
@@ -98,6 +101,7 @@ while true; do
           shift;;
       -v|--version) BUILDVERSION=1 ;;
       -i|--mic) BUILDIMAGE=1 ;;
+      -o|--offline) BUILDOFFLINE=1 ;;
       --)        shift ; break ;;
       *)         echo "unknown option: $1" ; exit 1 ;;
     esac
@@ -152,7 +156,11 @@ if [ "$BUILDMW" = "1" ]; then
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper ref
+    if [ "$BUILDOFFLINE" = "1" ]; then
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref local-$DEVICE-hal
+    else
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref
+    fi
 
     if [ "$FAMILY" == "" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel

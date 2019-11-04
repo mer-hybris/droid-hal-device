@@ -63,7 +63,8 @@ if [ -z $DEVICE ]; then
 fi
 
 mkdir -p $ANDROID_ROOT/hybris/mw
-zypper se -i createrepo_c > /dev/null
+# checking if a package is installed, no need to go through repos
+zypper --disable-repositories se -i createrepo_c > /dev/null
 ret=$?
 if [ $ret -eq 104 ]; then
     ANDROID_TOOLS=""
@@ -217,8 +218,10 @@ buildmw() {
             fi
 
             pushd $PKG > /dev/null || die
-            minfo "pulling updates..."
-            git pull >>$LOG 2>&1|| die "pulling of updates failed"
+            if [ "$BUILDOFFLINE" = "" ]; then
+                minfo "pulling updates..."
+                git pull >>$LOG 2>&1|| die "pulling of updates failed"
+            fi
         fi
 
         if [ "$PKG" = "libhybris" ]; then
@@ -265,7 +268,11 @@ deploy() {
     rmdir RPMS.saved
     $CREATEREPO "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't update pkg info"
+    if [ "$BUILDOFFLINE" = "1" ]; then
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref local-$DEVICE-hal || die "can't refresh local hal repo"
+    else
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't refresh repositories"
+    fi
     DO_NOT_INSTALL=$2
     if [ "$PKG" = "libhybris" ]; then
         # If this is the first installation of libhybris simply remove mesa,
