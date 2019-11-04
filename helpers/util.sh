@@ -217,10 +217,8 @@ buildmw() {
             fi
 
             pushd $PKG > /dev/null || die
-            if [ "$UPDATE_MW_REPOS" = "1" ]; then
-                minfo "pulling updates..."
-                git pull >>$LOG 2>&1|| die "pulling of updates failed"
-            fi
+            minfo "pulling updates..."
+            git pull >>$LOG 2>&1|| die "pulling of updates failed"
         fi
 
         if [ "$PKG" = "libhybris" ]; then
