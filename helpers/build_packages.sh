@@ -346,6 +346,8 @@ if [ "$BUILDIMAGE" = "1" ]; then
             "$ANDROID_ROOT/hybris/droid-configs/installroot/usr/share/kickstarts/$ks" \
             > "$ks"
     fi
+    # Clear out extra store repositories from kickstart if exist
+    sed -i "/store-repository.jolla.com/d" "$ks"
     [ -n "$RELEASE" ] || die 'Please set the desired RELEASE variable in ~/.hadk.env to build an image for'
     hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
     sudo mic create fs --arch=$PORT_ARCH \
