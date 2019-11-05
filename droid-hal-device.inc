@@ -842,25 +842,6 @@ done
 /usr/bin/groupadd-user bluetooth || :
 /usr/bin/groupadd-user media_rw || :
 
-# FIXME: Workaround for droid-hal nuking audio group.
-# When audio group is removed and re-created pulse user is dropped from audio group.
-# To make sure that PulseAudio system mode is functional create all required users
-# and groups here as well. Remove this workaround when the group handling is a bit
-# more sane.
-getent group pulse-access >/dev/null || groupadd -r pulse-access
-getent group pulse >/dev/null || groupadd -f -g 171 -r pulse
-if ! getent passwd pulse >/dev/null ; then
-    if ! getent passwd 171 >/dev/null ; then
-        useradd -r -u 171 -g pulse -d %{_localstatedir}/run/pulse -s /sbin/nologin -c "PulseAudio System Daemon" pulse
-    else
-        useradd -r -g pulse -d %{_localstatedir}/run/pulse -s /sbin/nologin -c "PulseAudio System Daemon" pulse
-    fi
-fi
-usermod -G audio -a pulse || :
-usermod -G pulse -a pulse || :
-usermod -G pulse-access -a root || :
-# End workaround
-
 ################################################################
 # Begin files section
 
