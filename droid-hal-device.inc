@@ -684,9 +684,6 @@ done
 # for use in the -devel package
 cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
-# This ghost file must exist in the installroot
-touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid.ids.created
-
 echo "#!/bin/sh" > $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh
 if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
    grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
@@ -793,51 +790,44 @@ fi
 #of droid-specific user/group information to current one.
 cd %{_libdir}/droid
 if [ $1 -gt 1 -a \
-     -e droid-user-remove.sh.installed -a \
-     -e droid-user-add.sh ]; then
-  #We've got the previous data in a shell-style generated text file. Convert.
-  #Only user/group name and ID is important, username=groupname, uid=gid.
-  sed -n -e 's/^groupadd -g \(.*\) \(.*\)/\2 \1/p' \
-      droid-user-add.sh > droid.ids.created || :
-  #Truncate the old file. rpm will remove it on its own.
+     -e droid-user-remove.sh.installed ]; then
   echo '#!/bin/sh' > droid-user-remove.sh.installed
-fi
-
-%preun users
-# Only run this during final cleanup
-if [ $1 -eq 0 ]; then
-    echo purging old droid users and groups
-    cat %{_libdir}/droid/droid.ids.created |while read name id; do
-        userdel -f $name
-        groupdel $name
-        sed -i "/^$name $id\$/d" droid.ids.created
-    done || :
 fi
 
 %post users
 cd %{_libdir}/droid
-# Upgrade: Check which users and groups were changed
-# between the previous version of droid-hal and current
-if [ $1 -gt 1 ]; then
-    ## Find users/groups that were removed by the current droid-hal ##
-    echo removing no longer used droid-hal users and groups
-    grep -v -F -x -f droid.ids droid.ids.created |while read name id; do
-        userdel -f $name
-        groupdel $name
-        sed -i "/^$name $id\$/d" droid.ids.created
-    done || :
-fi
-# Now for both install/update add the users and mark which were added already
-echo creating droid users and groups
-# On fresh installs, the file is not there at all and would break grep below
-if [ ! -e droid.ids.created ]; then
-    touch droid.ids.created
-fi
 
-grep -v -F -x -f droid.ids.created droid.ids |while read name id; do
-    groupadd -g $id $name || :
-    useradd -M -N -s /sbin/nologin -d / -u $id -g $id $name || :
-    echo $name $id >> droid.ids.created
+# NOTE: We do not delete groups/users in any case since that would cause issues
+# with users being removed from groups where they should really be in.
+
+echo creating droid users and groups
+[ -e droid.ids ] && cat droid.ids | while read name id; do
+    if ! getent group $name; then
+        if getent group $id; then
+            OTHER_NAME=$(getent group $id 2>/dev/null |cut -d":" -f1)
+            echo "Group $name did not exist yet, but another group has the same id ($id, $OTHER_NAME), renaming that group"
+            groupmod -g $id -n $name $OTHER_NAME || :
+        else
+            echo "Group $name did not exist yet"
+            groupadd -g $id $name || :
+        fi
+    else
+        echo "Group $name already existed, modifying it"
+        groupmod -g $id $name || :
+    fi
+    if ! getent passwd $name; then
+        if getent passwd $id; then
+            OTHER_NAME=$(getent passwd $id 2>/dev/null |cut -d":" -f1)
+            echo "User $name did not exist yet, but another user has the same id ($id, $OTHER_NAME), renaming that user"
+            usermod -s /sbin/nologin -d / -u $id -g $id -l $name $OTHER_NAME || :
+        else
+            echo "User $name did not exist yet"
+            useradd -M -N -s /sbin/nologin -d / -u $id -g $id $name || ::
+        fi
+    else
+        echo "User $name already existed, modifying it"
+        usermod -s /sbin/nologin -d / -u $id -g $id $name || :
+    fi
 done
 
 # Now ensure default user has access to various subsystems this HA provides
@@ -907,7 +897,6 @@ usermod -G pulse-access -a root || :
 
 %files users
 %{_libdir}/droid/droid.ids
-%ghost %attr(755, root, root) %{_libdir}/droid/droid.ids.created
 
 %files devel
 %defattr(644,root,root,-)
