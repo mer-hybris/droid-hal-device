@@ -168,6 +168,8 @@ BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  rsync
 # starting from Android 8
 BuildRequires:  python
+Requires(pre):  droid-hal-%{rpm_device}-users
+Requires:       droid-hal-%{rpm_device}-users
 %if 0%{?straggler_files:1}
 Requires:       droid-hal-%{rpm_device}-detritus
 %endif
@@ -195,6 +197,17 @@ Summary: Development files for droid-hal device: %{rpm_device}
 %description devel
 Device specific droid headers for %{rpm_device}.
 Needed by libhybris
+
+################
+%package users
+Group: Tools
+Requires: %{name} = %{version}-%{release}
+Provides: droid-hal-users
+Summary: Create users and groups for device: %{rpm_device}
+
+%description users
+This package provides android users and groups which are
+required by droid-hal/hybris based adaptations.
 
 ################
 %package tools
@@ -420,8 +433,7 @@ make ANDROID_ROOT=$ANDROID_ROOT IMG2SIMG_SOURCES="$IMG2SIMG_SOURCES" SIMG2IMG_SO
 popd
 
 echo Building uid scripts
-%{dhd_path}/helpers/usergroupgen add > %{dhd_path}/helpers/droid-user-add.sh
-%{dhd_path}/helpers/usergroupgen remove > %{dhd_path}/helpers/droid-user-remove.sh
+%{dhd_path}/helpers/usergroupgen > %{dhd_path}/helpers/droid.ids
 
 echo Building udev rules
 mkdir tmp/udev.rules
@@ -609,13 +621,8 @@ else
 cp -a %{android_root}/hybris/hybris-boot/hb/init-script $RPM_BUILD_ROOT/init-debug
 fi
 
-# droid user support This may be better done by passing a list of
-# users/groups and running 'ensure_usergroups_exist newlist oldlist'
-# which would preserve oldlist in %%post and delete any users no longer
-# needed (unlikely!). This avoids the transient removal of uids and
-# group issues
-install -D %{dhd_path}/helpers/droid-user-add.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-add.sh
-install -D %{dhd_path}/helpers/droid-user-remove.sh $RPM_BUILD_ROOT%{_libdir}/droid/droid-user-remove.sh
+# droid user support
+install -D %{dhd_path}/helpers/droid.ids $RPM_BUILD_ROOT%{_libdir}/droid/droid.ids
 
 # Remove cruft, unless the file is listed in straggler_files
 
@@ -677,9 +684,6 @@ done
 # for use in the -devel package
 cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
-# This ghost file must exist in the installroot
-touch $RPM_BUILD_ROOT/%{_libdir}/droid/droid-user-remove.sh.installed
-
 echo "#!/bin/sh" > $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh
 if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
    grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
@@ -740,60 +744,12 @@ install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
 for u in $(cat %{_libdir}/droid/all-units.txt); do
 %systemd_preun $u
 done
-# Only run this during final cleanup
-if [ $1 -eq 0 ]; then
-    echo purging old droid users and groups
-    %{_libdir}/droid/droid-user-remove.sh.installed || :
-fi
 
 %post
 for u in $(cat %{_libdir}/droid/all-units.txt); do
 %systemd_post $u
 done
 cd %{_libdir}/droid
-# Upgrade: remove users using stored file, then add new ones
-if [ $1 -eq 2 ]; then
-    # Remove installed users (at this point droid-user-remove.sh
-    # refers to the new set of UIDs)
-    echo removing old droid users and groups
-    ./droid-user-remove.sh.installed || :
-fi
-# Now for both install/update add the users and force-store a removal file
-echo creating droid users and groups
-./droid-user-add.sh || :
-cp -f droid-user-remove.sh droid-user-remove.sh.installed
-
-# Now ensure default user has access to various subsystems this HA provides
-# These are the default android ones:
-/usr/bin/groupadd-user audio || :
-/usr/bin/groupadd-user graphics || :
-/usr/bin/groupadd-user system || :
-/usr/bin/groupadd-user input || :
-/usr/bin/groupadd-user camera || :
-/usr/bin/groupadd-user media || :
-/usr/bin/groupadd-user mtp || :
-/usr/bin/groupadd-user bluetooth || :
-/usr/bin/groupadd-user media_rw || :
-
-# FIXME: Workaround for droid-hal nuking audio group.
-# When audio group is removed and re-created pulse user is dropped from audio group.
-# To make sure that PulseAudio system mode is functional create all required users
-# and groups here as well. Remove this workaround when the group handling is a bit
-# more sane.
-getent group pulse-access >/dev/null || groupadd -r pulse-access
-getent group pulse >/dev/null || groupadd -f -g 171 -r pulse
-if ! getent passwd pulse >/dev/null ; then
-    if ! getent passwd 171 >/dev/null ; then
-        useradd -r -u 171 -g pulse -d %{_localstatedir}/run/pulse -s /sbin/nologin -c "PulseAudio System Daemon" pulse
-    else
-        useradd -r -g pulse -d %{_localstatedir}/run/pulse -s /sbin/nologin -c "PulseAudio System Daemon" pulse
-    fi
-fi
-usermod -G audio -a pulse || :
-usermod -G pulse -a pulse || :
-usermod -G pulse-access -a root || :
-# End workaround
-
 ./generated-post-scripts.sh || :
 
 # To add additional groups define a HA config, one can define those as part
@@ -829,6 +785,63 @@ fi
 %endif
 %endif
 
+%pre users
+#Compatibility with old droid-hal version - convert previous format
+#of droid-specific user/group information to current one.
+cd %{_libdir}/droid
+if [ $1 -gt 1 -a \
+     -e droid-user-remove.sh.installed ]; then
+  echo '#!/bin/sh' > droid-user-remove.sh.installed
+fi
+
+%post users
+cd %{_libdir}/droid
+
+# NOTE: We do not delete groups/users in any case since that would cause issues
+# with users being removed from groups where they should really be in.
+
+echo creating droid users and groups
+[ -e droid.ids ] && cat droid.ids | while read name id; do
+    if ! getent group $name; then
+        if getent group $id; then
+            OTHER_NAME=$(getent group $id 2>/dev/null |cut -d":" -f1)
+            echo "Group $name did not exist yet, but another group has the same id ($id, $OTHER_NAME), renaming that group"
+            groupmod -g $id -n $name $OTHER_NAME || :
+        else
+            echo "Group $name did not exist yet"
+            groupadd -g $id $name || :
+        fi
+    else
+        echo "Group $name already existed, modifying it"
+        groupmod -g $id $name || :
+    fi
+    if ! getent passwd $name; then
+        if getent passwd $id; then
+            OTHER_NAME=$(getent passwd $id 2>/dev/null |cut -d":" -f1)
+            echo "User $name did not exist yet, but another user has the same id ($id, $OTHER_NAME), renaming that user"
+            usermod -s /sbin/nologin -d / -u $id -g $id -l $name $OTHER_NAME || :
+        else
+            echo "User $name did not exist yet"
+            useradd -M -N -s /sbin/nologin -d / -u $id -g $id $name || ::
+        fi
+    else
+        echo "User $name already existed, modifying it"
+        usermod -s /sbin/nologin -d / -u $id -g $id $name || :
+    fi
+done
+
+# Now ensure default user has access to various subsystems this HA provides
+# These are the default android ones:
+/usr/bin/groupadd-user audio || :
+/usr/bin/groupadd-user graphics || :
+/usr/bin/groupadd-user system || :
+/usr/bin/groupadd-user input || :
+/usr/bin/groupadd-user camera || :
+/usr/bin/groupadd-user media || :
+/usr/bin/groupadd-user mtp || :
+/usr/bin/groupadd-user bluetooth || :
+/usr/bin/groupadd-user media_rw || :
+
 ################################################################
 # Begin files section
 
@@ -836,13 +849,10 @@ fi
 %defattr(-,root,root,-)
 /sbin/*
 # This binary should probably move to /sbin/
-%{_libdir}/droid/droid-user-add.sh
-%{_libdir}/droid/droid-user-remove.sh
 %{_libdir}/droid/all-units.txt
 # Created in %%post
 # init-debug
 %attr(755,root,root) /init-debug
-%ghost %attr(755, root, root) %{_libdir}/droid/droid-user-remove.sh.installed
 %attr(755, root, root) %{_libdir}/droid/generated-post-scripts.sh
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
@@ -865,6 +875,9 @@ fi
 /default.prop
 # Disabling v4l.rules
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
+
+%files users
+%{_libdir}/droid/droid.ids
 
 %files devel
 %defattr(644,root,root,-)
