@@ -346,14 +346,27 @@ if [ "$BUILDIMAGE" = "1" ]; then
             "$ANDROID_ROOT/hybris/droid-configs/installroot/usr/share/kickstarts/$ks" \
             > "$ks"
     fi
+    # Clear out extra store repositories from kickstart if exist
+    sed -i "/store-repository.jolla.com/d" "$ks"
     [ -n "$RELEASE" ] || die 'Please set the desired RELEASE variable in ~/.hadk.env to build an image for'
     hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
-    sudo mic create fs --arch=$PORT_ARCH \
-        --tokenmap=ARCH:$PORT_ARCH,RELEASE:$RELEASE,EXTRA_NAME:"$EXTRA_NAME" \
-        --record-pkgs=name,url \
-        --outdir=sfe-$DEVICE-$RELEASE"$EXTRA_NAME" \
-        --pack-to=sfe-$DEVICE-$RELEASE"$EXTRA_NAME".tar.bz2 \
-        "$ANDROID_ROOT"/Jolla-@RELEASE@-$DEVICE-@ARCH@.ks
+    # Check if we need to build loop or fs image
+    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml 2>/dev/null)
+    if grep -q "^- droid-hal-{$DEVICE,$HABUILD_DEVICE}-kernel-modules" $pattern_lookup &>/dev/null; then
+        sudo mic create fs --arch=$PORT_ARCH \
+            --tokenmap=ARCH:$PORT_ARCH,RELEASE:$RELEASE,EXTRA_NAME:"$EXTRA_NAME" \
+            --record-pkgs=name,url \
+            --outdir=sfe-$DEVICE-$RELEASE"$EXTRA_NAME" \
+            --pack-to=sfe-$DEVICE-$RELEASE"$EXTRA_NAME".tar.bz2 \
+            "$ANDROID_ROOT"/Jolla-@RELEASE@-$DEVICE-@ARCH@.ks
+    else
+        sudo mic create loop --arch=$PORT_ARCH \
+            --tokenmap=ARCH:$PORT_ARCH,RELEASE:$RELEASE,EXTRA_NAME:"$EXTRA_NAME" \
+            --record-pkgs=name,url \
+            --outdir=sfe-$DEVICE-$RELEASE"$EXTRA_NAME" \
+            --copy-kernel \
+            "$ANDROID_ROOT"/Jolla-@RELEASE@-$DEVICE-@ARCH@.ks
+    fi
 fi
 
 if [ "$BUILDPKG" = "1" ]; then
