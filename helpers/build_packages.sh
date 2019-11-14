@@ -352,7 +352,7 @@ if [ "$BUILDIMAGE" = "1" ]; then
     hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
     # Check if we need to build loop or fs image
     pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml 2>/dev/null)
-    if grep -q "^- droid-hal-{$DEVICE,$HABUILD_DEVICE}-kernel-modules" $pattern_lookup &>/dev/null; then
+    if grep -qE "^- droid-hal-($DEVICE|$HABUILD_DEVICE)-kernel-modules" $pattern_lookup &>/dev/null; then
         sudo mic create fs --arch=$PORT_ARCH \
             --tokenmap=ARCH:$PORT_ARCH,RELEASE:$RELEASE,EXTRA_NAME:"$EXTRA_NAME" \
             --record-pkgs=name,url \
