@@ -534,6 +534,12 @@ echo "%{_libexecdir}/droid-hybris/system/etc/init/servicemanager.rc" > tmp/droid
 else
 echo "" > tmp/droid-hal.files
 fi
+
+if [ -f %{android_root}/out/target/product/%{device}/system/etc/init/hybris_extras.rc ]; then
+cp -a %{android_root}/out/target/product/%{device}/system/etc/init/hybris_extras.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
+echo "%{_libexecdir}/droid-hybris/system/etc/init/hybris_extras.rc" >> tmp/droid-hal.files
+fi
+
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 %if 0%{?droid_target_aarch64:1}
 cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
