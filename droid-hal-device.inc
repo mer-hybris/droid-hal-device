@@ -157,7 +157,6 @@ Release: 	%{rel_date}
 # Allow device specific sources to be defined using dhd_sources
 %{?dhd_sources}
 Provides:	droid-hal
-Provides:	hardware-adaptation-setup
 
 Group:		System
 #BuildArch:	noarch
@@ -202,7 +201,7 @@ Needed by libhybris
 %package users
 Group: Tools
 Requires: %{name} = %{version}-%{release}
-Provides: droid-hal-users
+Provides: hardware-adaptation-setup
 Summary: Create users and groups for device: %{rpm_device}
 
 %description users
