@@ -203,6 +203,7 @@ Group: Tools
 Requires: %{name} = %{version}-%{release}
 Provides: hardware-adaptation-setup
 Summary: Create users and groups for device: %{rpm_device}
+%{_oneshot_groupadd_requires_post}
 
 %description users
 This package provides android users and groups which are
