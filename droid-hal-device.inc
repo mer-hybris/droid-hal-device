@@ -200,7 +200,6 @@ Needed by libhybris
 ################
 %package users
 Group: Tools
-Requires: %{name} = %{version}-%{release}
 Provides: hardware-adaptation-setup
 Summary: Create users and groups for device: %{rpm_device}
 %{_oneshot_groupadd_requires_post}
