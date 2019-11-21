@@ -200,9 +200,9 @@ Needed by libhybris
 ################
 %package users
 Group: Tools
-Requires: %{name} = %{version}-%{release}
 Provides: hardware-adaptation-setup
 Summary: Create users and groups for device: %{rpm_device}
+%{_oneshot_groupadd_requires_post}
 
 %description users
 This package provides android users and groups which are
@@ -754,12 +754,6 @@ done
 for u in $(cat %{_libdir}/droid/all-units.txt); do
 %systemd_post $u
 done
-cd %{_libdir}/droid
-./generated-post-scripts.sh || :
-
-# To add additional groups define a HA config, one can define those as part
-# of additional_post_scripts macro.
-%{?additional_post_scripts}
 
 %post kernel-modules
 # This runs on the device at install or in mic chroot at img build
@@ -847,6 +841,12 @@ done
 /usr/bin/groupadd-user bluetooth || :
 /usr/bin/groupadd-user media_rw || :
 
+./generated-post-scripts.sh || :
+
+# To add additional groups define a HA config, one can define those as part
+# of additional_post_scripts macro.
+%{?additional_post_scripts}
+
 ################################################################
 # Begin files section
 
@@ -858,7 +858,6 @@ done
 # Created in %%post
 # init-debug
 %attr(755,root,root) /init-debug
-%attr(755, root, root) %{_libdir}/droid/generated-post-scripts.sh
 # droid binaries
 %{_libexecdir}/droid-hybris/system/bin/
 
@@ -883,6 +882,7 @@ done
 
 %files users
 %{_libdir}/droid/droid.ids
+%attr(755, root, root) %{_libdir}/droid/generated-post-scripts.sh
 
 %files devel
 %defattr(644,root,root,-)
