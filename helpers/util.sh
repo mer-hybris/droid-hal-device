@@ -218,7 +218,7 @@ buildmw() {
             fi
 
             pushd $PKG > /dev/null || die
-            if [ "$BUILDOFFLINE" = "" ]; then
+            if [[ "$BUILDOFFLINE" = "" && "$PKG" != *"-localbuild" ]]; then
                 minfo "pulling updates..."
                 git pull >>$LOG 2>&1|| die "pulling of updates failed"
             fi
