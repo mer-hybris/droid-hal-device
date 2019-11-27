@@ -674,6 +674,8 @@ if [ $ANDROID_VERSION_MAJOR -lt "7" ]; then
     _remove_cruft "/property_contexts"
 fi
 
+mkdir -p $RPM_BUILD_ROOT/data
+
 # Name this so droid-system-packager's droid-hal-startup.sh can find it
 mkdir -p $RPM_BUILD_ROOT/sbin
 mv $RPM_BUILD_ROOT/init $RPM_BUILD_ROOT/sbin/droid-hal-init
@@ -851,6 +853,7 @@ done
 
 %files -f tmp/droid-hal.files
 %defattr(-,root,root,-)
+%dir /data
 /sbin/*
 # This binary should probably move to /sbin/
 %{_libdir}/droid/all-units.txt
