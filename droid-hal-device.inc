@@ -787,10 +787,9 @@ fi
 %pre users
 #Compatibility with old droid-hal version - convert previous format
 #of droid-specific user/group information to current one.
-cd %{_libdir}/droid
 if [ $1 -gt 1 -a \
-     -e droid-user-remove.sh.installed ]; then
-  echo '#!/bin/sh' > droid-user-remove.sh.installed
+     -f "%{_libdir}/droid/droid-user-remove.sh.installed" ]; then
+  echo '#!/bin/sh' > "%{_libdir}/droid/droid-user-remove.sh.installed"
 fi
 
 %post users
