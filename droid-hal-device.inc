@@ -160,7 +160,6 @@ Provides:	droid-hal
 
 Group:		System
 #BuildArch:	noarch
-# Note that oneshot is not in mer-core (yet)
 BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
