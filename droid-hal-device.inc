@@ -160,7 +160,6 @@ Provides:	droid-hal
 
 Group:		System
 #BuildArch:	noarch
-# Note that oneshot is not in mer-core (yet)
 BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
@@ -202,7 +201,6 @@ Needed by libhybris
 Group: Tools
 Provides: hardware-adaptation-setup
 Summary: Create users and groups for device: %{rpm_device}
-%{_oneshot_groupadd_requires_post}
 
 %description users
 This package provides android users and groups which are
@@ -691,14 +689,34 @@ done
 # for use in the -devel package
 cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 
-echo "#!/bin/sh" > $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh
-if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
-   grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
+# Store the groups that users need to be in to access various subsystems this HA provides
+# These are the default android ones:
 
-    cat >> $RPM_BUILD_ROOT/%{_libdir}/droid/generated-post-scripts.sh <<EOF
-/usr/bin/groupadd-user inet || :
+mkdir -p %{buildroot}/%{_libdir}/droid/hw-group.d
+cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/default.list <<EOF
+audio
+graphics
+system
+input
+camera
+media
+mtp
+bluetooth
+media_rw
 EOF
 
+if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
+   grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
+    echo "inet" > %{buildroot}/%{_libdir}/droid/hw-group.d/inet.list
+fi
+
+# To add additional groups needed by device adaptation, one can define those as part
+# of additional_ha_groups macro.
+
+if [ -n "%{?additional_ha_groups}" ]; then
+cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/device.list <<EOF
+%{?additional_ha_groups}
+EOF
 fi
 
 # Kernel and module installation; to
@@ -830,24 +848,6 @@ echo creating droid users and groups
     fi
 done
 
-# Now ensure default user has access to various subsystems this HA provides
-# These are the default android ones:
-/usr/bin/groupadd-user audio || :
-/usr/bin/groupadd-user graphics || :
-/usr/bin/groupadd-user system || :
-/usr/bin/groupadd-user input || :
-/usr/bin/groupadd-user camera || :
-/usr/bin/groupadd-user media || :
-/usr/bin/groupadd-user mtp || :
-/usr/bin/groupadd-user bluetooth || :
-/usr/bin/groupadd-user media_rw || :
-
-./generated-post-scripts.sh || :
-
-# To add additional groups define a HA config, one can define those as part
-# of additional_post_scripts macro.
-%{?additional_post_scripts}
-
 ################################################################
 # Begin files section
 
@@ -883,8 +883,10 @@ done
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
 
 %files users
+%dir %{_libdir}/droid
+%dir %{_libdir}/droid/hw-group.d
 %{_libdir}/droid/droid.ids
-%attr(755, root, root) %{_libdir}/droid/generated-post-scripts.sh
+%{_libdir}/droid/hw-group.d/*.list
 
 %files devel
 %defattr(644,root,root,-)
