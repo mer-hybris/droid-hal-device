@@ -199,6 +199,10 @@ Needed by libhybris
 ################
 %package users
 Group: Tools
+Requires(pre): coreutils
+Requires(post): coreutils
+Requires(post): glibc-common
+Requires(post): shadow-utils
 Provides: hardware-adaptation-setup
 Summary: Create users and groups for device: %{rpm_device}
 
