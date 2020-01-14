@@ -246,6 +246,12 @@ buildmw() {
                 minfo "Installing kernel and modules..."
                 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper --non-interactive install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
             fi
+            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i busybox-symlinks-cpio > /dev/null
+            ret=$?
+            if [ ! $ret -eq 104 ]; then
+                minfo "Applying cpio fix..."
+                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper --non-interactive install --force-resolution cpio>>$LOG 2>&1|| die "can't install cpio"
+            fi
         fi
 
         build "$MW_BUILDSPEC"
