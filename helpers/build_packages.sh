@@ -124,10 +124,12 @@ if [ "$BUILDDHD" = "1" ]; then
     builddhd
 fi
 
-if [ -n "$(grep '%define community_adaptation' $ANDROID_ROOT/hybris/droid-configs/rpm/droid-config-$DEVICE.spec)" ]; then
-    community_adaptation=1
-else
-    community_adaptation=0
+if [ "$BUILDCONFIGS" = "1" -o "$BUILDIMAGE" = "1" ]; then
+    if [ -n "$(grep '%define community_adaptation' $ANDROID_ROOT/hybris/droid-configs/rpm/droid-config-$DEVICE.spec)" ]; then
+        community_adaptation=1
+    else
+        community_adaptation=0
+    fi
 fi
 
 if [ "$BUILDCONFIGS" = "1" ]; then
