@@ -62,6 +62,10 @@ if [ -z $DEVICE ]; then
     die 'Error: $DEVICE is undefined. Please run hadk'
 fi
 
+if [ -z $HABUILD_DEVICE ]; then
+    HABUILD_DEVICE=$DEVICE
+fi
+
 mkdir -p $ANDROID_ROOT/hybris/mw
 # checking if a package is installed, no need to go through repos
 zypper --disable-repositories se -i createrepo_c > /dev/null
@@ -229,6 +233,19 @@ buildmw() {
             sed "s/%{?qa_stage_devel:--enable-debug}/--enable-debug/g" -i rpm/libhybris.spec
             sed "s/%{?qa_stage_devel:--enable-trace}/--enable-trace/g" -i rpm/libhybris.spec
             sed "s/%{?qa_stage_devel:--enable-arm-tracing}/--enable-arm-tracing/g" -i rpm/libhybris.spec
+        elif [[ "$PKG" == "droid-hal-img-boot-"* ]]; then
+            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i droid-hal-$HABUILD_DEVICE-img-boot > /dev/null
+            ret=$?
+            if [ ! $ret -eq 104 ]; then
+                minfo "Removing existing img-boot..."
+                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper --non-interactive remove droid-hal-$HABUILD_DEVICE-img-boot>>$LOG 2>&1|| die "can't uninstall img-boot"
+            fi
+            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i droid-hal-$HABUILD_DEVICE-kernel-modules > /dev/null
+            ret=$?
+            if [ $ret -eq 104 ]; then
+                minfo "Installing kernel and modules..."
+                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper --non-interactive install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
+            fi
         fi
 
         build "$MW_BUILDSPEC"
