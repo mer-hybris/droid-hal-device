@@ -233,7 +233,7 @@ buildmw() {
             sed "s/%{?qa_stage_devel:--enable-debug}/--enable-debug/g" -i rpm/libhybris.spec
             sed "s/%{?qa_stage_devel:--enable-trace}/--enable-trace/g" -i rpm/libhybris.spec
             sed "s/%{?qa_stage_devel:--enable-arm-tracing}/--enable-arm-tracing/g" -i rpm/libhybris.spec
-        elif [[ "$PKG" == "droid-hal-img-boot-"* ]]; then
+        elif [[ "$PKG" == "droid-hal-img-boot"* ]]; then
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i droid-hal-$HABUILD_DEVICE-img-boot > /dev/null
             ret=$?
             if [ ! $ret -eq 104 ]; then
