@@ -234,17 +234,25 @@ buildmw() {
             sed "s/%{?qa_stage_devel:--enable-trace}/--enable-trace/g" -i rpm/libhybris.spec
             sed "s/%{?qa_stage_devel:--enable-arm-tracing}/--enable-arm-tracing/g" -i rpm/libhybris.spec
         elif [[ "$PKG" == "droid-hal-img-boot"* ]]; then
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i droid-hal-$HABUILD_DEVICE-img-boot > /dev/null
-            ret=$?
-            if [ ! $ret -eq 104 ]; then
-                minfo "Removing existing img-boot..."
-                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper --non-interactive remove droid-hal-$HABUILD_DEVICE-img-boot>>$LOG 2>&1|| die "can't uninstall img-boot"
-            fi
+            # Remove existing img-boot
+            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper --non-interactive remove droid-hal-img-boot > /dev/null
+            # Both cases are possible:
+            #   droid-hal-$DEVICE-* and droid-hal-$HABUILD_DEVICE-*
+            # The latter is used when HW has variants, e.g.:
+            #   DEVICE=i4113, HABUILD_DEVICE=kirin
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i droid-hal-$HABUILD_DEVICE-kernel-modules > /dev/null
             ret=$?
             if [ $ret -eq 104 ]; then
-                minfo "Installing kernel and modules..."
-                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper --non-interactive install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
+                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i droid-hal-$DEVICE-kernel-modules > /dev/null
+                ret=$?
+                if [ $ret -eq 104 ]; then
+                    minfo "Installing kernel and modules..."
+                    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper --non-interactive install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules &> /dev/null
+                    ret=$?
+                    if [ $ret -eq 104 ]; then
+                        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper --non-interactive install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-kernel droid-hal-$DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
+                    fi
+                fi
             fi
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i busybox-symlinks-cpio > /dev/null
             ret=$?
