@@ -708,6 +708,15 @@ media_rw
 mtp
 EOF
 
+# If user needs to be removed from a certain group define the groups
+# here. If a user is added to a group listed in additional_ha_groups
+# macro then the removal is not done, even when the group is listed
+# here.
+
+cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/default.list.remove <<EOF
+system
+EOF
+
 if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
    grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
     echo "inet" > %{buildroot}/%{_libdir}/droid/hw-group.d/inet.list
@@ -719,6 +728,15 @@ fi
 if [ -n "%{?additional_ha_groups}" ]; then
 cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/device.list <<EOF
 %{?additional_ha_groups}
+EOF
+fi
+
+# To remove additional groups needed by device adaptation, one can define those as part
+# of additional_ha_groups_remove macro.
+
+if [ -n "%{?additional_ha_groups_remove}" ]; then
+cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/device.list.remove <<EOF
+%{?additional_ha_groups_remove}
 EOF
 fi
 
