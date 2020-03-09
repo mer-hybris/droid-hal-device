@@ -699,14 +699,13 @@ cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 mkdir -p %{buildroot}/%{_libdir}/droid/hw-group.d
 cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/default.list <<EOF
 audio
-graphics
-system
-input
-camera
-media
-mtp
 bluetooth
+camera
+graphics
+input
+media
 media_rw
+mtp
 EOF
 
 if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
