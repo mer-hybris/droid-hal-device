@@ -907,7 +907,7 @@ done
 %dir %{_libdir}/droid
 %dir %{_libdir}/droid/hw-group.d
 %{_libdir}/droid/droid.ids
-%{_libdir}/droid/hw-group.d/*.list
+%{_libdir}/droid/hw-group.d/*.list*
 
 %files devel
 %defattr(644,root,root,-)
