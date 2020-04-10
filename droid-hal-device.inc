@@ -184,6 +184,7 @@ BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  rsync
 # starting from Android 8
 BuildRequires:  python
+%{?custom_build_requires}
 Requires(pre):  droid-hal-%{rpm_device}-users
 Requires:       droid-hal-%{rpm_device}-users
 %if 0%{?straggler_files:1}
@@ -352,6 +353,8 @@ cp -ar /vendor .
 # So if rpm/ is missing then we use ../SOURCES :
 [ -d rpm ] || ln -s ../SOURCES rpm
 %endif
+
+%{?custom_prep_cmds}
 %endif
 
 %build
@@ -494,6 +497,8 @@ MER_HA_SAILFISH_BUILD=%{_obs_build_count}
 MER_HA_SAILFISH_FLAVOUR=%{_build_flavour}
 MER_HA_HOME_URL="https://sailfishos.org/"
 EOF
+
+%{?custom_build_cmds}
 
 ################
 %install
@@ -810,6 +815,8 @@ cp out/target/product/%{device}/%{?bootloader_binary} $RPM_BUILD_ROOT/boot/
 # allow the systemd_post to work... and then install that:
 echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
 install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_prefix}/lib/droid/all-units.txt
+
+%{?custom_install_cmds}
 
 ################################################################
 # Begin pre/post section
