@@ -170,10 +170,12 @@ buildmw() {
     #  -b     Branch to use. If none supplied, use default.
     #  -s     .spec file to use. Can be supplied multiple times.
     #         If empty, will use all .spec files from $PKG/rpm/*.
+    #  -n     Do not install package after build.
 
     local GIT_URL=""
     local GIT_BRANCH=""
     local MW_BUILDSPEC=""
+    local DO_NOT_INSTALL=""
     # This is important for getopt or it will fail on the second invocation!
     local OPTIND
     while getopts 'u:b:s:' _flag
@@ -182,6 +184,7 @@ buildmw() {
             u) GIT_URL="$OPTARG" ;;
             b) GIT_BRANCH="-b $OPTARG" ;;
             s) MW_BUILDSPEC+="$OPTARG " ;;
+            n) DO_NOT_INSTALL="1";;
             *) echo "buildmw(): Unexpected option $_flag"; exit 1; ;;
         esac
     done
