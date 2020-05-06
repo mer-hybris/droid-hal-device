@@ -230,6 +230,7 @@ environment.
 %package kernel
 Provides: droid-hal-kernel
 Group:	System
+Requires(pre): filesystem
 Summary: Kernel for droid-hal device: %{rpm_device}
 
 %description kernel
@@ -250,6 +251,7 @@ Just the kernel modules
 %package img-boot
 Provides: droid-hal-img-boot
 Group:	System
+Requires(pre): filesystem
 Requires: oneshot
 %{_oneshot_requires_post}
 Summary: Boot img for droid-hal device: %{rpm_device}
@@ -267,6 +269,7 @@ The boot.img for device
 %package img-recovery
 Provides: droid-hal-img-recovery
 Group:	System
+Requires(pre): filesystem
 Summary: Recovery image for droid-hal device: %{rpm_device}
 
 %description img-recovery
@@ -277,6 +280,7 @@ The recovery.img for device
 ################
 %package aboot
 Group:  System
+Requires(pre): filesystem
 Summary: Bootloader for %{device} hw
 %if 0%{?enable_bootloader_update:1}
 # The device flashing info and scripts is now in droid-configs
