@@ -152,6 +152,9 @@ if [ "$BUILDCONFIGS" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R bash -c "mkdir -p /system; echo ro.build.version.sdk=99 > /system/build.prop"
     fi
     buildconfigs
+    if grep -q "^- droid-config-$DEVICE-bluez5" hybris/droid-configs/patterns/*.yaml &>/dev/null; then
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper -n install droid-config-$DEVICE-bluez5
+    fi
 fi
 
 if [ "$BUILDMW" = "1" ]; then
