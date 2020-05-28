@@ -289,7 +289,7 @@ fi
 if [ "$BUILDGG" = "1" ]; then
 
     # look for either DEVICE or HABUILD_DEVICE files, do not use wildcards as there could be other variants
-    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml | uniq 2>/dev/null)
+    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml 2>/dev/null | uniq)
 
     if grep -q "^- gstreamer1.0-droid" "$pattern_lookup" &>/dev/null; then
         droidmedia_version=$(git --git-dir external/droidmedia/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
@@ -360,7 +360,7 @@ if [ "$BUILDIMAGE" = "1" ]; then
     [ -n "$RELEASE" ] || die 'Please set the desired RELEASE variable in ~/.hadk.env to build an image for'
     hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
     # Check if we need to build loop or fs image
-    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml | uniq 2>/dev/null)
+    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml 2>/dev/null | uniq)
     if grep -qE "^- droid-hal-($DEVICE|$HABUILD_DEVICE)-kernel-modules" "$pattern_lookup" &>/dev/null; then
         sudo mic create fs --arch=$PORT_ARCH \
             --tokenmap=ARCH:$PORT_ARCH,RELEASE:$RELEASE,EXTRA_NAME:"$EXTRA_NAME" \
