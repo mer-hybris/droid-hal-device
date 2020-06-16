@@ -13,4 +13,5 @@ BUILDMW_QUIET=1
 buildmw -u "https://github.com/sailfishos/yamui" || die
 buildmw -u "https://github.com/sailfishos/initrd-helpers/" || die
 buildmw -u "https://github.com/sailfishos/hw-ramdisk" || die
+buildmw -u "https://github.com/mer-hybris/initrd-logos-sailfish" || die
 BUILDMW_QUIET=
