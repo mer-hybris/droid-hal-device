@@ -239,10 +239,10 @@ if [ "$BUILDMW" = "1" ]; then
         done
     else
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
+        buildmw -u "https://github.com/mer-hybris/libgbinder" || die
 
         if [ $android_version_major -ge 8 ]; then
             buildmw -u "https://git.sailfishos.org/mer-core/libglibutil.git" || die
-            buildmw -u "https://github.com/mer-hybris/libgbinder" || die
             buildmw -u "https://github.com/mer-hybris/libgbinder-radio" || die
             buildmw -u "https://github.com/mer-hybris/bluebinder" || die
             buildmw -u "https://github.com/mer-hybris/ofono-ril-binder-plugin" || die
@@ -251,9 +251,8 @@ if [ "$BUILDMW" = "1" ]; then
         fi
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid.git" \
                 -s rpm/pulseaudio-modules-droid.spec || die
-        if [ $android_version_major -ge 9 ]; then
-            buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
-        fi
+        buildmw -u "https://github.com/mer-hybris/audiosystem-passthrough.git" || die
+        buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
         buildmw -u "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
         buildmw -u "https://github.com/mer-hybris/ngfd-plugin-droid-vibrator" \
                 -s rpm/ngfd-plugin-native-vibrator.spec || die
