@@ -38,7 +38,7 @@
 #                      will do an old-fashioned cross-compile and produce
 #                      non-x86 binaries (default armv7hl). This can be set to
 #                      tell OBS what arch the binaries are. E.g. Android for
-#                      Intel arch must set this
+#                      Intel arch must set this (64bit ARM is autodetected below)
 # device_variant:    for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
 # lunch_device:      cases where the lunch combo is different from device name.
 #                      For example, it's "aosp_f5121" for the "suzu" device
@@ -100,9 +100,20 @@ such_macro supports spaces\
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
 
+# Autodetect ARM 64bit architecture
+%if 0%{?_obs_build_project:1}
+# this always assumes "latest_", but no easy way to substr macros
+%if "%{_repository}" == "latest_aarch64"
+%define device_target_cpu aarch64
+%endif
+%else
+%ifarch aarch64
+%define device_target_cpu aarch64
+%endif
+%endif
 # On the OBS this package should be built in the i486 scheduler against
-# mer/sailfish *_i486 targets.
-# The prjconf should have an ExportFilter like this (mer/sailfish has this):
+# sailfish *_i486 targets.
+# The prjconf should have an ExportFilter like this (sailfish has this):
 #   ExportFilter: \.armv7hl\.rpm$ armv8el
 # We lie about our architecture and allows OBS to cross-publish this 486 cross-built spec to the armv7hl repos
 %if 0%{?device_target_cpu:1}
