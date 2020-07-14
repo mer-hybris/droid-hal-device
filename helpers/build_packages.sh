@@ -314,6 +314,7 @@ if [ "$BUILDGG" = "1" ]; then
         fi
         cp rpm/dhd/helpers/droidmedia-localbuild.spec hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         sed -ie "s/0.0.0/$droidmedia_version/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
+        sed -ie "s/@PORT_ARCH@/$PORT_ARCH/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         mv hybris/mw/droidmedia-"$droidmedia_version".tgz hybris/mw/droidmedia-localbuild
         buildmw -u "droidmedia-localbuild" || die
         buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
