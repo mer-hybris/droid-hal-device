@@ -616,9 +616,11 @@ fi
 sed '0,/CONFIG GOES HERE/d' $HDRS/android-config.h >> $HDRS/android-config.h.new
 mv $HDRS/android-config.h.new $HDRS/android-config.h
 
-# Move the pkgconfig .pc to the correct location
+# Move the pkgconfig .pc to the correct location(s)
 %if 0%{!?provides_own_headers:1}
 mkdir -p $RPM_BUILD_ROOT%{dhdlibdir}/pkgconfig/
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/lib/pkgconfig/ || true
+cp $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_prefix}/lib/pkgconfig/
 mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{dhdlibdir}/pkgconfig/
 %endif
 
@@ -929,7 +931,7 @@ done
 %files devel
 %defattr(644,root,root,-)
 %{dhdlibdir}/droid-devel/
-%{dhdlibdir}/pkgconfig/*pc
+%{_prefix}/lib*/pkgconfig/*pc
 
 %files tools
 %defattr(-,root,root,-)
