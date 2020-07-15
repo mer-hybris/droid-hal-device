@@ -503,7 +503,6 @@ mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib64-dev-alog/
 %endif
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
@@ -511,7 +510,7 @@ mkdir -p $RPM_BUILD_ROOT/etc/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/os-release.d
 
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/modules/
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
+mkdir -p $RPM_BUILD_ROOT/%{_prefix}/lib/droid
 mkdir -p $RPM_BUILD_ROOT/%{_bindir}/droid
 
 mkdir -p $RPM_BUILD_ROOT/img
@@ -641,7 +640,7 @@ cp -a %{android_root}/hybris/hybris-boot/hb/init-script $RPM_BUILD_ROOT/init-deb
 fi
 
 # droid user support
-install -D %{dhd_path}/helpers/droid.ids $RPM_BUILD_ROOT%{_libdir}/droid/droid.ids
+install -D %{dhd_path}/helpers/droid.ids $RPM_BUILD_ROOT/%{_prefix}/lib/droid/droid.ids
 
 # Remove cruft, unless the file is listed in straggler_files
 
@@ -708,8 +707,8 @@ cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
 # Store the groups that users need to be in to access various subsystems this HA provides
 # These are the default android ones:
 
-mkdir -p %{buildroot}/%{_libdir}/droid/hw-group.d
-cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/default.list <<EOF
+mkdir -p %{buildroot}/%{_prefix}/lib/droid/hw-group.d
+cat >> %{buildroot}/%{_prefix}/lib/droid/hw-group.d/default.list <<EOF
 audio
 bluetooth
 camera
@@ -725,20 +724,20 @@ EOF
 # macro then the removal is not done, even when the group is listed
 # here.
 
-cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/default.list.remove <<EOF
+cat >> %{buildroot}/%{_prefix}/lib/droid/hw-group.d/default.list.remove <<EOF
 system
 EOF
 
 if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
    grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
-    echo "inet" > %{buildroot}/%{_libdir}/droid/hw-group.d/inet.list
+    echo "inet" > %{buildroot}/%{_prefix}/lib/droid/hw-group.d/inet.list
 fi
 
 # To add additional groups needed by device adaptation, one can define those as part
 # of additional_ha_groups macro.
 
 if [ -n "%{?additional_ha_groups}" ]; then
-cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/device.list <<EOF
+cat >> %{buildroot}/%{_prefix}/lib/droid/hw-group.d/device.list <<EOF
 %{?additional_ha_groups}
 EOF
 fi
@@ -747,7 +746,7 @@ fi
 # of additional_ha_groups_remove macro.
 
 if [ -n "%{?additional_ha_groups_remove}" ]; then
-cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/device.list.remove <<EOF
+cat >> %{buildroot}/%{_prefix}/lib/droid/hw-group.d/device.list.remove <<EOF
 %{?additional_ha_groups_remove}
 EOF
 fi
@@ -793,18 +792,18 @@ cp out/target/product/%{device}/%{?bootloader_binary} $RPM_BUILD_ROOT/boot/
 # Everything is installed; get a list of the units we installed to
 # allow the systemd_post to work... and then install that:
 echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
-install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
+install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_prefix}/lib/droid/all-units.txt
 
 ################################################################
 # Begin pre/post section
 
 %preun
-for u in $(cat %{_libdir}/droid/all-units.txt); do
+for u in $(cat %{_prefix}/lib/droid/all-units.txt); do
 %systemd_preun $u
 done
 
 %post
-for u in $(cat %{_libdir}/droid/all-units.txt); do
+for u in $(cat %{_prefix}/lib/droid/all-units.txt); do
 %systemd_post $u
 done
 
@@ -841,12 +840,12 @@ fi
 #Compatibility with old droid-hal version - convert previous format
 #of droid-specific user/group information to current one.
 if [ $1 -gt 1 -a \
-     -f "%{_libdir}/droid/droid-user-remove.sh.installed" ]; then
-  echo '#!/bin/sh' > "%{_libdir}/droid/droid-user-remove.sh.installed"
+     -f "%{_prefix}/lib/droid/droid-user-remove.sh.installed" ]; then
+  echo '#!/bin/sh' > "%{_prefix}/lib/droid/droid-user-remove.sh.installed"
 fi
 
 %post users
-cd %{_libdir}/droid
+cd %{_prefix}/lib/droid
 
 # NOTE: We do not delete groups/users in any case since that would cause issues
 # with users being removed from groups where they should really be in.
@@ -889,7 +888,7 @@ done
 %dir /data
 /sbin/*
 # This binary should probably move to /sbin/
-%{_libdir}/droid/all-units.txt
+%{_prefix}/lib/droid/all-units.txt
 # Created in %%post
 # init-debug
 %attr(755,root,root) /init-debug
@@ -916,10 +915,10 @@ done
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
 
 %files users
-%dir %{_libdir}/droid
-%dir %{_libdir}/droid/hw-group.d
-%{_libdir}/droid/droid.ids
-%{_libdir}/droid/hw-group.d/*.list*
+%dir %{_prefix}/lib/droid
+%dir %{_prefix}/lib/droid/hw-group.d
+%{_prefix}/lib/droid/droid.ids
+%{_prefix}/lib/droid/hw-group.d/*.list*
 
 %files devel
 %defattr(644,root,root,-)
