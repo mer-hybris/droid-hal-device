@@ -619,6 +619,11 @@ mv $HDRS/android-config.h.new $HDRS/android-config.h
 # Move the pkgconfig .pc to the correct location
 %if 0%{!?provides_own_headers:1}
 mkdir -p $RPM_BUILD_ROOT%{dhdlibdir}/pkgconfig/
+%if 0%{?_obs_build_project:1}
+# this hack fixes OBS i586 worker failure
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/lib/pkgconfig/ || true
+cp $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_prefix}/lib/pkgconfig/
+%endif
 mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{dhdlibdir}/pkgconfig/
 %endif
 
@@ -929,7 +934,12 @@ done
 %files devel
 %defattr(644,root,root,-)
 %{dhdlibdir}/droid-devel/
+%if 0%{?_obs_build_project:1}
+# this hack fixes OBS i586 worker failure
+%{_prefix}/lib*/pkgconfig/*pc
+%else
 %{dhdlibdir}/pkgconfig/*pc
+%endif
 
 %files tools
 %defattr(-,root,root,-)
