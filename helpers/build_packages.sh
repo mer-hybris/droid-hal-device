@@ -40,7 +40,7 @@ Usage: $0 [OPTION]..."
    -d, --droid-hal build droid-hal-device (rpm/)
    -c, --configs   build droid-configs
    -m, --mw[=REPO] build HW middleware packages or REPO
-   -g, --gg        build droidmedia, gst-droid, and audioflingerglue
+   -g, --gg        build droidmedia, gst-droid, gmp-droid and audioflingerglue
    -v, --version   build droid-hal-version
    -i, --mic       build image
    -b, --build=PKG build one package (PKG can include path)
@@ -225,6 +225,7 @@ if [ "$BUILDMW" = "1" ]; then
                 done
                 if [ ! -z "$mw" ] \
                    && [ ! "$mw" = "gst-droid" ] \
+                   && [ ! "$mw" = "gmp-droid" ] \
                    && [ ! "$mw" = "pulseaudio-modules-droid-glue" ]; then
                     if [ -z "$spec" ]; then
                         buildmw_cmds+=("$mw")
@@ -300,7 +301,9 @@ if [ "$BUILDGG" = "1" ]; then
     metapackage_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/patterns-sailfish-device-adaptation-{$DEVICE,$HABUILD_DEVICE}.inc 2>/dev/null | uniq)
 
     if grep -qs "^- gstreamer1.0-droid" "$pattern_lookup" ||
-       grep -qs "^Requires: gstreamer1.0-droid" "$metapackage_lookup"; then
+       grep -qs "^Requires: gstreamer1.0-droid" "$metapackage_lookup" ||
+       grep -qs "^- gmp-droid" "$pattern_lookup" ||
+       grep -qs "^Requires: gmp-droid" "$metapackage_lookup"; then
         droidmedia_version=$(git --git-dir external/droidmedia/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
         if [ -z "$droidmedia_version" ]; then
             # in case of shallow clone:
@@ -318,9 +321,20 @@ if [ "$BUILDGG" = "1" ]; then
         sed -ie "s/@DEVICE@/$HABUILD_DEVICE/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         mv hybris/mw/droidmedia-"$droidmedia_version".tgz hybris/mw/droidmedia-localbuild
         buildmw -u "droidmedia-localbuild" || die
-        buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
+        if grep -qs "^- gstreamer1.0-droid" "$pattern_lookup" ||
+           grep -qs "^Requires: gstreamer1.0-droid" "$metapackage_lookup"; then
+            buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
+        else
+            minfo "Not found in patterns: gstreamer1.0-droid. Camera and app video playback will not be available"
+        fi
+        if grep -qs "^- gmp-droid" "$pattern_lookup" ||
+           grep -qs "^Requires: gmp-droid" "$metapackage_lookup"; then
+            buildmw -u "https://github.com/sailfishos/gmp-droid.git" || die
+        else
+            minfo "Not found in patterns: gmp-droid. Browser video acceleration will not be available"
+        fi
     else
-        minfo "Not building droidmedia and gstreamer1.0-droid due to the latter not being in patterns"
+        minfo "Neither gstreamer1.0-droid nor gmp-droid were found in patterns, not building them or droidmedia"
     fi
 
     if grep -qs "^- pulseaudio-modules-droid-hidl" "$pattern_lookup" ||
