@@ -108,6 +108,12 @@ while true; do
     shift
 done
 
+if [ "$PORT_ARCH" = "aarch64" ]; then
+    _LIB=lib64
+else
+    _LIB=lib
+fi
+
 if [ $# -ne 0 ]; then
     echo "unknown option(s): $@"
     exit 1
@@ -173,7 +179,7 @@ if [ "$BUILDMW" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
     fi
 
-    android_version_major=$(sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R cat /usr/lib/droid-devel/droid-headers/android-version.h |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
+    android_version_major=$(sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R cat /usr/$_LIB/droid-devel/droid-headers/android-version.h 2>/dev/null |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
 
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
@@ -308,6 +314,7 @@ if [ "$BUILDGG" = "1" ]; then
         fi
         cp rpm/dhd/helpers/droidmedia-localbuild.spec hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         sed -ie "s/0.0.0/$droidmedia_version/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
+        sed -ie "s/@PORT_ARCH@/$PORT_ARCH/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         mv hybris/mw/droidmedia-"$droidmedia_version".tgz hybris/mw/droidmedia-localbuild
         buildmw -u "droidmedia-localbuild" || die
         buildmw -u "https://github.com/sailfishos/gst-droid.git" || die

@@ -38,7 +38,7 @@
 #                      will do an old-fashioned cross-compile and produce
 #                      non-x86 binaries (default armv7hl). This can be set to
 #                      tell OBS what arch the binaries are. E.g. Android for
-#                      Intel arch must set this
+#                      Intel arch must set this (64bit ARM is autodetected below)
 # device_variant:    for AOSP this is used as the TARGET_BUILD_VARIANT for lunch
 # lunch_device:      cases where the lunch combo is different from device name.
 #                      For example, it's "aosp_f5121" for the "suzu" device
@@ -99,13 +99,31 @@ such_macro supports spaces\
 %define __requires_exclude ^.*$
 %define __provides_exclude_from ^%{_libexecdir}/droid-hybris/.*$
 %define android_root .
+%define dhdlibdir %{_libdir}
 
+# Autodetect ARM 64bit architecture
+%if 0%{?_obs_build_project:1}
+# this always assumes "latest_", but no easy way to substr macros
+%if "%{_repository}" == "latest_aarch64"
+%define device_target_cpu aarch64
+%endif
+%else
+%ifarch aarch64
+%define device_target_cpu aarch64
+%endif
+%endif
 # On the OBS this package should be built in the i486 scheduler against
-# mer/sailfish *_i486 targets.
-# The prjconf should have an ExportFilter like this (mer/sailfish has this):
+# sailfish *_i486 targets.
+# The prjconf should have an ExportFilter like this (sailfish has this):
 #   ExportFilter: \.armv7hl\.rpm$ armv8el
 # We lie about our architecture and allows OBS to cross-publish this 486 cross-built spec to the armv7hl repos
 %if 0%{?device_target_cpu:1}
+%if 0%{?_obs_build_project:1}
+%if "%{device_target_cpu}" == "aarch64"
+# Correct _libdir for OBS builds that are on i486 scheduler
+%define dhdlibdir %{_prefix}/lib64
+%endif
+%endif
 %define _target_cpu %{device_target_cpu}
 %else
 %define _target_cpu armv7hl
@@ -492,15 +510,13 @@ mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib64-dev-alog/
 %endif
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid-devel/
+mkdir -p $RPM_BUILD_ROOT%{dhdlibdir}/droid-devel/
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT/lib/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/etc/udev/rules.d
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/os-release.d
 
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/modules/
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/droid
+mkdir -p $RPM_BUILD_ROOT/%{_prefix}/lib/droid
 mkdir -p $RPM_BUILD_ROOT/%{_bindir}/droid
 
 mkdir -p $RPM_BUILD_ROOT/img
@@ -549,8 +565,8 @@ cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%
 %endif
 # Remove kernel modules if installed under /system/lib/modules
 rm -rf $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/modules
-cp -a %{android_root}/out/target/product/%{device}/obj/include $RPM_BUILD_ROOT%{_libdir}/droid-devel/
-rm -rf $RPM_BUILD_ROOT%{_libdir}/droid-devel/lib/*.so.toc
+cp -a %{android_root}/out/target/product/%{device}/obj/include $RPM_BUILD_ROOT%{dhdlibdir}/droid-devel/
+rm -rf $RPM_BUILD_ROOT%{dhdlibdir}/droid-devel/lib/*.so.toc
 
 # Omit audioflingerglue bits, they get packaged via audioflingerglue-localbuild
 rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/{lib,lib64}/libaudioflingerglue.so
@@ -561,20 +577,20 @@ rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/{lib,lib64}/libminisf.so
 rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/bin/minimediaservice
 rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/bin/minisfservice
 
-HDRS=$RPM_BUILD_ROOT%{_libdir}/droid-devel/droid-headers
+HDRS=$RPM_BUILD_ROOT%{dhdlibdir}/droid-devel/droid-headers
 mkdir -p $HDRS
 
 # Run extract-headers.sh
 %if 0%{!?provides_own_headers:1}
 echo "Extracting headers for hybris"
 # This is copied from libhybris and should be kept in-sync:
-%{dhd_path}/helpers/extract-headers.sh -p %{_libdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
+%{dhd_path}/helpers/extract-headers.sh -p %{dhdlibdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
 if test -d "%{android_root}/rpm/header_patches"; then
     %{dhd_path}/helpers/patch-headers.sh "$HDRS" "%{android_root}/rpm/header_patches"/*.patch
 fi
 %else
 pushd %{android_root}/rpm/droid-headers 1>/dev/null
-make install DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} INCLUDEDIR=%{_libdir}/droid-devel/droid-headers
+make install DESTDIR=$RPM_BUILD_ROOT PREFIX=%{_prefix} INCLUDEDIR=%{dhdlibdir}/droid-devel/droid-headers
 popd 1>/dev/null
 %endif
 
@@ -602,8 +618,13 @@ mv $HDRS/android-config.h.new $HDRS/android-config.h
 
 # Move the pkgconfig .pc to the correct location
 %if 0%{!?provides_own_headers:1}
-mkdir -p $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
-mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_libdir}/pkgconfig/
+mkdir -p $RPM_BUILD_ROOT%{dhdlibdir}/pkgconfig/
+%if 0%{?_obs_build_project:1}
+# this hack fixes OBS i586 worker failure
+mkdir -p $RPM_BUILD_ROOT%{_prefix}/lib/pkgconfig/ || true
+cp $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_prefix}/lib/pkgconfig/
+%endif
+mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{dhdlibdir}/pkgconfig/
 %endif
 
 # If this ever becomes unmanageable then
@@ -630,7 +651,7 @@ cp -a %{android_root}/hybris/hybris-boot/hb/init-script $RPM_BUILD_ROOT/init-deb
 fi
 
 # droid user support
-install -D %{dhd_path}/helpers/droid.ids $RPM_BUILD_ROOT%{_libdir}/droid/droid.ids
+install -D %{dhd_path}/helpers/droid.ids $RPM_BUILD_ROOT/%{_prefix}/lib/droid/droid.ids
 
 # Remove cruft, unless the file is listed in straggler_files
 
@@ -692,13 +713,13 @@ done
 #mv $RPM_BUILD_ROOT/charger $RPM_BUILD_ROOT/sbin/droid-hal-charger
 
 # for use in the -devel package
-cp tmp/hw-release %{buildroot}/%{_libdir}/droid-devel/hw-release.vars
+cp tmp/hw-release %{buildroot}/%{dhdlibdir}/droid-devel/hw-release.vars
 
 # Store the groups that users need to be in to access various subsystems this HA provides
 # These are the default android ones:
 
-mkdir -p %{buildroot}/%{_libdir}/droid/hw-group.d
-cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/default.list <<EOF
+mkdir -p %{buildroot}/%{_prefix}/lib/droid/hw-group.d
+cat >> %{buildroot}/%{_prefix}/lib/droid/hw-group.d/default.list <<EOF
 audio
 bluetooth
 camera
@@ -714,20 +735,20 @@ EOF
 # macro then the removal is not done, even when the group is listed
 # here.
 
-cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/default.list.remove <<EOF
+cat >> %{buildroot}/%{_prefix}/lib/droid/hw-group.d/default.list.remove <<EOF
 system
 EOF
 
 if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
    grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
-    echo "inet" > %{buildroot}/%{_libdir}/droid/hw-group.d/inet.list
+    echo "inet" > %{buildroot}/%{_prefix}/lib/droid/hw-group.d/inet.list
 fi
 
 # To add additional groups needed by device adaptation, one can define those as part
 # of additional_ha_groups macro.
 
 if [ -n "%{?additional_ha_groups}" ]; then
-cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/device.list <<EOF
+cat >> %{buildroot}/%{_prefix}/lib/droid/hw-group.d/device.list <<EOF
 %{?additional_ha_groups}
 EOF
 fi
@@ -736,7 +757,7 @@ fi
 # of additional_ha_groups_remove macro.
 
 if [ -n "%{?additional_ha_groups_remove}" ]; then
-cat >> %{buildroot}/%{_libdir}/droid/hw-group.d/device.list.remove <<EOF
+cat >> %{buildroot}/%{_prefix}/lib/droid/hw-group.d/device.list.remove <<EOF
 %{?additional_ha_groups_remove}
 EOF
 fi
@@ -782,18 +803,18 @@ cp out/target/product/%{device}/%{?bootloader_binary} $RPM_BUILD_ROOT/boot/
 # Everything is installed; get a list of the units we installed to
 # allow the systemd_post to work... and then install that:
 echo "$(cd $RPM_BUILD_ROOT%{_unitdir}; echo *)" > tmp/units/all-units.txt
-install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_libdir}/droid/all-units.txt
+install -D tmp/units/all-units.txt $RPM_BUILD_ROOT%{_prefix}/lib/droid/all-units.txt
 
 ################################################################
 # Begin pre/post section
 
 %preun
-for u in $(cat %{_libdir}/droid/all-units.txt); do
+for u in $(cat %{_prefix}/lib/droid/all-units.txt); do
 %systemd_preun $u
 done
 
 %post
-for u in $(cat %{_libdir}/droid/all-units.txt); do
+for u in $(cat %{_prefix}/lib/droid/all-units.txt); do
 %systemd_post $u
 done
 
@@ -830,12 +851,12 @@ fi
 #Compatibility with old droid-hal version - convert previous format
 #of droid-specific user/group information to current one.
 if [ $1 -gt 1 -a \
-     -f "%{_libdir}/droid/droid-user-remove.sh.installed" ]; then
-  echo '#!/bin/sh' > "%{_libdir}/droid/droid-user-remove.sh.installed"
+     -f "%{_prefix}/lib/droid/droid-user-remove.sh.installed" ]; then
+  echo '#!/bin/sh' > "%{_prefix}/lib/droid/droid-user-remove.sh.installed"
 fi
 
 %post users
-cd %{_libdir}/droid
+cd %{_prefix}/lib/droid
 
 # NOTE: We do not delete groups/users in any case since that would cause issues
 # with users being removed from groups where they should really be in.
@@ -878,7 +899,7 @@ done
 %dir /data
 /sbin/*
 # This binary should probably move to /sbin/
-%{_libdir}/droid/all-units.txt
+%{_prefix}/lib/droid/all-units.txt
 # Created in %%post
 # init-debug
 %attr(755,root,root) /init-debug
@@ -905,15 +926,20 @@ done
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
 
 %files users
-%dir %{_libdir}/droid
-%dir %{_libdir}/droid/hw-group.d
-%{_libdir}/droid/droid.ids
-%{_libdir}/droid/hw-group.d/*.list*
+%dir %{_prefix}/lib/droid
+%dir %{_prefix}/lib/droid/hw-group.d
+%{_prefix}/lib/droid/droid.ids
+%{_prefix}/lib/droid/hw-group.d/*.list*
 
 %files devel
 %defattr(644,root,root,-)
-%{_libdir}/droid-devel/
-%{_libdir}/pkgconfig/*pc
+%{dhdlibdir}/droid-devel/
+%if 0%{?_obs_build_project:1}
+# this hack fixes OBS i586 worker failure
+%{_prefix}/lib*/pkgconfig/*pc
+%else
+%{dhdlibdir}/pkgconfig/*pc
+%endif
 
 %files tools
 %defattr(-,root,root,-)
