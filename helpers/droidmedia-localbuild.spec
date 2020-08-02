@@ -54,7 +54,7 @@ tar -xvf %name-%version.tgz
 %install
 
 pushd %name-%version
-if [ -f out/target/product/*/system/lib64/libdroidmedia.so ]; then
+if [ -f out/target/product/@DEVICE@/system/lib64/libdroidmedia.so ]; then
 DROIDLIB=lib64
 else
 DROIDLIB=lib
@@ -64,16 +64,16 @@ mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 mkdir -p $RPM_BUILD_ROOT/%{_includedir}/droidmedia/
 mkdir -p $RPM_BUILD_ROOT/%{_datadir}/droidmedia/
-cp out/target/product/*/system/$DROIDLIB/libdroidmedia.so \
+cp out/target/product/@DEVICE@/system/$DROIDLIB/libdroidmedia.so \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 
-cp out/target/product/*/system/$DROIDLIB/libminisf.so \
+cp out/target/product/@DEVICE@/system/$DROIDLIB/libminisf.so \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 
-cp out/target/product/*/system/bin/minimediaservice \
+cp out/target/product/@DEVICE@/system/bin/minimediaservice \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 
-cp out/target/product/*/system/bin/minisfservice \
+cp out/target/product/@DEVICE@/system/bin/minisfservice \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 
 cp external/droidmedia/*.h $RPM_BUILD_ROOT/%{_includedir}/droidmedia/
