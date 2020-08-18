@@ -50,13 +50,14 @@ Usage: $0 [OPTION]..."
                    useful when package is needed only in the final image
                    especially when it conflicts in an SDK target
    -o, --offline   build offline after all repos have been cloned or refreshed
+   -n, --no-delete do not delete existing packages when adding to repo
 
  No options assumes building for all areas.
 EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::gvib:s:Do -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,offline -- "$@")
+OPTIONS=$(getopt -o hdcm::gvib:s:Don -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,offline,no-delete -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -102,6 +103,7 @@ while true; do
       -v|--version) BUILDVERSION=1 ;;
       -i|--mic) BUILDIMAGE=1 ;;
       -o|--offline) BUILDOFFLINE=1 ;;
+      -n|--no-delete) NODELETE=1 ;;
       --)        shift ; break ;;
       *)         echo "unknown option: $1" ; exit 1 ;;
     esac
