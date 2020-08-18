@@ -149,7 +149,7 @@ such_macro supports spaces\
 %define __strip /bin/true
 
 Summary: 	Droid HAL package for %{rpm_device}
-License: 	BSD-3-Clause
+License: 	BSD
 Name: 		droid-hal-%{rpm_device}
 Version: 	0.0.6
 # timestamped releases are used only for HADK (mb2) builds
