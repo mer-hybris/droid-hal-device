@@ -263,10 +263,6 @@ if [ "$BUILDMW" = "1" ]; then
         buildmw -u "https://github.com/mer-hybris/audiosystem-passthrough.git" || die
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
         buildmw -u "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
-        buildmw -u "https://github.com/mer-hybris/ngfd-plugin-droid-vibrator" \
-                -s rpm/ngfd-plugin-native-vibrator.spec || die
-        buildmw -u "https://github.com/mer-hybris/qt5-feedback-haptics-droid-vibrator" \
-                -s rpm/qt5-feedback-haptics-native-vibrator.spec || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
         buildmw -u "https://git.sailfishos.org/mer-core/qtscenegraph-adaptation.git" \
                 -s rpm/qtscenegraph-adaptation-droid.spec || die
