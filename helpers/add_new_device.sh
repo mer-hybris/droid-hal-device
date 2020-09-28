@@ -39,14 +39,16 @@ echo $PATTERNS_DEVICE_DIR/
 
 mkdir -p $PATTERNS_DEVICE_DIR
 
-for pattern in $(find $PATTERNS_DIR/templates -name *.yaml); do
+for pattern in $(find $PATTERNS_DIR/templates -name *.yaml -o -name *.inc); do
     PATTERNS_FILE=$(echo $PATTERNS_DEVICE_DIR/$(basename $pattern) | sed -e "s|@DEVICE@|$DEVICE|g")
     echo $PATTERNS_FILE
-    cat <<'EOF' >$PATTERNS_FILE
+    if [[ "$pattern" == *.inc ]]; then
+        cat <<'EOF' >$PATTERNS_FILE
 # Feel free to disable non-critical HA parts during devel by commenting lines out
 # Generated in hadk by executing: rpm/dhd/helpers/add_new_device.sh
 
 EOF
+    fi
     sed -e 's|@DEVICE@|'$DEVICE'|g' $pattern >>$PATTERNS_FILE
 done
 
