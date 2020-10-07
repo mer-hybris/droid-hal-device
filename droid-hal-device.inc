@@ -540,6 +540,10 @@ rsync -av %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT --
 # We'll use the mer provided modprobe so clean that out of the way
 rm -f $RPM_BUILD_ROOT/sbin/modprobe
 
+# Remove android e2fsprogs
+rm -f $RPM_BUILD_ROOT/sbin/e2fsck
+rm -f $RPM_BUILD_ROOT/sbin/resize2fs
+
 # Now remove the mount commands from any .rc files as they're included in .mount unit files now
 sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
 # remove the creation of /tmp to prevent wrong permissons 
