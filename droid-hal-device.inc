@@ -596,7 +596,8 @@ popd 1>/dev/null
 
 # Add our config into the default android-config.h
 echo Making new $HDRS/android-config.h
-sed '/CONFIG GOES HERE/,$d' $HDRS/android-config.h > $HDRS/android-config.h.new
+token_line=$(sed -n '/CONFIG GOES HERE/=' $HDRS/android-config.h)
+sed "$token_line,\$ d" $HDRS/android-config.h > $HDRS/android-config.h.new
 cat <<EOF >> $HDRS/android-config.h.new
 /* Added by Droid HAL packaging for %{rpm_device} */
 %{?android_config}
@@ -613,7 +614,7 @@ if (grep -q '^TARGET_USES_QCOM_BSP := true' %{android_root}/device/%{vendor}/*/B
 #define QTI_BSP 1
 EOF
 fi
-sed '0,/CONFIG GOES HERE/d' $HDRS/android-config.h >> $HDRS/android-config.h.new
+sed "1,$token_line d" $HDRS/android-config.h >> $HDRS/android-config.h.new
 mv $HDRS/android-config.h.new $HDRS/android-config.h
 
 # Move the pkgconfig .pc to the correct location
