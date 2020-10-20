@@ -309,20 +309,15 @@ deploy() {
     DO_NOT_INSTALL=$2
     if [ "$PKG" = "libhybris" ]; then
         # If this is the first installation of libhybris simply remove mesa,
-        # otherwise proceed with force re-installation
+        # assuming it's v19 or newer (introduced in Sailfish OS 3.1.0)
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i mesa-llvmpipe > /dev/null
         ret=$?
         if [ $ret -eq 104 ]; then
             DO_NOT_INSTALL=
         else
             DO_NOT_INSTALL=1
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe >>$LOG 2>&1
-            ret=$?
-            if [ $ret -eq 104 ]; then
-                minfo "Could not remove mesa-llvmpipe to install libhybris, assuming new mesa>=v19 and attempting alternative libhybris installation"
-                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n in --force-resolution libhybris-libEGL libhybris-libGLESv2 libhybris-libEGL-devel libhybris-libGLESv2-devel >>$LOG 2>&1|| die "could not install libhybris-{libEGL,libGLESv2}"
-                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe-libgbm mesa-llvmpipe-libglapi >>$LOG 2>&1
-            fi
+            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n in --force-resolution libhybris-libEGL libhybris-libGLESv2 libhybris-libEGL-devel libhybris-libGLESv2-devel >>$LOG 2>&1|| die "could not install libhybris-{libEGL,libGLESv2}"
+            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe-libgbm mesa-llvmpipe-libglapi >>$LOG 2>&1
         fi
     fi
     if [ -z $DO_NOT_INSTALL ]; then
