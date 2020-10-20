@@ -49,6 +49,8 @@ Usage: $0 [OPTION]..."
    -D, --do-not-install
                    useful when package is needed only in the final image
                    especially when it conflicts in an SDK target
+   -N  --no-auto-version
+                   Tell mb2 to not fix the version inside a spec file
    -o, --offline   build offline after all repos have been cloned or refreshed
    -n, --no-delete do not delete existing packages when adding to repo
 
@@ -57,7 +59,7 @@ EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::gvib:s:Don -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,offline,no-delete -- "$@")
+OPTIONS=$(getopt -o hdcm::gvib:s:DonN -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,offline,no-delete,no-auto-version -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -83,6 +85,7 @@ while true; do
       -d|--droid-hal) BUILDDHD=1 ;;
       -c|--configs) BUILDCONFIGS=1 ;;
       -D|--do-not-install) DO_NOT_INSTALL=1;;
+      -N|--no-auto-version) NO_AUTO_VERSION=--no-fix-version ;;
       -m|--mw) BUILDMW=1
           BUILDMW_ASK=1
           case "$2" in
