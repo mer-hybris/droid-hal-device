@@ -160,7 +160,7 @@ if [ "$BUILDCONFIGS" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R bash -c "mkdir -p /system; echo ro.build.version.sdk=99 > /system/build.prop"
     fi
     buildconfigs
-    if grep -qE "^(-|Requires:) droid-config-$DEVICE-bluez5" hybris/droid-configs/patterns/*.{yaml,inc} 2>/dev/null; then
+    if grep -qsE "^(-|Requires:) droid-config-$DEVICE-bluez5" hybris/droid-configs/patterns/*.{yaml,inc}; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper -n install droid-config-$DEVICE-bluez5
     fi
 fi
@@ -299,8 +299,8 @@ if [ "$BUILDGG" = "1" ]; then
     pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml 2>/dev/null | uniq)
     metapackage_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/patterns-sailfish-device-adaptation-{$DEVICE,$HABUILD_DEVICE}.inc 2>/dev/null | uniq)
 
-    if grep -q "^- gstreamer1.0-droid" "$pattern_lookup" ||
-       grep -q "^Requires: gstreamer1.0-droid" "$metapackage_lookup" 2>/dev/null; then
+    if grep -qs "^- gstreamer1.0-droid" "$pattern_lookup" ||
+       grep -qs "^Requires: gstreamer1.0-droid" "$metapackage_lookup"; then
         droidmedia_version=$(git --git-dir external/droidmedia/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
         if [ -z "$droidmedia_version" ]; then
             # in case of shallow clone:
@@ -323,11 +323,11 @@ if [ "$BUILDGG" = "1" ]; then
         minfo "Not building droidmedia and gstreamer1.0-droid due to the latter not being in patterns"
     fi
 
-    if grep -q "^- pulseaudio-modules-droid-hidl" "$pattern_lookup" 2>/dev/null ||
-       grep -q "^Requires: pulseaudio-modules-droid-hidl" "$metapackage_lookup" 2>/dev/null; then
+    if grep -qs "^- pulseaudio-modules-droid-hidl" "$pattern_lookup" ||
+       grep -qs "^Requires: pulseaudio-modules-droid-hidl" "$metapackage_lookup"; then
         minfo "Not building audioflingerglue and pulseaudio-modules-droid-glue due to pulseaudio-modules-droid-hidl in patterns"
-    elif grep -q "- pulseaudio-modules-droid-glue" "$pattern_lookup" 2>/dev/null ||
-         grep -q "Requires: pulseaudio-modules-droid-glue" "$metapackage_lookup" 2>/dev/null; then
+    elif grep -qs "- pulseaudio-modules-droid-glue" "$pattern_lookup" ||
+         grep -qs "Requires: pulseaudio-modules-droid-glue" "$metapackage_lookup"; then
         audioflingerglue_version=$(git --git-dir external/audioflingerglue/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
         if [ -z "$audioflingerglue_version" ]; then
             # in case of shallow clone:
@@ -403,8 +403,8 @@ if [ "$BUILDIMAGE" = "1" ]; then
     pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml 2>/dev/null | uniq)
     metapackage_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/patterns-sailfish-device-adaptation-{$DEVICE,$HABUILD_DEVICE}.inc 2>/dev/null | uniq)
 
-    if grep -qE "^- droid-hal-($DEVICE|$HABUILD_DEVICE)-kernel-modules" "$pattern_lookup" 2>/dev/null ||
-       grep -qE "^Requires: droid-hal-($DEVICE|$HABUILD_DEVICE)-kernel-modules" "$metapackage_lookup" 2>/dev/null; then
+    if grep -qsE "^- droid-hal-($DEVICE|$HABUILD_DEVICE)-kernel-modules" "$pattern_lookup" ||
+       grep -qsE "^Requires: droid-hal-($DEVICE|$HABUILD_DEVICE)-kernel-modules" "$metapackage_lookup"; then
         sudo mic create fs --arch=$PORT_ARCH \
             --tokenmap=$tokenmap \
             --record-pkgs=name,url \
