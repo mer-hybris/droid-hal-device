@@ -307,11 +307,14 @@ if [ "$BUILDGG" = "1" ]; then
        grep -qs "^Requires: gstreamer1.0-droid" "$metapackage_lookup" ||
        grep -qs "^- gmp-droid" "$pattern_lookup" ||
        grep -qs "^Requires: gmp-droid" "$metapackage_lookup"; then
-        droidmedia_version=$(git --git-dir external/droidmedia/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
+        pkg=droidmedia
+        cd external/$pkg || die "Could not change directory to external/$pkg"
+        droidmedia_version=$(get_package_version "$pkg")
         if [ -z "$droidmedia_version" ]; then
-            # in case of shallow clone:
-            droidmedia_version=999.99999999.99
+            # Could not obtain version, function call will have shown the error
+            exit 1
         fi
+        cd ../..
         rpm/dhd/helpers/pack_source_droidmedia-localbuild.sh "$droidmedia_version" ||
             die "Failed to pack_source_droidmedia-localbuild.sh"
         mkdir -p hybris/mw/droidmedia-localbuild/rpm
@@ -342,10 +345,12 @@ if [ "$BUILDGG" = "1" ]; then
         minfo "Not building audioflingerglue and pulseaudio-modules-droid-glue due to pulseaudio-modules-droid-hidl in patterns"
     elif grep -qs "- pulseaudio-modules-droid-glue" "$pattern_lookup" ||
          grep -qs "Requires: pulseaudio-modules-droid-glue" "$metapackage_lookup"; then
-        audioflingerglue_version=$(git --git-dir external/audioflingerglue/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
+        pkg=audioflingerglue
+        cd external/$pkg || die "Could not change directory to external/$pkg"
+        audioflingerglue_version=$(get_package_version "$pkg")
         if [ -z "$audioflingerglue_version" ]; then
-            # in case of shallow clone:
-            audioflingerglue_version=999.0.0
+            # Could not obtain version, function call will have shown the error
+            exit 1
         fi
         rpm/dhd/helpers/pack_source_audioflingerglue-localbuild.sh "$audioflingerglue_version" ||
             die "Failed to pack_source_audioflingerglue-localbuild.sh"
