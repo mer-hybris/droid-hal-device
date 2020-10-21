@@ -105,6 +105,45 @@ initlog() {
     [ -f "$LOG" ] && rm "$LOG"
 }
 
+get_last_tag() {
+    git describe --tags 2>/dev/null | sed -r "s/\-/\+/g"
+}
+
+get_package_version() {
+    pkg=$1
+    if [ "$(basename "$PWD")" != "$pkg" ]; then
+        die "get_package_version(): not within the $pkg directory"
+    fi
+    version=$(get_last_tag)
+    if [ -z "$version" ]; then
+        if [ "$BUILDOFFLINE" = "1" ]; then
+            die "Could not get version for $pkg: make sure it is cloned without --depth=1 or clone-depth=\"1\""
+        else
+            unshallow_attempt=$(git fetch --unshallow 2>&1)
+            ret=$?
+            if [ $ret -ne 0 ]; then
+                # Most probable error: --unshallow on a complete repository does not make sense
+                # in which case there's not much we can do if the tags are still not available
+                die "Could not get version for $pkg: $unshallow_attempt"
+            elif [ -z "$unshallow_attempt" ]; then
+                # --unshallow output was empty, it means remote "origin" doesn't exist (cloned via repo sync)
+                remotes=$(git remote)
+                if [ -n "$remotes" ] &&
+                   [ "$(echo "$remotes" | wc -w)" -gt 1 ]; then
+                    die "Could not get version for $pkg: there is more than one remote to fetch tags from. Please fetch manually."
+                elif ! unshallow_attempt=$(git fetch --unshallow "$remotes" 2>&1); then
+                    die "Could not get version for $pkg: $unshallow_attempt"
+                fi
+            fi
+            version=$(get_last_tag)
+            if [ -z "$version" ]; then
+                die "Could not read $pkg version from tags"
+            fi
+        fi
+    fi
+    echo "$version"
+}
+
 buildconfigs() {
     PKG=droid-configs
     cd hybris/$PKG
