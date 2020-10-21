@@ -42,7 +42,7 @@ minfo() {
 }
 
 merror() {
-    echo -e "\e[01;31m!! $* \e[00m"
+>&2 echo -e "\e[01;31m!! $* \e[00m"
 }
 
 die() {
@@ -269,6 +269,11 @@ buildmw() {
                 minfo "pulling updates..."
                 git pull >>$LOG 2>&1|| die "pulling of updates failed"
             fi
+        fi
+
+        if [ -z "$NO_AUTO_VERSION" ]; then
+            # Let's check if package has a valid tag for version
+            get_package_version "$PKG" >/dev/null # failure within will exit the script altogether
         fi
 
         if [ "$PKG" = "libhybris" ]; then
