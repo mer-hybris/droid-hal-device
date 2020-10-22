@@ -545,6 +545,13 @@ rsync -av %{android_root}/out/target/product/%{device}/root/. $RPM_BUILD_ROOT --
 # We'll use the mer provided modprobe so clean that out of the way
 rm -f $RPM_BUILD_ROOT/sbin/modprobe
 
+if [ $android_version_major -ge "10" ]; then
+    # just in case device is still using BOARD_BUILD_SYSTEM_ROOT_IMAGE, remove init:
+    rm -f $RPM_BUILD_ROOT/init
+    cp -a %{android_root}/out/target/product/%{device}/system/bin/init \
+        $RPM_BUILD_ROOT/
+fi
+
 # Now remove the mount commands from any .rc files as they're included in .mount unit files now
 sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
 # remove the creation of /tmp to prevent wrong permissons 
@@ -568,6 +575,24 @@ cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_R
 %if 0%{?droid_target_aarch64:1}
 cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 %endif
+if [ $android_version_major -ge "10" ]; then
+    # To avoid building apex (which in turn builds art),
+    # we could take lib{dl,c,m}.so from:
+    # out/soong/.intermediates/bionic/lib*/lib*/android_arm<COMPILER>_core_shared/lib*.so
+    # but that is not elegant.
+    # So we have to build apex (make com.android.runtime.release) and then:
+    art_path=%{android_root}/out/soong/.intermediates/art/build
+    apex_path=apex/com.android.runtime.release/android_common_com.android.runtime.release/image.apex
+    cp -a \
+        $art_path/$apex_path/lib/bionic/lib{dl,c,m}.so \
+        $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib
+%if 0%{?droid_target_aarch64:1}
+    cp -a \
+        $art_path/$apex_path/lib64/bionic/lib{dl,c,m}.so \
+        $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib64
+%endif
+fi
+
 # Remove kernel modules if installed under /system/lib/modules
 rm -rf $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/modules
 cp -a %{android_root}/out/target/product/%{device}/obj/include $RPM_BUILD_ROOT%{dhdlibdir}/droid-devel/
