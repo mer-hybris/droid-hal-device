@@ -373,10 +373,10 @@ fi
 %if 0%{?_obs_build_project:1}
 
 # Set up kernel extra version for OBS kernel builds
-if EXTRAVERSION_OLD=$(cat %android_root/kernel/Makefile | grep "EXTRAVERSION ="); then
-    sed -i "s/$EXTRAVERSION_OLD/EXTRAVERSION = +%{version}/g" %android_root/kernel/Makefile
-elif EXTRAVERSION_OLD=$(cat %android_root/linux/kernel/Makefile | grep "EXTRAVERSION ="); then
-    sed -i "s/$EXTRAVERSION_OLD/EXTRAVERSION = +%{version}/g" %android_root/linux/kernel/Makefile
+if extraversion_old=$(grep "EXTRAVERSION =" %android_root/kernel/Makefile); then
+    sed -i "s/$extraversion_old/EXTRAVERSION = +%{version}/g" %android_root/kernel/Makefile
+elif extraversion_old=$(grep "EXTRAVERSION =" %android_root/linux/kernel/Makefile); then
+    sed -i "s/$extraversion_old/EXTRAVERSION = +%{version}/g" %android_root/linux/kernel/Makefile
 else
     echo "Kernel Makefile not found, skipping EXTRAVERSION appending"
 fi
@@ -396,32 +396,32 @@ hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/*/.config
 
 
-ANDROID_VERSION_MAJOR=$(awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' \
+android_version_major=$(awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' \
                           < %{android_root}/build/core/version_defaults.mk \
                           | awk -F'.' '{print $1}')
 
 # Check if local overrides for tool mk files exist, otherwise dhd defaults are used
-if test -f rpm/helpers/mkbootimg.mk; then
+if [ -f rpm/helpers/mkbootimg.mk ]; then
     export MKBOOTIMG_MK=$(pwd)/rpm/helpers/mkbootimg.mk
 else
     # Starting from Android 7 mkbootimg is a python program so build only for older Android versions
-    if [ $ANDROID_VERSION_MAJOR -lt "7" ]; then
+    if [ $android_version_major -lt "7" ]; then
         export MKBOOTIMG_MK=$(pwd)/rpm/dhd/helpers/mkbootimg.mk
     fi
 fi
 
-if test -f rpm/helpers/simg2img.mk; then
+if [ -f rpm/helpers/simg2img.mk ]; then
     export SIMG2IMG_MK=$(pwd)/rpm/helpers/simg2img.mk
 fi
 
-if test -f rpm/helpers/img2simg.mk; then
+if [ -f rpm/helpers/img2simg.mk ]; then
     export IMG2SIMG_MK=$(pwd)/rpm/helpers/img2simg.mk
 fi
 
 echo Building local tools
 ANDROID_ROOT=$(readlink -e %{android_root})
 
-if [ $ANDROID_VERSION_MAJOR -ge "8" ]; then
+if [ $android_version_major -ge "8" ]; then
     $ANDROID_ROOT/build/make/tools/fs_config/fs_config_generator.py aidarray \
         $ANDROID_ROOT/system/core/libcutils/include/private/android_filesystem_config.h \
         > generated_android_filesystem_config.h
@@ -435,7 +435,7 @@ fi
 # files have changed in android >=8 so we need to supply different ones to the
 # makefile. we also need the cstring workaround thus handling both issues here
 # at once
-if [ $ANDROID_VERSION_MAJOR -ge "8" ]; then
+if [ $android_version_major -ge "8" ]; then
     # sparse_read.cpp doesn't include cstring and therefore fails for us
     # workaround:
     echo "#include <cstring>" > $ANDROID_ROOT/system/core/libsparse/sparse_read_fix.cpp
@@ -471,11 +471,11 @@ mkdir tmp/units
 # skip various mounts which are not wanted (This is just in case they creep in)
 # First handle stupid spec quoting rules to get some args for makefstab
 shopt -s nullglob
-FSTAB_FILES="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab* %{android_root}/out/target/product/%{device}/system/vendor/etc/fstab*)"
+fstab_files="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab* %{android_root}/out/target/product/%{device}/system/vendor/etc/fstab*)"
 shopt -u nullglob
 
 
-%{dhd_path}/helpers/makefstab --files $FSTAB_FILES  --skip auto none /acct /boot /cache /data /misc /recovery /staging /storage/sdcard1 /storage/usbdisk /storage/usbotg /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config /dev/usb-ffs/adb /tmp %{?makefstab_skip_entries} --outputdir tmp/units
+%{dhd_path}/helpers/makefstab --files $fstab_files  --skip auto none /acct /boot /cache /data /misc /recovery /staging /storage/sdcard1 /storage/usbdisk /storage/usbotg /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config /dev/usb-ffs/adb /tmp %{?makefstab_skip_entries} --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
@@ -498,12 +498,11 @@ EOF
 ################
 %install
 
-ANDROID_VERSION_MAJOR=$(awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' \
+android_version_major=$(awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' \
                           < %{android_root}/build/core/version_defaults.mk \
                           | awk -F'.' '{print $1}')
 
 echo install $(cat tmp/units/all-units.txt)
-rm -rf $RPM_BUILD_ROOT
 # Create dir structure
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/lib-dev-alog/
 %if 0%{?droid_target_aarch64:1}
@@ -545,7 +544,7 @@ sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device 
 # remove the creation of /tmp to prevent wrong permissons 
 sed -i -e '/^[[:space:]]*mkdir[[:space:]]\/tmp[[:space:]]*/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT/*rc
 
-if [ $ANDROID_VERSION_MAJOR -ge "7" ]; then
+if [ $android_version_major -ge "7" ]; then
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init
 cp -a %{android_root}/out/target/product/%{device}/system/etc/init/servicemanager.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
 echo "%{_libexecdir}/droid-hybris/system/etc/init/servicemanager.rc" > tmp/droid-hal.files
@@ -577,16 +576,16 @@ rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/{lib,lib64}/libminisf.so
 rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/bin/minimediaservice
 rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/bin/minisfservice
 
-HDRS=$RPM_BUILD_ROOT%{dhdlibdir}/droid-devel/droid-headers
-mkdir -p $HDRS
+hdrs=$RPM_BUILD_ROOT%{dhdlibdir}/droid-devel/droid-headers
+mkdir -p $hdrs
 
 # Run extract-headers.sh
 %if 0%{!?provides_own_headers:1}
 echo "Extracting headers for hybris"
 # This is copied from libhybris and should be kept in-sync:
-%{dhd_path}/helpers/extract-headers.sh -p %{dhdlibdir}/droid-devel/droid-headers . $HDRS/ > /dev/null
-if test -d "%{android_root}/rpm/header_patches"; then
-    %{dhd_path}/helpers/patch-headers.sh "$HDRS" "%{android_root}/rpm/header_patches"/*.patch
+%{dhd_path}/helpers/extract-headers.sh -p %{dhdlibdir}/droid-devel/droid-headers . $hdrs/ > /dev/null
+if [ -d "%{android_root}/rpm/header_patches" ]; then
+    %{dhd_path}/helpers/patch-headers.sh "$hdrs" "%{android_root}/rpm/header_patches"/*.patch
 fi
 %else
 pushd %{android_root}/rpm/droid-headers 1>/dev/null
@@ -595,26 +594,27 @@ popd 1>/dev/null
 %endif
 
 # Add our config into the default android-config.h
-echo Making new $HDRS/android-config.h
-sed '/CONFIG GOES HERE/,$d' $HDRS/android-config.h > $HDRS/android-config.h.new
-cat <<EOF >> $HDRS/android-config.h.new
+echo Making new $hdrs/android-config.h
+token_line=$(sed -n '/CONFIG GOES HERE/=' $hdrs/android-config.h)
+sed "$token_line,\$ d" $hdrs/android-config.h > $hdrs/android-config.h.new
+cat <<EOF >> $hdrs/android-config.h.new
 /* Added by Droid HAL packaging for %{rpm_device} */
 %{?android_config}
 EOF
 # Detect QCOM_BSP and add the define into android-config.h if needed
 if (grep -q '^TARGET_USES_QCOM_BSP := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk || \
-   ([ $ANDROID_VERSION_MAJOR -ge "5" ] && \
+   ([ $android_version_major -ge "5" ] && \
      grep -q '^BOARD_USES_QCOM_HARDWARE := true' %{android_root}/device/%{vendor}/*/BoardConfig*.mk)); then
 
     echo Found QCOM_BSP
-    cat <<EOF >> $HDRS/android-config.h.new
+    cat <<EOF >> $hdrs/android-config.h.new
 /* Added by automatic QCOM_BSP detection */
 #define QCOM_BSP 1
 #define QTI_BSP 1
 EOF
 fi
-sed '0,/CONFIG GOES HERE/d' $HDRS/android-config.h >> $HDRS/android-config.h.new
-mv $HDRS/android-config.h.new $HDRS/android-config.h
+sed "1,$token_line d" $hdrs/android-config.h >> $hdrs/android-config.h.new
+mv $hdrs/android-config.h.new $hdrs/android-config.h
 
 # Move the pkgconfig .pc to the correct location
 %if 0%{!?provides_own_headers:1}
@@ -622,9 +622,9 @@ mkdir -p $RPM_BUILD_ROOT%{dhdlibdir}/pkgconfig/
 %if 0%{?_obs_build_project:1}
 # this hack fixes OBS i586 worker failure
 mkdir -p $RPM_BUILD_ROOT%{_prefix}/lib/pkgconfig/ || true
-cp $HDRS/android-headers.pc $RPM_BUILD_ROOT%{_prefix}/lib/pkgconfig/
+cp $hdrs/android-headers.pc $RPM_BUILD_ROOT%{_prefix}/lib/pkgconfig/
 %endif
-mv $HDRS/android-headers.pc $RPM_BUILD_ROOT%{dhdlibdir}/pkgconfig/
+mv $hdrs/android-headers.pc $RPM_BUILD_ROOT%{dhdlibdir}/pkgconfig/
 %endif
 
 # If this ever becomes unmanageable then
@@ -642,10 +642,10 @@ cp -a tmp/udev.rules/* $RPM_BUILD_ROOT/lib/udev/rules.d/
 ln -s /dev/null $RPM_BUILD_ROOT/etc/udev/rules.d/60-persistent-v4l.rules 
 
 # Install init-debug which will provide usb access and non-blocking telnet
-INIT_SCRIPT=%{android_root}/hybris/hybris-boot/init-script
+init_script=%{android_root}/hybris/hybris-boot/init-script
 
-if test -f $INIT_SCRIPT; then
-cp -a $INIT_SCRIPT $RPM_BUILD_ROOT/init-debug
+if [ -f $init_script ] ; then
+cp -a $init_script $RPM_BUILD_ROOT/init-debug
 else
 cp -a %{android_root}/hybris/hybris-boot/hb/init-script $RPM_BUILD_ROOT/init-debug
 fi
@@ -694,7 +694,7 @@ _remove_cruft   "/fstab.*"          \
                 "/res"              \
                 "/data"             \
                 "/odm/*"
-if [ $ANDROID_VERSION_MAJOR -lt "7" ]; then
+if [ $android_version_major -lt "7" ]; then
     _remove_cruft "/property_contexts"
 fi
 
@@ -739,7 +739,7 @@ cat >> %{buildroot}/%{_prefix}/lib/droid/hw-group.d/default.list.remove <<EOF
 system
 EOF
 
-if [ $ANDROID_VERSION_MAJOR -ge "5" ] && \
+if [ $android_version_major -ge "5" ] && \
    grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
     echo "inet" > %{buildroot}/%{_prefix}/lib/droid/hw-group.d/inet.list
 fi
@@ -764,27 +764,27 @@ fi
 
 # Kernel and module installation; to
 # /boot and modules to /lib as normal
-KERNEL_RELEASE=$(cat out/target/product/%{device}/*/*/include/config/kernel.release)
-cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$KERNEL_RELEASE
+kernel_release=$(cat out/target/product/%{device}/*/*/include/config/kernel.release)
+cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$kernel_release
 cp out/target/product/%{device}/obj/ROOT/hybris-boot_intermediates/boot-initramfs.gz $RPM_BUILD_ROOT/boot/
 
-echo "/boot/kernel-$KERNEL_RELEASE" > kernel.files
+echo "/boot/kernel-$kernel_release" > kernel.files
 echo "/boot/boot-initramfs.gz" >> kernel.files
 
 if cp out/target/product/%{device}/dt.img $RPM_BUILD_ROOT/boot/ &> /dev/null; then
     echo /boot/dt.img >> kernel.files
 fi
 
-MOD_DIR=$RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE
-mkdir -p $MOD_DIR
-cp -a out/target/product/%{device}/system/lib/modules/. $MOD_DIR/. || true
-cp -a out/target/product/%{device}/system/vendor/lib/modules/. $MOD_DIR/. || true
-cp -a out/target/product/%{device}/vendor/lib/modules/. $MOD_DIR/. || true
-cp -a out/target/product/%{device}/obj/*/modules.builtin $MOD_DIR/. || true
-cp -a out/target/product/%{device}/obj/*/modules.order $MOD_DIR/. || true
+mod_dir=$RPM_BUILD_ROOT/lib/modules/$kernel_release
+mkdir -p $mod_dir
+cp -a out/target/product/%{device}/system/lib/modules/. $mod_dir/. || true
+cp -a out/target/product/%{device}/system/vendor/lib/modules/. $mod_dir/. || true
+cp -a out/target/product/%{device}/vendor/lib/modules/. $mod_dir/. || true
+cp -a out/target/product/%{device}/obj/*/modules.builtin $mod_dir/. || true
+cp -a out/target/product/%{device}/obj/*/modules.order $mod_dir/. || true
 
 # on some systems modules are in /lib/modules for some reason, lets move them to right place
-mv $RPM_BUILD_ROOT/lib/modules/* $RPM_BUILD_ROOT/lib/modules/$KERNEL_RELEASE || true
+mv $RPM_BUILD_ROOT/lib/modules/* $RPM_BUILD_ROOT/lib/modules/$kernel_release || true
 
 # Images are installed to /boot - they'll probably be unpacked using
 # rpm2cpio mostly anyhow
@@ -865,9 +865,9 @@ echo creating droid users and groups
 [ -e droid.ids ] && cat droid.ids | while read name id; do
     if ! getent group $name; then
         if getent group $id; then
-            OTHER_NAME=$(getent group $id 2>/dev/null |cut -d":" -f1)
-            echo "Group $name did not exist yet, but another group has the same id ($id, $OTHER_NAME), renaming that group"
-            groupmod -g $id -n $name $OTHER_NAME || :
+            other_name=$(getent group $id 2>/dev/null |cut -d":" -f1)
+            echo "Group $name did not exist yet, but another group has the same id ($id, $other_name), renaming that group"
+            groupmod -g $id -n $name $other_name || :
         else
             echo "Group $name did not exist yet"
             groupadd -g $id $name || :
@@ -878,9 +878,9 @@ echo creating droid users and groups
     fi
     if ! getent passwd $name; then
         if getent passwd $id; then
-            OTHER_NAME=$(getent passwd $id 2>/dev/null |cut -d":" -f1)
-            echo "User $name did not exist yet, but another user has the same id ($id, $OTHER_NAME), renaming that user"
-            usermod -s /sbin/nologin -d / -u $id -g $id -l $name $OTHER_NAME || :
+            other_name=$(getent passwd $id 2>/dev/null |cut -d":" -f1)
+            echo "User $name did not exist yet, but another user has the same id ($id, $other_name), renaming that user"
+            usermod -s /sbin/nologin -d / -u $id -g $id -l $name $other_name || :
         else
             echo "User $name did not exist yet"
             useradd -M -N -s /sbin/nologin -d / -u $id -g $id $name || ::
