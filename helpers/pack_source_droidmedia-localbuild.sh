@@ -1,9 +1,10 @@
-if [ -f out/target/product/*/system/lib64/libdroidmedia.so ]; then
+OUT_DEVICE=${HABUILD_DEVICE:-$DEVICE}
+
+if [ -f ./out/target/product/${OUT_DEVICE}/system/lib64/libdroidmedia.so ]; then
 DROIDLIB=lib64
 else
 DROIDLIB=lib
 fi
-OUT_DEVICE=${HABUILD_DEVICE:-$DEVICE}
 
 if [ ! -f ./out/target/product/${OUT_DEVICE}/system/${DROIDLIB}/libdroidmedia.so ]; then
     echo "Please build droidmedia as per HADK instructions"
