@@ -523,7 +523,13 @@ mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/lib/modules
 
 # Install tools
-install -m 755 -D %{android_root}/system/core/mkbootimg/mkbootimg %{buildroot}/%{_bindir}/
+if [ -e %{android_root}/system/core/mkbootimg/mkbootimg.py ]; then
+    _mkbootimg=mkbootimg.py
+fi
+install -m 755 \
+    -D %{android_root}/system/core/mkbootimg/${_mkbootimg:-mkbootimg} \
+    %{buildroot}/%{_bindir}/mkbootimg
+
 install -m 755 -D %{android_root}/system/core/libsparse/simg2img %{buildroot}/%{_bindir}/
 install -m 755 -D %{android_root}/system/core/libsparse/img2simg %{buildroot}/%{_bindir}/
 
