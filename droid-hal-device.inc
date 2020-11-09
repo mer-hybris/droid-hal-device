@@ -458,11 +458,11 @@ echo Building udev rules
 mkdir tmp/udev.rules
 # Device specific ueventd rules is the "not goldfish" one
 %{dhd_path}/helpers/makeudev \
-    %{android_root}/out/target/product/%{device}/root/ueventd.rc \
-    $(ls %{android_root}/out/target/product/%{device}/root/ueventd.*.rc | grep -v .goldfish.rc) \
-    %{android_root}/out/target/product/%{device}/vendor/ueventd.rc \
-    %{android_root}/out/target/product/%{device}/system/vendor/ueventd.rc \
-        > tmp/udev.rules/999-android-system.rules
+    $(find %{android_root}/out/target/product/%{device}/system \
+           %{android_root}/out/target/product/%{device}/root \
+           %{android_root}/out/target/product/%{device}/vendor \
+          -name ueventd.rc -o -name ueventd.\*.rc -a ! -name \*.goldfish.rc ) \
+    > tmp/udev.rules/999-android-system.rules
 
 echo Building mount units
 mkdir tmp/units
