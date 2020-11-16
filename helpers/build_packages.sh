@@ -49,6 +49,8 @@ Usage: $0 [OPTION]..."
    -D, --do-not-install
                    useful when package is needed only in the final image
                    especially when it conflicts in an SDK target
+   -N  --no-auto-version
+                   Tell mb2 to not fix the version inside a spec file
    -o, --offline   build offline after all repos have been cloned or refreshed
    -n, --no-delete do not delete existing packages when adding to repo
 
@@ -57,7 +59,7 @@ EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::gvib:s:Don -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,offline,no-delete -- "$@")
+OPTIONS=$(getopt -o hdcm::gvib:s:DonN -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,offline,no-delete,no-auto-version -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -83,6 +85,7 @@ while true; do
       -d|--droid-hal) BUILDDHD=1 ;;
       -c|--configs) BUILDCONFIGS=1 ;;
       -D|--do-not-install) DO_NOT_INSTALL=1;;
+      -N|--no-auto-version) NO_AUTO_VERSION=--no-fix-version ;;
       -m|--mw) BUILDMW=1
           BUILDMW_ASK=1
           case "$2" in
@@ -304,23 +307,23 @@ if [ "$BUILDGG" = "1" ]; then
        grep -qs "^Requires: gstreamer1.0-droid" "$metapackage_lookup" ||
        grep -qs "^- gmp-droid" "$pattern_lookup" ||
        grep -qs "^Requires: gmp-droid" "$metapackage_lookup"; then
-        droidmedia_version=$(git --git-dir external/droidmedia/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
+        pkg=droidmedia
+        cd external/$pkg || die "Could not change directory to external/$pkg"
+        droidmedia_version=$(get_package_version "$pkg")
         if [ -z "$droidmedia_version" ]; then
-            # in case of shallow clone:
-            droidmedia_version=999.99999999.99
+            # Could not obtain version, function call will have shown the error
+            exit 1
         fi
-        rpm/dhd/helpers/pack_source_droidmedia-localbuild.sh "$droidmedia_version"
+        cd ../..
+        rpm/dhd/helpers/pack_source_droidmedia-localbuild.sh "$droidmedia_version" ||
+            die "Failed to pack_source_droidmedia-localbuild.sh"
         mkdir -p hybris/mw/droidmedia-localbuild/rpm
-        if [ -d .git ] && [ ! -d hybris/mw/droidmedia-localbuild/.git ]; then
-            # for the top-level .git adaptations such as Xperia 10 Android 9, otherwise mb2 will complain:
-            (cd hybris/mw/droidmedia-localbuild; git init; git commit --allow-empty -m "initial")
-        fi
         cp rpm/dhd/helpers/droidmedia-localbuild.spec hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         sed -ie "s/0.0.0/$droidmedia_version/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         sed -ie "s/@PORT_ARCH@/$PORT_ARCH/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         sed -ie "s/@DEVICE@/$HABUILD_DEVICE/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         mv hybris/mw/droidmedia-"$droidmedia_version".tgz hybris/mw/droidmedia-localbuild
-        buildmw -u "droidmedia-localbuild" || die
+        buildmw -Nu "droidmedia-localbuild" || die
         if grep -qs "^- gstreamer1.0-droid" "$pattern_lookup" ||
            grep -qs "^Requires: gstreamer1.0-droid" "$metapackage_lookup"; then
             buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
@@ -342,22 +345,21 @@ if [ "$BUILDGG" = "1" ]; then
         minfo "Not building audioflingerglue and pulseaudio-modules-droid-glue due to pulseaudio-modules-droid-hidl in patterns"
     elif grep -qs "- pulseaudio-modules-droid-glue" "$pattern_lookup" ||
          grep -qs "Requires: pulseaudio-modules-droid-glue" "$metapackage_lookup"; then
-        audioflingerglue_version=$(git --git-dir external/audioflingerglue/.git describe --tags 2>/dev/null | sed -r "s/\-/\+/g")
+        pkg=audioflingerglue
+        cd external/$pkg || die "Could not change directory to external/$pkg"
+        audioflingerglue_version=$(get_package_version "$pkg")
         if [ -z "$audioflingerglue_version" ]; then
-            # in case of shallow clone:
-            audioflingerglue_version=999.0.0
+            # Could not obtain version, function call will have shown the error
+            exit 1
         fi
-        rpm/dhd/helpers/pack_source_audioflingerglue-localbuild.sh "$audioflingerglue_version"
+        rpm/dhd/helpers/pack_source_audioflingerglue-localbuild.sh "$audioflingerglue_version" ||
+            die "Failed to pack_source_audioflingerglue-localbuild.sh"
         mkdir -p hybris/mw/audioflingerglue-localbuild/rpm
-        if [ -d .git ] && [ ! -d hybris/mw/audioflingerglue-localbuild/.git ]; then
-            # for the top-level .git adaptations such as Xperia 10 Android 9, otherwise mb2 will complain:
-            (cd hybris/mw/audioflingerglue-localbuild; git init; git commit --allow-empty -m "initial")
-        fi
         cp rpm/dhd/helpers/audioflingerglue-localbuild.spec hybris/mw/audioflingerglue-localbuild/rpm/audioflingerglue.spec
         sed -ie "s/0.0.0/$audioflingerglue_version/" hybris/mw/audioflingerglue-localbuild/rpm/audioflingerglue.spec
         sed -ie "s/@DEVICE@/$HABUILD_DEVICE/" hybris/mw/audioflingerglue-localbuild/rpm/audioflingerglue.spec
         mv hybris/mw/audioflingerglue-"$audioflingerglue_version".tgz hybris/mw/audioflingerglue-localbuild
-        buildmw -u "audioflingerglue-localbuild" || die
+        buildmw -Nu "audioflingerglue-localbuild" || die
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-glue.git" || die
     else
         minfo "Not building audioflingerglue and pulseaudio-modules-droid-glue due to the latter not being in patterns"

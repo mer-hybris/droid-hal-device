@@ -42,7 +42,7 @@ minfo() {
 }
 
 merror() {
-    echo -e "\e[01;31m!! $* \e[00m"
+>&2 echo -e "\e[01;31m!! $* \e[00m"
 }
 
 die() {
@@ -103,6 +103,45 @@ initlog() {
     fi
     LOG="$LOGPATH/$1.log"
     [ -f "$LOG" ] && rm "$LOG"
+}
+
+get_last_tag() {
+    git describe --tags 2>/dev/null | sed -r "s/\-/\+/g"
+}
+
+get_package_version() {
+    pkg=$1
+    if [ "$(basename "$PWD")" != "$pkg" ]; then
+        die "get_package_version(): not within the $pkg directory"
+    fi
+    version=$(get_last_tag)
+    if [ -z "$version" ]; then
+        if [ "$BUILDOFFLINE" = "1" ]; then
+            die "Could not get version for $pkg: make sure it is cloned without --depth=1 or clone-depth=\"1\""
+        else
+            unshallow_attempt=$(git fetch --unshallow 2>&1)
+            ret=$?
+            if [ $ret -ne 0 ]; then
+                # Most probable error: --unshallow on a complete repository does not make sense
+                # in which case there's not much we can do if the tags are still not available
+                die "Could not get version for $pkg: $unshallow_attempt"
+            elif [ -z "$unshallow_attempt" ]; then
+                # --unshallow output was empty, it means remote "origin" doesn't exist (cloned via repo sync)
+                remotes=$(git remote)
+                if [ -n "$remotes" ] &&
+                   [ "$(echo "$remotes" | wc -w)" -gt 1 ]; then
+                    die "Could not get version for $pkg: there is more than one remote to fetch tags from. Please fetch manually."
+                elif ! unshallow_attempt=$(git fetch --unshallow "$remotes" 2>&1); then
+                    die "Could not get version for $pkg: $unshallow_attempt"
+                fi
+            fi
+            version=$(get_last_tag)
+            if [ -z "$version" ]; then
+                die "Could not read $pkg version from tags"
+            fi
+        fi
+    fi
+    echo "$version"
 }
 
 buildconfigs() {
@@ -170,18 +209,22 @@ buildmw() {
     #  -b     Branch to use. If none supplied, use default.
     #  -s     .spec file to use. Can be supplied multiple times.
     #         If empty, will use all .spec files from $PKG/rpm/*.
+    #  -N     Tell mb2 to not fix the version inside a spec file.
 
     local GIT_URL=""
     local GIT_BRANCH=""
     local MW_BUILDSPEC=""
+    # Use global override, if defined
+    local NO_AUTO_VERSION=$NO_AUTO_VERSION
     # This is important for getopt or it will fail on the second invocation!
     local OPTIND
-    while getopts 'u:b:s:' _flag
+    while getopts 'u:b:s:N' _flag
     do
         case "${_flag}" in
             u) GIT_URL="$OPTARG" ;;
             b) GIT_BRANCH="-b $OPTARG" ;;
             s) MW_BUILDSPEC+="$OPTARG " ;;
+            N) NO_AUTO_VERSION=--no-fix-version ;;
             *) echo "buildmw(): Unexpected option $_flag"; exit 1; ;;
         esac
     done
@@ -226,6 +269,11 @@ buildmw() {
                 minfo "pulling updates..."
                 git pull >>$LOG 2>&1|| die "pulling of updates failed"
             fi
+        fi
+
+        if [ -z "$NO_AUTO_VERSION" ]; then
+            # Let's check if package has a valid tag for version
+            get_package_version "$PKG" >/dev/null # failure within will exit the script altogether
         fi
 
         if [ "$PKG" = "libhybris" ]; then
@@ -279,7 +327,8 @@ build() {
     fi
     for SPEC in $SPECS ; do
         minfo "Building $SPEC"
-        mb2 -s $SPEC -t $VENDOR-$DEVICE-$PORT_ARCH build >>$LOG 2>&1|| die "building of package failed"
+        mb2 -s $SPEC -t $VENDOR-$DEVICE-$PORT_ARCH $NO_AUTO_VERSION \
+            build >>$LOG 2>&1|| die "building of package failed"
         # RPMS directory gets emptied when mb2 starts, so let's put packages
         # to the side in case of multiple .spec file builds
         mkdir RPMS.saved &>/dev/null
