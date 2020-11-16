@@ -313,6 +313,11 @@ Summary: Straggler files for %{device} hw
 %{summary}.
 %endif
 
+%package kernel-dtbo
+Summary: Placeholder for %{device} flashable dtbo if applicable
+%description kernel-dtbo
+%{summary}. Will stay empty, if dtbo image is not needed.
+
 ################################################################
 # Begin prep/build section
 
@@ -806,6 +811,12 @@ if cp out/target/product/%{device}/dt.img $RPM_BUILD_ROOT/boot/ &> /dev/null; th
     echo /boot/dt.img >> kernel.files
 fi
 
+touch dtbo.files
+
+if cp out/target/product/%{device}/dtbo.img $RPM_BUILD_ROOT/boot &> /dev/null; then
+    echo /boot/dtbo.img >> dtbo.files
+fi
+
 mod_dir=$RPM_BUILD_ROOT/lib/modules/$kernel_release
 mkdir -p $mod_dir
 cp -a out/target/product/%{device}/system/lib/modules/. $mod_dir/. || true
@@ -1013,3 +1024,6 @@ done
 %defattr(644,root,root,-)
 %{?straggler_files}
 %endif
+
+%files kernel-dtbo -f dtbo.files
+%defattr(644,root,root,-)
