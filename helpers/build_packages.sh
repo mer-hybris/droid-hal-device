@@ -352,6 +352,7 @@ if [ "$BUILDGG" = "1" ]; then
             # Could not obtain version, function call will have shown the error
             exit 1
         fi
+        cd ../..
         rpm/dhd/helpers/pack_source_audioflingerglue-localbuild.sh "$audioflingerglue_version" ||
             die "Failed to pack_source_audioflingerglue-localbuild.sh"
         mkdir -p hybris/mw/audioflingerglue-localbuild/rpm
