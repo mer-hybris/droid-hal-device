@@ -44,6 +44,8 @@ Usage: $0 [OPTION]..."
    -v, --version   build droid-hal-version
    -i, --mic       build image
    -b, --build=PKG build one package (PKG can include path)
+   -r, --revision=REV optionally used with -m
+                   build package version from a specific git tag or commit hash
    -s, --spec=SPEC optionally used with -m or -b
                    can be supplied multiple times to build multiple .spec files at once
    -D, --do-not-install
@@ -59,7 +61,7 @@ EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::gvib:s:DonN -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,offline,no-delete,no-auto-version -- "$@")
+OPTIONS=$(getopt -o hdcm::gvib:r:s:DonN -l help,droid-hal,configs,mw::,gg,version,mic,build:,revision:,spec:,do-not-install,offline,no-delete,no-auto-version -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -96,6 +98,11 @@ while true; do
       -b|--build) BUILDPKG=1
           case "$2" in
               *) BUILDPKG_PATH=$2;;
+          esac
+          shift;;
+      -r|--revision) BUILDREV=1
+          case "$2" in
+              *) BUILDREV_ARGS="-r $2";;
           esac
           shift;;
       -s|--spec) BUILDSPEC=1
@@ -228,10 +235,10 @@ if [ "$BUILDMW" = "1" ]; then
         # No point in asking when only one mw package is being built
         BUILDMW_QUIET=1
         if [ -z "$BUILDSPEC_FILE" ]; then
-            buildmw -u "$BUILDMW_REPO" || die
+            buildmw -u "$BUILDMW_REPO" $BUILDREV_ARGS || die
         else
             # Supply all given spec files from $BUILDSPEC_FILE array prefixed with "-s"
-            buildmw -u "$BUILDMW_REPO" "${BUILDSPEC_FILE[@]/#/-s }" || die
+            buildmw -u "$BUILDMW_REPO" "${BUILDSPEC_FILE[@]/#/-s }" $BUILDREV_ARGS || die
         fi
     elif [ -n "$manifest" ] &&
          grep -ql hybris/mw $manifest; then

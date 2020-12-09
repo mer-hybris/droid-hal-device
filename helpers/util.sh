@@ -205,22 +205,25 @@ buildmw() {
     #         git repo is already present in $ANDROID_ROOT/external/* and
     #         re-use that one.
     #  -b     Branch to use. If none supplied, use default.
+    #  -r     Git revision to use. Can either be a tag or a commit hash.
     #  -s     .spec file to use. Can be supplied multiple times.
     #         If empty, will use all .spec files from $PKG/rpm/*.
     #  -N     Tell mb2 to not fix the version inside a spec file.
 
     local GIT_URL=""
     local GIT_BRANCH=""
+    local GIT_REVISION=""
     local MW_BUILDSPEC=""
     # Use global override, if defined
     local NO_AUTO_VERSION=$NO_AUTO_VERSION
     # This is important for getopt or it will fail on the second invocation!
     local OPTIND
-    while getopts 'u:b:s:N' _flag
+    while getopts 'u:b:r:s:N' _flag
     do
         case "${_flag}" in
             u) GIT_URL="$OPTARG" ;;
             b) GIT_BRANCH="-b $OPTARG" ;;
+            r) GIT_REVISION="$OPTARG" ;;
             s) MW_BUILDSPEC+="$OPTARG " ;;
             N) NO_AUTO_VERSION=--no-fix-version ;;
             *) echo "buildmw(): Unexpected option $_flag"; exit 1; ;;
@@ -264,8 +267,15 @@ buildmw() {
 
             pushd $PKG > /dev/null || die
             if [[ "$BUILDOFFLINE" = "" && "$PKG" != *"-localbuild" ]]; then
-                minfo "pulling updates..."
-                git pull >>$LOG 2>&1|| die "pulling of updates failed"
+                if [ -z "$GIT_REVISION" ]; then
+                    minfo "pulling updates..."
+                    git pull >>$LOG 2>&1|| die "pulling of updates failed"
+                else
+                    git diff-index --quiet HEAD -- || die "Package $PKG has uncommitted changes, please commit first, refusing to reset version"
+                    minfo "setting version to $GIT_REVISION..."
+                    git fetch >>$LOG 2>&1
+                    git reset --hard $GIT_REVISION --recurse-submodules >>$LOG 2>&1|| die "version reset failed"
+                fi
             fi
         fi
 
