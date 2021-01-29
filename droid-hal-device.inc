@@ -53,6 +53,7 @@
 #                      from droid-hal-device
 # bootloader_binary: define bootloader binary name when aboot is packaged
 #                      separately from droid-hal-device
+# dtbo_binary:       override dtbo binary name. Defaults to dtbo.img
 # pre_actions:       command to execute on OBS before `. build/envsetup.sh`,
 #                      such as choosing correct Java VM
 # provides_own_headers:
@@ -94,6 +95,9 @@ such_macro supports spaces\
 %endif
 %if 0%{!?dhd_path:1}
 %define dhd_path rpm/dhd
+%endif
+%if 0%{!?dtbo_binary:1}
+%define dtbo_binary dtbo.img
 %endif
 
 %define __requires_exclude ^.*$
@@ -818,7 +822,7 @@ fi
 
 touch dtbo.files
 
-if cp out/target/product/%{device}/dtbo.img $RPM_BUILD_ROOT/boot &> /dev/null; then
+if cp out/target/product/%{device}/%{dtbo_binary} $RPM_BUILD_ROOT/boot/dtbo.img &> /dev/null; then
     echo /boot/dtbo.img >> dtbo.files
 fi
 
