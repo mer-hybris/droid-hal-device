@@ -590,6 +590,9 @@ cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_R
 cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 %endif
 if [ $android_version_major -ge "10" ]; then
+    # Create empty /apex, /system/bin/apexd will then mount namespaces therein
+    mkdir $RPM_BUILD_ROOT/apex
+    echo "%dir /apex" >> tmp/droid-hal.files
     # To avoid building apex (which in turn builds art),
     # we could take lib{dl,c,m}.so from:
     # out/soong/.intermediates/bionic/lib*/lib*/android_arm<COMPILER>_core_shared/lib*.so
