@@ -313,6 +313,10 @@ Summary: Straggler files for %{device} hw
 
 %package kernel-dtbo
 Summary: Placeholder for %{device} flashable dtbo if applicable
+# The device flashing info and scripts are in droid-configs
+Requires: oneshot
+Requires(post): droid-config-flashing
+%{_oneshot_requires_post}
 
 %description kernel-dtbo
 %{summary}. Will stay empty, if dtbo image is not needed.
@@ -896,6 +900,13 @@ if [ $1 -ne 1 ] ; then
 fi
 %endif
 %endif
+
+%post kernel-dtbo
+# This oneshot is enabled only during package upgrades, as initial
+# installation is done when we flash device.
+if [ $1 -ne 1 ] ; then
+  add-preinit-oneshot /var/lib/platform-updates/flash-dtbo.sh || :
+fi
 
 %pre users
 #Compatibility with old droid-hal version - convert previous format
