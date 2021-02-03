@@ -273,12 +273,12 @@ Just the kernel modules
 %package img-boot
 Provides: droid-hal-img-boot
 Group:	System
-Requires: oneshot
-%{_oneshot_requires_post}
 Summary: Boot img for droid-hal device: %{rpm_device}
 %if 0%{?enable_kernel_update:1}
-# The device flashing info and scripts is now in droid-configs
-Requires(post): droid-config-%{rpm_device}-flashing
+# The device flashing info and scripts are in droid-configs
+Requires: oneshot
+Requires(post): droid-config-flashing
+%{_oneshot_requires_post}
 %endif
 
 %description img-boot
@@ -302,8 +302,10 @@ The recovery.img for device
 Group:  System
 Summary: Bootloader for %{device} hw
 %if 0%{?enable_bootloader_update:1}
-# The device flashing info and scripts is now in droid-configs
-Requires(post): droid-config-%{rpm_device}-flashing
+# The device flashing info and scripts are in droid-configs
+Requires: oneshot
+Requires(post): droid-config-flashing
+%{_oneshot_requires_post}
 %endif
 
 %description aboot
@@ -887,7 +889,7 @@ done
 # This oneshot is enabled only during package upgrades, as initial
 # installation is done when we flash device.
 if [ $1 -ne 1 ] ; then
-  add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh
+  add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh || :
 fi
 %endif
 %endif
@@ -898,7 +900,7 @@ fi
 # This oneshot is enabled only during package upgrades, as initial
 # installation is done when we flash device.
 if [ $1 -ne 1 ] ; then
-  add-preinit-oneshot /var/lib/platform-updates/flash-aboot.sh
+  add-preinit-oneshot /var/lib/platform-updates/flash-aboot.sh || :
 fi
 %endif
 %endif
