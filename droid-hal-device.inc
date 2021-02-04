@@ -180,8 +180,6 @@ Release: 	%{rel_date}
 %{?dhd_sources}
 Provides:	droid-hal
 
-Group:		System
-#BuildArch:	noarch
 BuildRequires:  oneshot
 BuildRequires:  systemd
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
@@ -210,7 +208,6 @@ BuildRequires:  droid-system-vendor-obsbuild
 
 ################
 %package devel
-Group:	Development/Tools
 # Requires: %%{name} = %%{version}-%%{release}
 Provides: droid-hal-devel
 Summary: Development files for droid-hal device: %{rpm_device}
@@ -221,7 +218,6 @@ Needed by libhybris
 
 ################
 %package users
-Group: Tools
 Requires(pre): coreutils
 Requires(post): coreutils
 Requires(post): glibc-common
@@ -236,7 +232,6 @@ required by droid-hal/hybris based adaptations.
 ################
 %package tools
 Provides: droid-hal-tools
-Group:	Tools
 Summary: Some tools from android specific for %{device}
 License: ASL 2.0
 BuildRequires:  pkgconfig(zlib)
@@ -252,7 +247,6 @@ environment.
 ################
 %package kernel
 Provides: droid-hal-kernel
-Group:	System
 Summary: Kernel for droid-hal device: %{rpm_device}
 
 %description kernel
@@ -262,7 +256,6 @@ Just the kernel - mainly useful if you want to make a custom img
 %package kernel-modules
 Provides: droid-hal-kernel-modules
 Requires: kmod
-Group:	System
 Summary: Kernel modules for droid-hal device: %{rpm_device}
 
 %description kernel-modules
@@ -272,13 +265,12 @@ Just the kernel modules
 ################
 %package img-boot
 Provides: droid-hal-img-boot
-Group:	System
-Requires: oneshot
-%{_oneshot_requires_post}
 Summary: Boot img for droid-hal device: %{rpm_device}
 %if 0%{?enable_kernel_update:1}
-# The device flashing info and scripts is now in droid-configs
-Requires(post): droid-config-%{rpm_device}-flashing
+# The device flashing info and scripts are in droid-configs
+Requires: oneshot
+Requires(post): droid-config-flashing
+%{_oneshot_requires_post}
 %endif
 
 %description img-boot
@@ -289,7 +281,6 @@ The boot.img for device
 ################
 %package img-recovery
 Provides: droid-hal-img-recovery
-Group:	System
 Summary: Recovery image for droid-hal device: %{rpm_device}
 
 %description img-recovery
@@ -299,11 +290,12 @@ The recovery.img for device
 %if 0%{?bootloader_binary:1}
 ################
 %package aboot
-Group:  System
 Summary: Bootloader for %{device} hw
 %if 0%{?enable_bootloader_update:1}
-# The device flashing info and scripts is now in droid-configs
-Requires(post): droid-config-%{rpm_device}-flashing
+# The device flashing info and scripts are in droid-configs
+Requires: oneshot
+Requires(post): droid-config-flashing
+%{_oneshot_requires_post}
 %endif
 
 %description aboot
@@ -314,12 +306,18 @@ Bootloader for %{device} hw.
 ################
 %package detritus
 Summary: Straggler files for %{device} hw
+
 %description detritus
 %{summary}.
 %endif
 
 %package kernel-dtbo
 Summary: Placeholder for %{device} flashable dtbo if applicable
+# The device flashing info and scripts are in droid-configs
+Requires: oneshot
+Requires(post): droid-config-flashing
+%{_oneshot_requires_post}
+
 %description kernel-dtbo
 %{summary}. Will stay empty, if dtbo image is not needed.
 
@@ -887,7 +885,7 @@ done
 # This oneshot is enabled only during package upgrades, as initial
 # installation is done when we flash device.
 if [ $1 -ne 1 ] ; then
-  add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh
+  add-preinit-oneshot /var/lib/platform-updates/flash-bootimg.sh || :
 fi
 %endif
 %endif
@@ -898,10 +896,17 @@ fi
 # This oneshot is enabled only during package upgrades, as initial
 # installation is done when we flash device.
 if [ $1 -ne 1 ] ; then
-  add-preinit-oneshot /var/lib/platform-updates/flash-aboot.sh
+  add-preinit-oneshot /var/lib/platform-updates/flash-aboot.sh || :
 fi
 %endif
 %endif
+
+%post kernel-dtbo
+# This oneshot is enabled only during package upgrades, as initial
+# installation is done when we flash device.
+if [ $1 -ne 1 ] ; then
+  add-preinit-oneshot /var/lib/platform-updates/flash-dtbo.sh || :
+fi
 
 %pre users
 #Compatibility with old droid-hal version - convert previous format
