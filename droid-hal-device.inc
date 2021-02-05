@@ -30,6 +30,9 @@
 # enable_bootloader_update:
 #                    ability to flash aboot partition, inspect the usage of this
 #                      macro
+# enable_dtbo_update:
+#                    ability to flash dtbo partition, inspect the usage of this
+#                      macro
 #
 # Miscellaneous:
 # hadk_make_target:  the target used when running make in the HABUILD_SDK on the
@@ -313,10 +316,12 @@ Summary: Straggler files for %{device} hw
 
 %package kernel-dtbo
 Summary: Placeholder for %{device} flashable dtbo if applicable
+%if 0%{?enable_dtbo_update:1}
 # The device flashing info and scripts are in droid-configs
 Requires: oneshot
 Requires(post): droid-config-flashing
 %{_oneshot_requires_post}
+%endif
 
 %description kernel-dtbo
 %{summary}. Will stay empty, if dtbo image is not needed.
@@ -901,12 +906,14 @@ fi
 %endif
 %endif
 
+%if 0%{?enable_dtbo_update:1}
 %post kernel-dtbo
 # This oneshot is enabled only during package upgrades, as initial
 # installation is done when we flash device.
 if [ $1 -ne 1 ] ; then
   add-preinit-oneshot /var/lib/platform-updates/flash-dtbo.sh || :
 fi
+%endif
 
 %pre users
 #Compatibility with old droid-hal version - convert previous format
