@@ -145,15 +145,36 @@ fi
 
 if [ "$BUILDCONFIGS" = "1" ]; then
     if [ "$community_adaptation" == "1" ]; then
+        if [ "$(ls -A "$ANDROID_ROOT"/hybris/droid-configs/sparse/usr/share/ssu/repos.d 2> /dev/null)" ]; then
+            build_community="localbuild-ota"
+        else
+            build_community="localbuild"
+        fi
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i community-adaptation > /dev/null
         ret=$?
-        if [ $ret -eq 104 ]; then
+        if [ $ret -eq 0 ]; then
+            if [ "$build_community" == "localbuild-ota" ]; then
+                sb2 -t "$VENDOR-$DEVICE-$PORT_ARCH" -m sdk-install -R zypper se -i community-adaptation-localbuild > /dev/null
+                ret=$?
+                if [ $ret -eq 104 ]; then
+                    # Do nothing, because either localbuild-ota is already installed
+                    # or user chose to keep another flavour, respect their choice.
+                    build_community=
+                elif [ $ret -ne 0 ]; then
+                    fail=1
+                fi
+            fi
+        elif [ $ret -ne 104 ]; then
+            fail=1
+        fi
+        if [ $fail ]; then
+            die "Could not determine if community-adaptation package is available, exiting."
+        fi
+        if [ -n "$build_community" ]; then
             BUILDMW_QUIET=1
             buildmw -u "https://github.com/mer-hybris/community-adaptation.git" \
-                    -s rpm/community-adaptation-localbuild.spec || die
+                    -s rpm/community-adaptation-"$build_community".spec || die
             BUILDMW_QUIET=
-        elif [ $ret -ne 0 ]; then
-            die "Could not determine if community-adaptation package is available, exiting."
         fi
     fi
     # avoid a SIGSEGV on exit of libhybris client
