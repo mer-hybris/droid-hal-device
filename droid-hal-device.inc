@@ -594,7 +594,7 @@ cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%
 %endif
 if [ $android_version_major -ge "10" ]; then
     # Create empty /apex, /system/bin/apexd will then mount namespaces therein
-    mkdir $RPM_BUILD_ROOT/apex
+    mkdir -p $RPM_BUILD_ROOT/apex
     echo "%dir /apex" >> tmp/droid-hal.files
     # To avoid building apex (which in turn builds art),
     # we could take lib{dl,c,m}.so from:
