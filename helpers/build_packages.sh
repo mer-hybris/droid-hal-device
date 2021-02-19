@@ -379,6 +379,7 @@ if [ "$BUILDGG" = "1" ]; then
         mkdir -p hybris/mw/audioflingerglue-localbuild/rpm
         cp rpm/dhd/helpers/audioflingerglue-localbuild.spec hybris/mw/audioflingerglue-localbuild/rpm/audioflingerglue.spec
         sed -ie "s/0.0.0/$audioflingerglue_version/" hybris/mw/audioflingerglue-localbuild/rpm/audioflingerglue.spec
+        sed -ie "s/@PORT_ARCH@/$PORT_ARCH/" hybris/mw/audioflingerglue-localbuild/rpm/audioflingerglue.spec
         sed -ie "s/@DEVICE@/$HABUILD_DEVICE/" hybris/mw/audioflingerglue-localbuild/rpm/audioflingerglue.spec
         mv hybris/mw/audioflingerglue-"$audioflingerglue_version".tgz hybris/mw/audioflingerglue-localbuild
         buildmw -Nu "audioflingerglue-localbuild" || die

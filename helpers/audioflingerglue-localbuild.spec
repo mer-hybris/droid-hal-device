@@ -3,7 +3,7 @@
 %define __find_requires     %{nil}
 %global debug_package       %{nil}
 %define __provides_exclude_from ^.*$
-%define device_rpm_architecture_string armv7hl
+%define device_rpm_architecture_string @PORT_ARCH@
 %define _target_cpu %{device_rpm_architecture_string}
 
 

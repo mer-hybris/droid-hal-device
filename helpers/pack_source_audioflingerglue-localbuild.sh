@@ -1,9 +1,9 @@
 OUT_DEVICE=${HABUILD_DEVICE:-$DEVICE}
 
-if [ -f ./out/target/product/${OUT_DEVICE}/system/lib/libaudioflingerglue.so ]; then
-    DROIDLIB=lib
-elif [ -f ./out/target/product/${OUT_DEVICE}/system/lib64/libaudioflingerglue.so ]; then
+if [ -f ./out/target/product/${OUT_DEVICE}/system/lib64/libaudioflingerglue.so ]; then
     DROIDLIB=lib64
+elif [ -f ./out/target/product/${OUT_DEVICE}/system/lib/libaudioflingerglue.so ]; then
+    DROIDLIB=lib
 else
     echo "Please build audioflingerglue as per HADK instructions"
     exit 1
