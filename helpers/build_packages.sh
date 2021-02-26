@@ -205,7 +205,12 @@ if [ "$BUILDMW" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
     fi
 
-    android_version_major=$(sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R cat /usr/$_LIB/droid-devel/droid-headers/android-version.h 2>/dev/null |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
+    if [ -f "/usr/include/droid-devel/droid-headers/android-version.h" ]; then
+        android_version_header=/usr/include/droid-devel/droid-headers/android-version.h
+    else
+        android_version_header=/usr/$_LIB/droid-devel/droid-headers/android-version.h
+    fi
+    android_version_major=$(sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R cat $android_version_header 2>/dev/null |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
 
     pushd $ANDROID_ROOT/hybris/mw > /dev/null
 
