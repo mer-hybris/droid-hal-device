@@ -205,7 +205,7 @@ if [ "$BUILDMW" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
     fi
 
-    if [ -f "/usr/include/droid-devel/droid-headers/android-version.h" ]; then
+    if [ "$(sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R ls -A /usr/include/droid-devel/droid-headers/android-version.h 2> /dev/null)" ]; then
         android_version_header=/usr/include/droid-devel/droid-headers/android-version.h
     else
         android_version_header=/usr/$_LIB/droid-devel/droid-headers/android-version.h
