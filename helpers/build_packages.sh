@@ -421,6 +421,10 @@ if [ "$BUILDIMAGE" = "1" ]; then
     elif [ "$community_adaptation" == "1" ]; then
         ha_repo="repo --name=adaptation-community-common-$DEVICE-@RELEASE@"
         ha_dev="repo --name=adaptation-community-$DEVICE-@RELEASE@"
+        if ! grep -q "$ha_repo" "$srcks/$ks"; then
+            # aarch64 ports have no community-common repo for now
+            ha_repo="repo --name=apps-@RELEASE@"
+        fi
         sed "/$ha_repo/i$ha_dev --baseurl=file:\/\/$ANDROID_ROOT\/droid-local-repo\/$DEVICE" \
             "$srcks/$ks" > "$ks"
         community_build="community"
