@@ -320,6 +320,8 @@ if [ "$BUILDMW" = "1" ]; then
             # pull device's bluez4 configs correctly
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
         fi
+        buildmw -u "https://github.com/mer-hybris/dummy_netd" || die
+        buildmw -u "https://github.com/sailfishos/yamuisplash" || die
     fi
     popd > /dev/null
 fi
