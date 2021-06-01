@@ -322,6 +322,7 @@ if [ "$BUILDMW" = "1" ]; then
         fi
         buildmw -u "https://github.com/mer-hybris/dummy_netd" || die
         buildmw -u "https://github.com/sailfishos/yamuisplash" || die
+        buildmw -u "https://github.com/mer-hybris/sailfish-connman-plugin-suspend" || die
     fi
     popd > /dev/null
 fi
