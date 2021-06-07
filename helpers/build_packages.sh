@@ -293,7 +293,7 @@ if [ "$BUILDMW" = "1" ]; then
                 -s rpm/pulseaudio-modules-droid.spec || die
         buildmw -u "https://github.com/mer-hybris/audiosystem-passthrough.git" || die
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
-        buildmw -u "https://github.com/nemomobile/mce-plugin-libhybris.git" || die
+        buildmw -u "https://github.com/mer-hybris/mce-plugin-libhybris" || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
         buildmw -u "https://git.sailfishos.org/mer-core/qtscenegraph-adaptation.git" \
                 -s rpm/qtscenegraph-adaptation-droid.spec || die
@@ -320,6 +320,9 @@ if [ "$BUILDMW" = "1" ]; then
             # pull device's bluez4 configs correctly
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
         fi
+        buildmw -u "https://github.com/mer-hybris/dummy_netd" || die
+        buildmw -u "https://github.com/sailfishos/yamuisplash" || die
+        buildmw -u "https://github.com/mer-hybris/sailfish-connman-plugin-suspend" || die
     fi
     popd > /dev/null
 fi
