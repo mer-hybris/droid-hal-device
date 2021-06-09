@@ -156,8 +156,6 @@ buildconfigs() {
     cd installroot
     rpm2cpio $ANDROID_ROOT/droid-local-repo/$DEVICE/droid-configs/droid-config-$DEVICE-ssu-kickstarts-1-*.$PORT_ARCH.rpm | cpio -idv &> /dev/null
     cd ../../../
-
-    hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh >>$LOG 2>&1|| die "error while processing patterns"
 }
 
 builddhd() {

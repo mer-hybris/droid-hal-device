@@ -1,7 +1,7 @@
 #!/bin/bash
 # build_packages.sh - takes care of rebuilding droid-hal-device, -configs, and
 # -version, as well as any middleware packages. All in correct sequence, so that
-# any change made (e.g. to patterns) could be simply picked up just by
+# any change made could be simply picked up just by
 # re-running this script.
 #
 # Copyright (c) 2015 Alin Marin Elena <alin@elena.space>
@@ -184,7 +184,7 @@ if [ "$BUILDCONFIGS" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R bash -c "mkdir -p /system; echo ro.build.version.sdk=99 > /system/build.prop"
     fi
     buildconfigs
-    if grep -qsE "^(-|Requires:) droid-config-$DEVICE-bluez5" hybris/droid-configs/patterns/*.{yaml,inc}; then
+    if grep -qsE "^(-|Requires:) droid-config-$DEVICE-bluez5" hybris/droid-configs/patterns/*.inc; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper -n install droid-config-$DEVICE-bluez5
     fi
 fi
@@ -330,13 +330,10 @@ fi
 if [ "$BUILDGG" = "1" ]; then
 
     # look for either DEVICE or HABUILD_DEVICE files, do not use wildcards as there could be other variants
-    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml 2>/dev/null | uniq)
-    metapackage_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/patterns-sailfish-device-adaptation-{$DEVICE,$HABUILD_DEVICE}.inc 2>/dev/null | uniq)
+    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/patterns-sailfish-device-adaptation-{$DEVICE,$HABUILD_DEVICE}.inc 2>/dev/null | uniq)
 
-    if grep -qs "^- gstreamer1.0-droid" "$pattern_lookup" ||
-       grep -qs "^Requires: gstreamer1.0-droid" "$metapackage_lookup" ||
-       grep -qs "^- gmp-droid" "$pattern_lookup" ||
-       grep -qs "^Requires: gmp-droid" "$metapackage_lookup"; then
+    if grep -qs "^Requires: gstreamer1.0-droid" "$pattern_lookup" ||
+       grep -qs "^Requires: gmp-droid" "$pattern_lookup"; then
         pkg=droidmedia
         cd external/$pkg || die "Could not change directory to external/$pkg"
         droidmedia_version=$(get_package_version "$pkg")
@@ -354,14 +351,12 @@ if [ "$BUILDGG" = "1" ]; then
         sed -ie "s/@DEVICE@/$HABUILD_DEVICE/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         mv hybris/mw/droidmedia-"$droidmedia_version".tgz hybris/mw/droidmedia-localbuild
         buildmw -Nu "droidmedia-localbuild" || die
-        if grep -qs "^- gstreamer1.0-droid" "$pattern_lookup" ||
-           grep -qs "^Requires: gstreamer1.0-droid" "$metapackage_lookup"; then
+        if grep -qs "^Requires: gstreamer1.0-droid" "$pattern_lookup"; then
             buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
         else
             minfo "Not found in patterns: gstreamer1.0-droid. Camera and app video playback will not be available"
         fi
-        if grep -qs "^- gmp-droid" "$pattern_lookup" ||
-           grep -qs "^Requires: gmp-droid" "$metapackage_lookup"; then
+        if grep -qs "^Requires: gmp-droid" "$pattern_lookup"; then
             buildmw -u "https://github.com/sailfishos/gmp-droid.git" || die
         else
             minfo "Not found in patterns: gmp-droid. Browser video acceleration will not be available"
@@ -370,11 +365,9 @@ if [ "$BUILDGG" = "1" ]; then
         minfo "Neither gstreamer1.0-droid nor gmp-droid were found in patterns, not building them or droidmedia"
     fi
 
-    if grep -qs "^- pulseaudio-modules-droid-hidl" "$pattern_lookup" ||
-       grep -qs "^Requires: pulseaudio-modules-droid-hidl" "$metapackage_lookup"; then
+    if grep -qs "^Requires: pulseaudio-modules-droid-hidl" "$pattern_lookup"; then
         minfo "Not building audioflingerglue and pulseaudio-modules-droid-glue due to pulseaudio-modules-droid-hidl in patterns"
-    elif grep -qs "- pulseaudio-modules-droid-glue" "$pattern_lookup" ||
-         grep -qs "Requires: pulseaudio-modules-droid-glue" "$metapackage_lookup"; then
+    elif grep -qs "Requires: pulseaudio-modules-droid-glue" "$pattern_lookup"; then
         pkg=audioflingerglue
         cd external/$pkg || die "Could not change directory to external/$pkg"
         audioflingerglue_version=$(get_package_version "$pkg")
@@ -450,13 +443,10 @@ if [ "$BUILDIMAGE" = "1" ]; then
         release_version="-"$RELEASE
     fi
     imgname=SailfishOS"$community_build"-$flavour"$release_version"-$DEVICE"$EXTRA_NAME"
-    hybris/droid-configs/droid-configs-device/helpers/process_patterns.sh
     # Check if we need to build loop or fs image
-    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/jolla-hw-adaptation-{$DEVICE,$HABUILD_DEVICE}.yaml 2>/dev/null | uniq)
-    metapackage_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/patterns-sailfish-device-adaptation-{$DEVICE,$HABUILD_DEVICE}.inc 2>/dev/null | uniq)
+    pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/patterns-sailfish-device-adaptation-{$DEVICE,$HABUILD_DEVICE}.inc 2>/dev/null | uniq)
 
-    if grep -qsE "^- droid-hal-($DEVICE|$HABUILD_DEVICE)-kernel-modules" "$pattern_lookup" ||
-       grep -qsE "^Requires: droid-hal-($DEVICE|$HABUILD_DEVICE)-kernel-modules" "$metapackage_lookup"; then
+    if grep -qsE "^Requires: droid-hal-($DEVICE|$HABUILD_DEVICE)-kernel-modules" "$pattern_lookup"; then
         sudo mic create fs --arch=$PORT_ARCH \
             --tokenmap=$tokenmap \
             --record-pkgs=name,url \
