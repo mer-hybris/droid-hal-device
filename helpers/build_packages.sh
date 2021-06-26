@@ -277,14 +277,14 @@ if [ "$BUILDMW" = "1" ]; then
         done
     else
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
-        buildmw -u "https://git.sailfishos.org/mer-core/libglibutil.git" || die
+        buildmw -u "https://github.com/sailfishos/libglibutil.git" || die
         buildmw -u "https://github.com/mer-hybris/libgbinder" || die
 
         if [ $android_version_major -ge 8 ]; then
             buildmw -u "https://github.com/mer-hybris/libgbinder-radio" || die
             buildmw -u "https://github.com/mer-hybris/bluebinder" || die
             buildmw -u "https://github.com/mer-hybris/ofono-ril-binder-plugin" || die
-            buildmw -u "https://git.sailfishos.org/mer-core/nfcd.git" || die
+            buildmw -u "https://github.com/sailfishos/nfcd.git" || die
             buildmw -u "https://github.com/mer-hybris/libncicore.git" || die
             buildmw -u "https://github.com/mer-hybris/libnciplugin.git" || die
             buildmw -u "https://github.com/mer-hybris/nfcd-binder-plugin" || die
@@ -295,13 +295,13 @@ if [ "$BUILDMW" = "1" ]; then
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
         buildmw -u "https://github.com/mer-hybris/mce-plugin-libhybris" || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
-        buildmw -u "https://git.sailfishos.org/mer-core/qtscenegraph-adaptation.git" \
+        buildmw -u "https://github.com/sailfishos/qtscenegraph-adaptation.git" \
                 -s rpm/qtscenegraph-adaptation-droid.spec || die
         if [ $android_version_major -ge 9 ]; then
-            buildmw -u "https://git.sailfishos.org/mer-core/sensorfw.git" \
+            buildmw -u "https://github.com/sailfishos/sensorfw.git" \
                     -s rpm/sensorfw-qt5-binder.spec || die
         else
-            buildmw -u "https://git.sailfishos.org/mer-core/sensorfw.git" \
+            buildmw -u "https://github.com/sailfishos/sensorfw.git" \
                     -s rpm/sensorfw-qt5-hybris.spec || die
         fi
         if [ $android_version_major -ge 8 ]; then
@@ -315,7 +315,7 @@ if [ "$BUILDMW" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se kf5bluezqt-bluez4 > /dev/null
         ret=$?
         if [ $ret -eq 104 ]; then
-            buildmw -u "https://git.sailfishos.org/mer-core/kf5bluezqt.git" \
+            buildmw -u "https://github.com/sailfishos/kf5bluezqt.git" \
                     -s rpm/kf5bluezqt-bluez4.spec || die
             # pull device's bluez4 configs correctly
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
