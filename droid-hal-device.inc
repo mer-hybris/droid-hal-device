@@ -155,6 +155,10 @@ such_macro supports spaces\
 # Don't run strip
 %define __strip /bin/true
 
+# Don't terminate build if files are missing build ids
+# Android builds sometimes do not generate build ids
+%define _missing_build_ids_terminate_build 0
+
 Summary: 	Droid HAL package for %{rpm_device}
 License: 	BSD
 Name: 		droid-hal-%{rpm_device}
