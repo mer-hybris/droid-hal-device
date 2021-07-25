@@ -269,7 +269,7 @@ buildmw() {
             if [[ "$BUILDOFFLINE" = "" && "$PKG" != *"-localbuild" ]]; then
                 if [ -z "$GIT_REVISION" ]; then
                     minfo "pulling updates..."
-                    git pull >>$LOG 2>&1|| die "pulling of updates failed"
+                    git pull --recurse-submodules >>$LOG 2>&1|| die "pulling of updates failed"
                 else
                     git diff-index --quiet HEAD -- || die "Package $PKG has uncommitted changes, please commit first, refusing to reset version"
                     minfo "setting version to $GIT_REVISION..."
