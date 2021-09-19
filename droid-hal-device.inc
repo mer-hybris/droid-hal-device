@@ -605,6 +605,10 @@ if [ $android_version_major -ge "10" ]; then
     # So we have to build apex (make com.android.runtime.release) and then:
     art_path=%{android_root}/out/soong/.intermediates/art/build
     apex_path=apex/com.android.runtime.release/android_common_com.android.runtime.release/image.apex
+    if [ ! -f "$art_path/$apex_path/lib/bionic/libc.so" ]; then
+        art_path=%{android_root}/out/target/product/%{device}/system
+        apex_path=apex/com.android.runtime.release
+    fi
     cp -a \
         $art_path/$apex_path/lib/bionic/lib{dl,c,m}.so \
         $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib
