@@ -382,9 +382,7 @@ if (grep -q '^TARGET_ARCH := arm64' %{android_root}/device/*/*/BoardConfig*.mk);
     echo -e \
          "\n" \
          "IMPORTANT: some devices in your Android tree are 64bit targets. If your device is aarch64,\n" \
-         "           please define droid_target_aarch64 in your .spec, otherwise define droid_target_armv7hl\n" \
-         "NOTE: Currently there is no Sailfish OS ARM 64bit target, so leave PORT_ARCH as armv7hl\n" \
-         "      Mixed builds of 64bit Android+Linux Kernel and 32bit Sailfish OS work just fine."
+         "           please define droid_target_aarch64 in your .spec, otherwise define droid_target_armv7hl\n"
     exit 1
 fi
 %endif
