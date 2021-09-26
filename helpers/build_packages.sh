@@ -277,37 +277,17 @@ if [ "$BUILDMW" = "1" ]; then
         done
     else
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
-        buildmw -u "https://github.com/sailfishos/libglibutil.git" || die
-        buildmw -u "https://github.com/mer-hybris/libgbinder" || die
 
-        if [ $android_version_major -ge 8 ]; then
-            buildmw -u "https://github.com/mer-hybris/libgbinder-radio" || die
-            buildmw -u "https://github.com/mer-hybris/bluebinder" || die
-            buildmw -u "https://github.com/mer-hybris/ofono-ril-binder-plugin" || die
-            buildmw -u "https://github.com/sailfishos/nfcd.git" || die
-            buildmw -u "https://github.com/mer-hybris/libncicore.git" || die
-            buildmw -u "https://github.com/mer-hybris/libnciplugin.git" || die
-            buildmw -u "https://github.com/mer-hybris/nfcd-binder-plugin" || die
-        fi
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid.git" \
                 -s rpm/pulseaudio-modules-droid.spec || die
-        buildmw -u "https://github.com/mer-hybris/audiosystem-passthrough.git" || die
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
         buildmw -u "https://github.com/mer-hybris/mce-plugin-libhybris" || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
-        buildmw -u "https://github.com/sailfishos/qtscenegraph-adaptation.git" \
-                -s rpm/qtscenegraph-adaptation-droid.spec || die
-        if [ $android_version_major -ge 9 ]; then
-            buildmw -u "https://github.com/sailfishos/sensorfw.git" \
-                    -s rpm/sensorfw-qt5-binder.spec || die
-        else
+        if [ $android_version_major -le 8 ]; then
             buildmw -u "https://github.com/sailfishos/sensorfw.git" \
                     -s rpm/sensorfw-qt5-hybris.spec || die
         fi
-        if [ $android_version_major -ge 8 ]; then
-            buildmw -u "https://github.com/mer-hybris/geoclue-providers-hybris" \
-                    -s rpm/geoclue-providers-hybris-binder.spec || die
-        else
+        if [ $android_version_major -le 7 ]; then
             buildmw -u "https://github.com/mer-hybris/geoclue-providers-hybris" \
                     -s rpm/geoclue-providers-hybris.spec || die
         fi
@@ -320,9 +300,6 @@ if [ "$BUILDMW" = "1" ]; then
             # pull device's bluez4 configs correctly
             sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
         fi
-        buildmw -u "https://github.com/mer-hybris/dummy_netd" || die
-        buildmw -u "https://github.com/sailfishos/yamuisplash" || die
-        buildmw -u "https://github.com/mer-hybris/sailfish-connman-plugin-suspend" || die
     fi
     popd > /dev/null
 fi
