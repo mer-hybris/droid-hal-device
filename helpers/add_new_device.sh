@@ -39,7 +39,7 @@ echo $PATTERNS_DEVICE_DIR/
 
 mkdir -p $PATTERNS_DEVICE_DIR
 
-for pattern in $(find $PATTERNS_DIR/templates -name *.yaml -o -name *.inc); do
+for pattern in $(find $PATTERNS_DIR/templates -name '*.yaml' -o -name '*.inc'); do
     PATTERNS_FILE=$(echo $PATTERNS_DEVICE_DIR/$(basename $pattern) | sed -e "s|@DEVICE@|$DEVICE|g")
     echo $PATTERNS_FILE
     if [[ "$pattern" == *.inc ]]; then
