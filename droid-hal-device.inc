@@ -382,9 +382,7 @@ if (grep -q '^TARGET_ARCH := arm64' %{android_root}/device/*/*/BoardConfig*.mk);
     echo -e \
          "\n" \
          "IMPORTANT: some devices in your Android tree are 64bit targets. If your device is aarch64,\n" \
-         "           please define droid_target_aarch64 in your .spec, otherwise define droid_target_armv7hl\n" \
-         "NOTE: Currently there is no Sailfish OS ARM 64bit target, so leave PORT_ARCH as armv7hl\n" \
-         "      Mixed builds of 64bit Android+Linux Kernel and 32bit Sailfish OS work just fine."
+         "           please define droid_target_aarch64 in your .spec, otherwise define droid_target_armv7hl\n"
     exit 1
 fi
 %endif
@@ -607,6 +605,10 @@ if [ $android_version_major -ge "10" ]; then
     # So we have to build apex (make com.android.runtime.release) and then:
     art_path=%{android_root}/out/soong/.intermediates/art/build
     apex_path=apex/com.android.runtime.release/android_common_com.android.runtime.release/image.apex
+    if [ ! -f "$art_path/$apex_path/lib/bionic/libc.so" ]; then
+        art_path=%{android_root}/out/target/product/%{device}/system
+        apex_path=apex/com.android.runtime.release
+    fi
     cp -a \
         $art_path/$apex_path/lib/bionic/lib{dl,c,m}.so \
         $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib
