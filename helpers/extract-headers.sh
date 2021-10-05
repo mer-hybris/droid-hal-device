@@ -66,7 +66,7 @@ if [ x$MAJOR = x -o x$MINOR = x -o x$PATCH = x ]; then
     fi
 
     IFS="." read MAJOR MINOR PATCH PATCH2 PATCH3 <<EOF
-$(IFS="." awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' < $VERSION_DEFAULTS)
+$(IFS="." awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9.]+)/ { print $3; }' < $VERSION_DEFAULTS)
 EOF
     if [ x$MINOR = x ]; then
          MINOR=0
@@ -286,6 +286,10 @@ check_header_exists frameworks/native/libs/nativewindow/include/system/window.h 
 check_header_exists frameworks/native/libs/nativewindow/include/vndk/window.h && \
     extract_headers_to vndk \
         frameworks/native/libs/nativewindow/include/vndk
+
+check_header_exists frameworks/native/libs/nativewindow/include/apex/window.h && \
+    extract_headers_to apex \
+        frameworks/native/libs/nativewindow/include/apex
 
 # In order to make it easier to trace back the origins of headers, fetch
 # some repository information from the Git source tree (if available).

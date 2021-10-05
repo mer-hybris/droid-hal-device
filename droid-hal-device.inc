@@ -413,7 +413,7 @@ hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/*/.config
 
 
-android_version_major=$(awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' \
+android_version_major=$(awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9.]+)/ { print $3; }' \
                           < %{android_root}/build/core/version_defaults.mk \
                           | awk -F'.' '{print $1}')
 
@@ -443,7 +443,7 @@ if [ $android_version_major -ge "8" ]; then
         $ANDROID_ROOT/system/core/libcutils/include/private/android_filesystem_config.h \
         > generated_android_filesystem_config.h
 else
-    echo "#include <private/android_filesystem_config.h>;" > generated_android_filesystem_config.h
+    echo "#include <private/android_filesystem_config.h>" > generated_android_filesystem_config.h
     if [ ! -z "$MKBOOTIMG_MK" ]; then
         sed -i -e 's/CPPFLAGS+= -I..\/include/CPPFLAGS+= -I..\/include -std=gnu99/g' $MKBOOTIMG_MK
     fi
@@ -488,11 +488,11 @@ mkdir tmp/units
 # skip various mounts which are not wanted (This is just in case they creep in)
 # First handle stupid spec quoting rules to get some args for makefstab
 shopt -s nullglob
-fstab_files="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab* %{android_root}/out/target/product/%{device}/system/vendor/etc/fstab*)"
+fstab_files="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{android_root}/out/target/product/%{device}/system/etc/init/hw/*.rc %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab* %{android_root}/out/target/product/%{device}/system/vendor/etc/fstab*)"
 shopt -u nullglob
 
 
-%{dhd_path}/helpers/makefstab --files $fstab_files  --skip auto none /acct /boot /cache /data /misc /recovery /staging /storage/sdcard1 /storage/usbdisk /storage/usbotg /sys/fs/cgroup /sys/fs/cgroup/memory /sys/kernel/debug  /sys/kernel/config /dev/usb-ffs/adb /tmp %{?makefstab_skip_entries} --outputdir tmp/units
+%{dhd_path}/helpers/makefstab --files $fstab_files  --skip auto none /acct /boot /cache /data /data/user/0 /data_mirror /data_mirror/data_ce/null /data_mirror/data_de/null /data_mirror/cur_profiles /misc /recovery /staging /storage /storage/sdcard1 /storage/usbdisk /storage/usbotg sys/fs/bpf /sys/fs/cgroup /sys/fs/cgroup/memory /sys/fs/fuse/connections /sys/fs/pstore /sys/kernel/debug /sys/kernel/config /sys/kernel/tracing /dev/cpuctl /dev/cpuset /dev/stune /dev/usb-ffs/adb /tmp %{?makefstab_skip_entries} --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
@@ -517,7 +517,7 @@ EOF
 ################
 %install
 
-android_version_major=$(awk '/PLATFORM_VERSION[A-Z0-9.]* := ([0-9.]+)/ { print $3; }' \
+android_version_major=$(awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9.]+)/ { print $3; }' \
                           < %{android_root}/build/core/version_defaults.mk \
                           | awk -F'.' '{print $1}')
 
@@ -542,11 +542,16 @@ mkdir -p $RPM_BUILD_ROOT/boot
 mkdir -p $RPM_BUILD_ROOT/lib/modules
 
 # Install tools
-if [ -e %{android_root}/system/core/mkbootimg/mkbootimg.py ]; then
+if [ $android_version_major -ge "11" ]; then
+    mkbootimg_dir=tools
+else
+    mkbootimg_dir=core
+fi
+if [ -e %{android_root}/system/$mkbootimg_dir/mkbootimg/mkbootimg.py ]; then
     _mkbootimg=mkbootimg.py
 fi
 install -m 755 \
-    -D %{android_root}/system/core/mkbootimg/${_mkbootimg:-mkbootimg} \
+    -D %{android_root}/system/$mkbootimg_dir/mkbootimg/${_mkbootimg:-mkbootimg} \
     %{buildroot}/%{_bindir}/mkbootimg
 
 install -m 755 -D %{android_root}/system/core/libsparse/simg2img %{buildroot}/%{_bindir}/
@@ -579,11 +584,21 @@ sed -i -e '/^[[:space:]]*mkdir[[:space:]]\/tmp[[:space:]]*/s/^/# Removed during 
 if [ $android_version_major -ge "7" ]; then
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init
 cp -a %{android_root}/out/target/product/%{device}/system/etc/init/servicemanager.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
-echo "%{_libexecdir}/droid-hybris/system/etc/init/servicemanager.rc" > tmp/droid-hal.files
+echo "%{_libexecdir}/droid-hybris/system/etc/init/*.rc" > tmp/droid-hal.files
+
+if [ $android_version_major -ge "11" ]; then
+mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/hw
+cp -a %{android_root}/out/target/product/%{device}/system/etc/init/hw/init.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/hw/
+cp -a %{android_root}/out/target/product/%{device}/system/etc/init/hw/init.zygote*.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/hw/
+
+# Now remove the mount commands from any .rc files as they're included in .mount unit files now
+sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device build : /' $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/hw/*rc || true
+
+echo "%{_libexecdir}/droid-hybris/system/etc/init/hw/*.rc" >> tmp/droid-hal.files
+fi
 
 if [ -f %{android_root}/out/target/product/%{device}/system/etc/init/hybris_extras.rc ]; then
 cp -a %{android_root}/out/target/product/%{device}/system/etc/init/hybris_extras.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
-echo "%{_libexecdir}/droid-hybris/system/etc/init/hybris_extras.rc" >> tmp/droid-hal.files
 fi
 
 else
@@ -609,6 +624,10 @@ if [ $android_version_major -ge "10" ]; then
         art_path=%{android_root}/out/target/product/%{device}/system
         apex_path=apex/com.android.runtime.release
     fi
+    if [ ! -f "$art_path/$apex_path/lib/bionic/libc.so" ]; then
+        art_path=%{android_root}/out/target/product/%{device}
+        apex_path=apex/com.android.runtime
+    fi
     cp -a \
         $art_path/$apex_path/lib/bionic/lib{dl,c,m}.so \
         $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib
@@ -621,7 +640,7 @@ fi
 
 # Remove kernel modules if installed under /system/lib/modules
 rm -rf $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/modules
-cp -a %{android_root}/out/target/product/%{device}/obj/include $RPM_BUILD_ROOT%{_includedir}/droid-devel/
+cp -a %{android_root}/out/target/product/%{device}/obj/include $RPM_BUILD_ROOT%{_includedir}/droid-devel/ || true
 rm -rf $RPM_BUILD_ROOT%{_includedir}/droid-devel/lib/*.so.toc
 
 # Omit audioflingerglue bits, they get packaged via audioflingerglue-localbuild
