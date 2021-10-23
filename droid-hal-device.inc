@@ -188,7 +188,7 @@ Release: 	%{rel_date}
 Provides:	droid-hal
 
 BuildRequires:  oneshot
-BuildRequires:  systemd
+BuildRequires:  pkgconfig(systemd)
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  rsync
 # starting from Android 8
