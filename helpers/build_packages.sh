@@ -407,7 +407,7 @@ if [ "$BUILDIMAGE" = "1" ]; then
             "$srcks/$ks" > "$ks"
     fi
     if [ "$bleeding_edge_build_by_sailors" == "1" ]; then
-        tokenmap="ARCH:$PORT_ARCH,RELEASE:$RELEASE,RNDRELEASE:latest,EXTRA_NAME:$EXTRA_NAME,RNDFLAVOUR:devel,RELEASEPATTERN:,RNDPATTERN:"
+        tokenmap="ARCH:$PORT_ARCH,RELEASE:$RELEASE,RNDRELEASE:latest,EXTRA_NAME:$EXTRA_NAME,RNDFLAVOUR:devel,RELEASEPATTERN::/live:/,RNDPATTERN:devel"
         flavour=devel
     else
         tokenmap="ARCH:$PORT_ARCH,RELEASE:$RELEASE,EXTRA_NAME:$EXTRA_NAME"
