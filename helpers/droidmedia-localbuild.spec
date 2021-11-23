@@ -22,15 +22,6 @@ AutoReqProv:   no
 %description
 %{summary}
 
-%package       devel
-Summary:       droidmedia development headers
-Group:         System/Libraries
-Requires:      droidmedia = %{version}-%{release}
-BuildArch:     noarch
-
-%description   devel
-%{summary}
-
 %prep
 
 %if %{?device_rpm_architecture_string:0}%{!?device_rpm_architecture_string:1}
@@ -75,9 +66,6 @@ cp out/target/product/@DEVICE@/system/bin/minimediaservice \
 
 cp out/target/product/@DEVICE@/system/bin/minisfservice \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
-
-cp external/droidmedia/*.h $RPM_BUILD_ROOT/%{_includedir}/droidmedia/
-cp external/droidmedia/hybris.c $RPM_BUILD_ROOT/%{_datadir}/droidmedia/
 popd
 
 LIBDMSOLOC=file.list
@@ -88,9 +76,4 @@ echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libminisf.so >> ${LIBDMSOLOC}
 %defattr(-,root,root,-)
 %{_libexecdir}/droid-hybris/system/bin/minimediaservice
 %{_libexecdir}/droid-hybris/system/bin/minisfservice
-
-%files devel
-%defattr(-,root,root,-)
-%{_includedir}/droidmedia/*.h
-%{_datadir}/droidmedia/hybris.c
 
