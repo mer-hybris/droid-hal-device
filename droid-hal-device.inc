@@ -492,7 +492,7 @@ fstab_files="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{a
 shopt -u nullglob
 
 
-%{dhd_path}/helpers/makefstab --files $fstab_files  --skip auto none /acct /boot /cache /data /data/user/0 /data_mirror /data_mirror/data_ce/null /data_mirror/data_de/null /data_mirror/cur_profiles /misc /recovery /staging /storage /storage/sdcard1 /storage/usbdisk /storage/usbotg sys/fs/bpf /sys/fs/cgroup /sys/fs/cgroup/memory /sys/fs/fuse/connections /sys/fs/pstore /sys/kernel/debug /sys/kernel/config /sys/kernel/tracing /dev/cpuctl /dev/cpuset /dev/stune /dev/usb-ffs/adb /tmp %{?makefstab_skip_entries} --outputdir tmp/units
+%{dhd_path}/helpers/makefstab --files $fstab_files  --skip auto none /acct /boot /cache /data /data/user/0 /data_mirror /data_mirror/data_ce/null /data_mirror/data_de/null /data_mirror/cur_profiles /misc /recovery /staging /storage /storage/sdcard1 /storage/usbdisk /storage/usbotg /sys/fs/bpf /sys/fs/cgroup /sys/fs/cgroup/memory /sys/fs/fuse/connections /sys/fs/pstore /sys/kernel/debug /sys/kernel/config /sys/kernel/tracing /dev/cpuctl /dev/cpuset /dev/stune /dev/usb-ffs/adb /tmp %{?makefstab_skip_entries} --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
