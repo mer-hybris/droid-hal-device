@@ -40,7 +40,7 @@ Usage: $0 [OPTION]..."
    -d, --droid-hal build droid-hal-device (rpm/)
    -c, --configs   build droid-configs
    -m, --mw[=REPO] build HW middleware packages or REPO
-   -g, --gg        build droidmedia, gst-droid, gmp-droid and audioflingerglue
+   -g, --gg        build droidmedia, gst-droid, and audioflingerglue
    -v, --version   build droid-hal-version
    -i, --mic       build image
    -b, --build=PKG build one package (PKG can include path)
@@ -254,7 +254,6 @@ if [ "$BUILDMW" = "1" ]; then
                 done
                 if [ ! -z "$mw" ] \
                    && [ ! "$mw" = "gst-droid" ] \
-                   && [ ! "$mw" = "gmp-droid" ] \
                    && [ ! "$mw" = "pulseaudio-modules-droid-glue" ]; then
                     if [ -z "$spec" ]; then
                         buildmw_cmds+=("$mw")
@@ -309,8 +308,7 @@ if [ "$BUILDGG" = "1" ]; then
     # look for either DEVICE or HABUILD_DEVICE files, do not use wildcards as there could be other variants
     pattern_lookup=$(ls "$ANDROID_ROOT"/hybris/droid-configs/patterns/patterns-sailfish-device-adaptation-{$DEVICE,$HABUILD_DEVICE}.inc 2>/dev/null | uniq)
 
-    if grep -qs "^Requires: gstreamer1.0-droid" "$pattern_lookup" ||
-       grep -qs "^Requires: gmp-droid" "$pattern_lookup"; then
+    if grep -qs "^Requires: gstreamer1.0-droid" "$pattern_lookup"; then
         pkg=droidmedia
         cd external/$pkg || die "Could not change directory to external/$pkg"
         droidmedia_version=$(get_package_version "$pkg")
@@ -328,18 +326,9 @@ if [ "$BUILDGG" = "1" ]; then
         sed -ie "s/@DEVICE@/$HABUILD_DEVICE/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         mv hybris/mw/droidmedia-"$droidmedia_version".tgz hybris/mw/droidmedia-localbuild
         buildmw -Nu "droidmedia-localbuild" || die
-        if grep -qs "^Requires: gstreamer1.0-droid" "$pattern_lookup"; then
-            buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
-        else
-            minfo "Not found in patterns: gstreamer1.0-droid. Camera and app video playback will not be available"
-        fi
-        if grep -qs "^Requires: gmp-droid" "$pattern_lookup"; then
-            buildmw -u "https://github.com/sailfishos/gmp-droid.git" || die
-        else
-            minfo "Not found in patterns: gmp-droid. Browser video acceleration will not be available"
-        fi
+        buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
     else
-        minfo "Neither gstreamer1.0-droid nor gmp-droid were found in patterns, not building them or droidmedia"
+        minfo "gstreamer1.0-droid not in patterns: not building droidmedia. Camera and app video playback will not be available"
     fi
 
     if grep -qs "^Requires: pulseaudio-modules-droid-hidl" "$pattern_lookup"; then
