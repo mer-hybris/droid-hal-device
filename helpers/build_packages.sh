@@ -40,7 +40,7 @@ Usage: $0 [OPTION]..."
    -d, --droid-hal build droid-hal-device (rpm/)
    -c, --configs   build droid-configs
    -m, --mw[=REPO] build HW middleware packages or REPO
-   -g, --gg        build droidmedia, gst-droid, and audioflingerglue
+   -g, --gg        build droidmedia and supporting packages
    -v, --version   build droid-hal-version
    -i, --mic       build image
    -b, --build=PKG build one package (PKG can include path)
@@ -253,7 +253,6 @@ if [ "$BUILDMW" = "1" ]; then
                     preword=$word
                 done
                 if [ ! -z "$mw" ] \
-                   && [ ! "$mw" = "gst-droid" ] \
                    && [ ! "$mw" = "pulseaudio-modules-droid-glue" ]; then
                     if [ -z "$spec" ]; then
                         buildmw_cmds+=("$mw")
@@ -326,7 +325,6 @@ if [ "$BUILDGG" = "1" ]; then
         sed -ie "s/@DEVICE@/$HABUILD_DEVICE/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         mv hybris/mw/droidmedia-"$droidmedia_version".tgz hybris/mw/droidmedia-localbuild
         buildmw -Nu "droidmedia-localbuild" || die
-        buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
     else
         minfo "gstreamer1.0-droid not in patterns: not building droidmedia. Camera and app video playback will not be available"
     fi
