@@ -18,10 +18,7 @@ mkdir $fold
 
 mkdir -p $fold/out/target/product/${OUT_DEVICE}/system/${DROIDLIB}
 mkdir -p $fold/out/target/product/${OUT_DEVICE}/system/bin
-mkdir -p $fold/external/droidmedia
 
-cp ./external/droidmedia/*.h $fold/external/droidmedia/
-cp ./external/droidmedia/hybris.c $fold/external/droidmedia/
 cp ./out/target/product/${OUT_DEVICE}/system/${DROIDLIB}/libdroidmedia.so $fold/out/target/product/${OUT_DEVICE}/system/${DROIDLIB}/
 cp ./out/target/product/${OUT_DEVICE}/system/${DROIDLIB}/libminisf.so $fold/out/target/product/${OUT_DEVICE}/system/${DROIDLIB}/
 cp ./out/target/product/${OUT_DEVICE}/system/bin/minimediaservice $fold/out/target/product/${OUT_DEVICE}/system/bin/

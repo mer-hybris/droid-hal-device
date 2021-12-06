@@ -328,6 +328,7 @@ if [ "$BUILDGG" = "1" ]; then
         sed -ie "s/@DEVICE@/$HABUILD_DEVICE/" hybris/mw/droidmedia-localbuild/rpm/droidmedia.spec
         mv hybris/mw/droidmedia-"$droidmedia_version".tgz hybris/mw/droidmedia-localbuild
         buildmw -Nu "droidmedia-localbuild" || die
+        buildmw -u "droidmedia" -s "rpm/droidmedia-devel.spec"
         if grep -qs "^Requires: gstreamer1.0-droid" "$pattern_lookup"; then
             buildmw -u "https://github.com/sailfishos/gst-droid.git" || die
         else
