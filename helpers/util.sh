@@ -322,14 +322,16 @@ build() {
         minfo "No spec file for package building specified, building all I can find."
         set -- rpm/*.spec
     fi
+    # Cleanup previously build packages since if we pass
+    # --package-timeline to mb2 it won't clean them before buillding.
+    rm -rf RPMS
     for SPEC in "$@" ; do
         minfo "Building $SPEC"
-        mb2 -s $SPEC -t $VENDOR-$DEVICE-$PORT_ARCH $NO_AUTO_VERSION \
+        mb2 \
+            -s $SPEC \
+            -t $VENDOR-$DEVICE-$PORT_ARCH \
+            --package-timeline $NO_AUTO_VERSION \
             build >>$LOG 2>&1|| die "building of package failed"
-        # RPMS directory gets emptied when mb2 starts, so let's put packages
-        # to the side in case of multiple .spec file builds
-        mkdir RPMS.saved &>/dev/null
-        mv RPMS/*.rpm RPMS.saved/
     done
 }
 
@@ -343,8 +345,7 @@ deploy() {
     if [ -z "$NODELETE" ]; then
         rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm >>$LOG 2>&1|| die
     fi
-    mv RPMS.saved/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
-    rmdir RPMS.saved
+    mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
     $CREATEREPO "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
     if [ "$BUILDOFFLINE" = "1" ]; then
