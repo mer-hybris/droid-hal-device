@@ -310,7 +310,7 @@ buildmw() {
             fi
         fi
 
-        build "$MW_BUILDSPEC"
+        build $MW_BUILDSPEC
 
         deploy $PKG $DO_NOT_INSTALL
 
@@ -320,12 +320,11 @@ buildmw() {
 }
 
 build() {
-    SPECS=$@
-    if [ -z "$SPECS" ]; then
+    if [ $# -eq 0 ] || [ -z "$1" ]; then
         minfo "No spec file for package building specified, building all I can find."
-        SPECS="rpm/*.spec"
+        set -- rpm/*.spec
     fi
-    for SPEC in $SPECS ; do
+    for SPEC in "$@" ; do
         minfo "Building $SPEC"
         mb2 -s $SPEC -t $VENDOR-$DEVICE-$PORT_ARCH $NO_AUTO_VERSION \
             build >>$LOG 2>&1|| die "building of package failed"
