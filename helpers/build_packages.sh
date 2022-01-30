@@ -46,6 +46,9 @@ Usage: $0 [OPTION]..."
    -b, --build=PKG build one package (PKG can include path)
    -s, --spec=SPEC optionally used with -m or -b
                    can be supplied multiple times to build multiple .spec files at once
+   -q, --quiet     optionally used with -m
+                   build all HW middleware packages without interactively prompting
+                   which to build
    -D, --do-not-install
                    useful when package is needed only in the final image
                    especially when it conflicts in an SDK target
@@ -59,7 +62,7 @@ EOF
     exit 1
 }
 
-OPTIONS=$(getopt -o hdcm::gvib:s:DonN -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,do-not-install,offline,no-delete,no-auto-version -- "$@")
+OPTIONS=$(getopt -o hdcm::gvib:s:qDonN -l help,droid-hal,configs,mw::,gg,version,mic,build:,spec:,quiet,do-not-install,offline,no-delete,no-auto-version -- "$@")
 
 if [ $? -ne 0 ]; then
     echo "getopt error"
@@ -86,8 +89,9 @@ while true; do
       -c|--configs) BUILDCONFIGS=1 ;;
       -D|--do-not-install) DO_NOT_INSTALL=1;;
       -N|--no-auto-version) NO_AUTO_VERSION=--no-fix-version ;;
+      -q|--quiet) BUILDMW_ASK= ;;
       -m|--mw) BUILDMW=1
-          BUILDMW_ASK=1
+          [ ${BUILDMW_ASK+x} ] || BUILDMW_ASK=1
           case "$2" in
               *) BUILDMW_REPO=$2;;
           esac
