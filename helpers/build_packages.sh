@@ -190,7 +190,9 @@ if [ "$BUILDCONFIGS" = "1" ]; then
 fi
 
 if [ "$BUILDMW" = "1" ]; then
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
+    if ! sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R ssu s 2>/dev/null | grep -q "Device registration status: registered"; then
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
+    fi
     sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
 
     if [ "$BUILDOFFLINE" = "1" ]; then
