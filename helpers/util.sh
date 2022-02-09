@@ -94,7 +94,7 @@ mkdir -p $LOCAL_REPO
 
 # These lines can be reverted when everyone'll have jumped on at least 2.2.2 targets
 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper in -h | \
-  fgrep -q -- --allow-unsigned-rpm && ALLOW_UNSIGNED_RPM="--allow-unsigned-rpm"
+  grep -F -q -- --allow-unsigned-rpm && ALLOW_UNSIGNED_RPM="--allow-unsigned-rpm"
 
 initlog() {
     LOGPATH="$PWD"
