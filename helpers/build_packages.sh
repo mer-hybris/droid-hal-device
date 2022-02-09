@@ -186,6 +186,8 @@ if [ "$BUILDCONFIGS" = "1" ]; then
     buildconfigs
     if grep -qsE "^(-|Requires:) droid-config-$DEVICE-bluez5" hybris/droid-configs/patterns/*.inc; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper -n install droid-config-$DEVICE-bluez5
+        # If using the latest SDK with snapshots, remove it to avoid /etc/bluetooth as symlink failure later on
+        sdk-assistant remove --non-interactive --snapshots-of $VENDOR-$DEVICE-$PORT_ARCH >/dev/null || true
     fi
 fi
 

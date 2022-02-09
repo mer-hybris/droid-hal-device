@@ -351,7 +351,7 @@ deploy() {
     if [ "$BUILDOFFLINE" = "1" ]; then
         sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref local-$DEVICE-hal || die "can't refresh local hal repo"
     else
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't refresh repositories"
+        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't refresh repositories"
     fi
     DO_NOT_INSTALL=$2
     if [ "$PKG" = "libhybris" ]; then
