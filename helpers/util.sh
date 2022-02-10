@@ -305,6 +305,8 @@ buildmw() {
             if [ ! $ret -eq 104 ]; then
                 minfo "Applying cpio fix..."
                 sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper --non-interactive install --force-resolution cpio>>$LOG 2>&1|| die "can't install cpio"
+                # If using the latest SDK with snapshots, remove it to avoid busybox symlinks failure later on
+                sdk-assistant remove --non-interactive --snapshots-of $VENDOR-$DEVICE-$PORT_ARCH >/dev/null || true
             fi
         fi
 
