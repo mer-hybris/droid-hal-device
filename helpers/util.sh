@@ -36,6 +36,7 @@ PORT_ARCH="${PORT_ARCH:-armv7hl}"
 LOG="/dev/null"
 CREATEREPO="createrepo_c"
 ALLOW_UNSIGNED_RPM=""
+PLUS_LOCAL_REPO=""
 
 minfo() {
     echo -e "\e[01;34m* $* \e[00m"
@@ -91,9 +92,15 @@ if [ $ret -eq 104 ]; then
 fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
+PLUS_LOCAL_REPO="--plus-repo $LOCAL_REPO"
+
+mb2() {
+    # Avoid using snapshots at least until fix for JB#57370 is released
+    command mb2 --no-snapshot=force "$@"
+}
 
 # These lines can be reverted when everyone'll have jumped on at least 2.2.2 targets
-sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper in -h | \
+mb2 -t $VENDOR-$DEVICE-$PORT_ARCH build-shell --maintain zypper in -h | \
   grep -F -q -- --allow-unsigned-rpm && ALLOW_UNSIGNED_RPM="--allow-unsigned-rpm"
 
 initlog() {
@@ -149,12 +156,11 @@ buildconfigs() {
     cd hybris/$PKG
     initlog $PKG $(dirname "$PWD")
     build rpm/droid-config-$DEVICE.spec
-    deploy $PKG do_not_install
     # installroot no longer exists since Platform SDK 2.2.0, let's put KS back
     rm -rf installroot
     mkdir installroot
     cd installroot
-    rpm2cpio $ANDROID_ROOT/droid-local-repo/$DEVICE/droid-configs/droid-config-$DEVICE-ssu-kickstarts-1-*.$PORT_ARCH.rpm | cpio -idv &> /dev/null
+    rpm2cpio $ANDROID_ROOT/droid-local-repo/$DEVICE/droid-config-$DEVICE-ssu-kickstarts-1-*.$PORT_ARCH.rpm | cpio -idv &> /dev/null
     cd ../../../
 }
 
@@ -166,7 +172,6 @@ builddhd() {
     else
         build rpm/droid-hal-$DEVICE.spec
     fi
-    deploy $PKG do_not_install
 }
 
 buildversion() {
@@ -175,7 +180,6 @@ buildversion() {
     cd $dir/..
     initlog $PKG $(dirname "$PWD")
     build rpm/$PKG.spec
-    deploy $PKG do_not_install
     cd ../../
 }
 
@@ -281,36 +285,44 @@ buildmw() {
             sed "s/%{?qa_stage_devel:--enable-arm-tracing}/--enable-arm-tracing/g" -i rpm/libhybris.spec
         elif [[ "$PKG" == "droid-hal-img-boot"* ]]; then
             # Remove existing img-boot
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper --non-interactive remove droid-hal-img-boot > /dev/null
+            mb2 -t $VENDOR-$DEVICE-$PORT_ARCH build-shell --maintain zypper --non-interactive remove droid-hal-img-boot > /dev/null
             # Both cases are possible:
             #   droid-hal-$DEVICE-* and droid-hal-$HABUILD_DEVICE-*
             # The latter is used when HW has variants, e.g.:
             #   DEVICE=i4113, HABUILD_DEVICE=kirin
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i droid-hal-$HABUILD_DEVICE-kernel-modules > /dev/null
+            mb2 -t $VENDOR-$DEVICE-$PORT_ARCH build-shell --maintain zypper se -i droid-hal-$HABUILD_DEVICE-kernel-modules > /dev/null
             ret=$?
             if [ $ret -eq 104 ]; then
-                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i droid-hal-$DEVICE-kernel-modules > /dev/null
+                mb2 -t $VENDOR-$DEVICE-$PORT_ARCH build-shell --maintain zypper se -i droid-hal-$DEVICE-kernel-modules > /dev/null
                 ret=$?
                 if [ $ret -eq 104 ]; then
                     minfo "Installing kernel and modules..."
-                    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper --non-interactive install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules &> /dev/null
+                    mb2 -t $VENDOR-$DEVICE-$PORT_ARCH build-shell --maintain zypper --non-interactive $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules &> /dev/null
                     ret=$?
                     if [ $ret -eq 104 ]; then
-                        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper --non-interactive install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-kernel droid-hal-$DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
+                        mb2 -t $VENDOR-$DEVICE-$PORT_ARCH build-shell --maintain zypper --non-interactive $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-kernel droid-hal-$DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
                     fi
                 fi
             fi
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i busybox-symlinks-cpio > /dev/null
+            mb2 -t $VENDOR-$DEVICE-$PORT_ARCH build-shell --maintain zypper se -i busybox-symlinks-cpio > /dev/null
             ret=$?
             if [ ! $ret -eq 104 ]; then
                 minfo "Applying cpio fix..."
-                sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper --non-interactive install --force-resolution cpio>>$LOG 2>&1|| die "can't install cpio"
+                mb2 -t $VENDOR-$DEVICE-$PORT_ARCH build-shell --maintain zypper --non-interactive install --force-resolution cpio>>$LOG 2>&1|| die "can't install cpio"
             fi
         fi
 
         build $MW_BUILDSPEC
 
-        deploy $PKG $DO_NOT_INSTALL
+        if [ "$PKG" = "libhybris" ]; then
+            # If this is the first installation of libhybris simply remove mesa,
+            # assuming it's v19 or newer (introduced in Sailfish OS 3.1.0)
+            # TODO hook me
+            if mb2 -t "$SFDK_TARGET" build-shell --maintain rpm -q mesa-llvmpipe |grep -q .; then
+                mb2 -t "$SFDK_TARGET" build-shell --maintain zypper -n $PLUS_LOCAL_REPO in --force-resolution libhybris-libEGL libhybris-libGLESv2 libhybris-libEGL-devel libhybris-libGLESv2-devel >>$LOG 2>&1|| die "could not install libhybris-{libEGL,libGLESv2}"
+                mb2 -t "$SFDK_TARGET" build-shell --maintain zypper -n rm mesa-llvmpipe-libgbm mesa-llvmpipe-libglapi >>$LOG 2>&1
+            fi
+        fi
 
         popd > /dev/null
         popd > /dev/null
@@ -331,50 +343,9 @@ build() {
             -s $SPEC \
             -t $VENDOR-$DEVICE-$PORT_ARCH \
             --package-timeline $NO_AUTO_VERSION \
+            --output-dir "$LOCAL_REPO" \
             build >>$LOG 2>&1|| die "building of package failed"
     done
-}
-
-deploy() {
-    PKG=$1
-    if [ -z "$PKG" ]; then
-        die "Please provide a package name to build"
-    fi
-    minfo "Building successful, adding packages to repo"
-    mkdir -p "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die
-    if [ -z "$NODELETE" ]; then
-        rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm >>$LOG 2>&1|| die
-    fi
-    mv RPMS/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
-    $CREATEREPO "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
-    if [ "$BUILDOFFLINE" = "1" ]; then
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref local-$DEVICE-hal || die "can't refresh local hal repo"
-    else
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't refresh repositories"
-    fi
-    DO_NOT_INSTALL=$2
-    if [ "$PKG" = "libhybris" ]; then
-        # If this is the first installation of libhybris simply remove mesa,
-        # assuming it's v19 or newer (introduced in Sailfish OS 3.1.0)
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i mesa-llvmpipe > /dev/null
-        ret=$?
-        if [ $ret -eq 104 ]; then
-            DO_NOT_INSTALL=
-        else
-            DO_NOT_INSTALL=1
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n in --force-resolution libhybris-libEGL libhybris-libGLESv2 libhybris-libEGL-devel libhybris-libGLESv2-devel >>$LOG 2>&1|| die "could not install libhybris-{libEGL,libGLESv2}"
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe-libgbm mesa-llvmpipe-libglapi >>$LOG 2>&1
-        fi
-    fi
-    if [ -z $DO_NOT_INSTALL ]; then
-        # Force install due to Version unchanging in local builds,
-        # and dup wouldn't work either
-        # TODO: regexp match an RPM package filename to extract package name only,
-        # so then it becomes possible to zypper install --force elegantly
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper --non-interactive install --force $ALLOW_UNSIGNED_RPM $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
-    fi
-    minfo "Building of $PKG finished successfully"
 }
 
 buildpkg() {
@@ -386,7 +357,6 @@ buildpkg() {
     initlog $PKG $(dirname "$PWD")
     shift
     build "$@"
-    deploy $PKG "$DO_NOT_INSTALL"
     popd > /dev/null
 }
 
