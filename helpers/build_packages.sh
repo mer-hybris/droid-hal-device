@@ -185,7 +185,7 @@ if [ "$BUILDCONFIGS" = "1" ]; then
     fi
     buildconfigs
     if grep -qsE "^(-|Requires:) droid-config-$DEVICE-bluez5" hybris/droid-configs/patterns/*.inc; then
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n install droid-config-$DEVICE-bluez5
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install droid-config-$DEVICE-bluez5
     fi
 fi
 
@@ -195,16 +195,14 @@ if [ "$BUILDMW" = "1" ]; then
     fi
     sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu dr sdk
 
-    if [ "$BUILDOFFLINE" = "1" ]; then
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper ref local-$DEVICE-hal
-    else
+    if [ "$BUILDOFFLINE" != "1" ]; then
         sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper ref
     fi
 
     if [ "$FAMILY" == "" ]; then
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
     else
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
     fi
 
     if [ "$(sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ls -A /usr/include/droid-devel/droid-headers/android-version.h 2> /dev/null)" ]; then

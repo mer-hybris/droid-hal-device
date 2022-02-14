@@ -36,6 +36,7 @@ PORT_ARCH="${PORT_ARCH:-armv7hl}"
 LOG="/dev/null"
 CREATEREPO="createrepo_c"
 ALLOW_UNSIGNED_RPM=""
+PLUS_LOCAL_REPO=""
 
 minfo() {
     echo -e "\e[01;34m* $* \e[00m"
@@ -91,6 +92,7 @@ if [ $ret -eq 104 ]; then
 fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
+PLUS_LOCAL_REPO="--plus-repo $LOCAL_REPO"
 
 sdk-assistant() {
     command sdk-assistant --non-interactive "$@"
@@ -297,10 +299,10 @@ buildmw() {
                 ret=$?
                 if [ $ret -eq 104 ]; then
                     minfo "Installing kernel and modules..."
-                    sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules &> /dev/null
+                    sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules &> /dev/null
                     ret=$?
                     if [ $ret -eq 104 ]; then
-                        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-kernel droid-hal-$DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
+                        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-kernel droid-hal-$DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
                     fi
                 fi
             fi
