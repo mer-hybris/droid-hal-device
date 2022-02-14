@@ -159,7 +159,7 @@ buildconfigs() {
     PKG=droid-configs
     cd hybris/$PKG
     initlog $PKG $(dirname "$PWD")
-    build rpm/droid-config-$DEVICE.spec
+    build $PKG rpm/droid-config-$DEVICE.spec
     # installroot no longer exists since Platform SDK 2.2.0, let's put KS back
     rm -rf installroot
     mkdir installroot
@@ -172,9 +172,9 @@ builddhd() {
     PKG=droid-hal-$DEVICE
     initlog $PKG
     if [ -e "rpm/droid-hal-$HABUILD_DEVICE.spec" ]; then
-        build rpm/droid-hal-$HABUILD_DEVICE.spec
+        build $PKG rpm/droid-hal-$HABUILD_DEVICE.spec
     else
-        build rpm/droid-hal-$DEVICE.spec
+        build $PKG rpm/droid-hal-$DEVICE.spec
     fi
 }
 
@@ -183,7 +183,7 @@ buildversion() {
     dir=$(dirname $(find hybris -name $PKG.spec))
     cd $dir/..
     initlog $PKG $(dirname "$PWD")
-    build rpm/$PKG.spec
+    build $PKG rpm/$PKG.spec
     cd ../../
 }
 
@@ -316,7 +316,7 @@ buildmw() {
             fi
         fi
 
-        build "$MW_BUILDSPEC"
+        build $PKG "$MW_BUILDSPEC"
 
         if [ "$PKG" = "libhybris" ]; then
             # If this is the first installation of libhybris simply remove mesa,
@@ -334,6 +334,8 @@ buildmw() {
 }
 
 build() {
+    PKG=$1
+    shift
     SPECS=$@
     if [ -z "$SPECS" ]; then
         minfo "No spec file for package building specified, building all I can find."
@@ -355,6 +357,7 @@ build() {
             --output-dir "$LOCAL_REPO" \
             build >>$LOG 2>&1|| die "building of package failed"
     done
+    minfo "Building of $PKG finished successfully"
 }
 
 buildpkg() {
@@ -365,7 +368,7 @@ buildpkg() {
     PKG=$(basename "$1")
     initlog $PKG $(dirname "$PWD")
     shift
-    build "$@"
+    build $PKG "$@"
     popd > /dev/null
 }
 
