@@ -274,7 +274,6 @@ if [ "$BUILDMW" = "1" ]; then
 
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid.git" \
                 -s rpm/pulseaudio-modules-droid.spec || die
-        buildmw -u "https://github.com/mer-hybris/audiosystem-passthrough.git" || die
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
         buildmw -u "https://github.com/mer-hybris/mce-plugin-libhybris" || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
