@@ -94,6 +94,12 @@ LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
 PLUS_LOCAL_REPO="--plus-repo $LOCAL_REPO"
 
+mb2() {
+    # Changes in this build script are done in the original build target
+    # which subsequently redefines the device's clean build environment
+    command mb2 --no-snapshot=force "$@"
+}
+
 sdk-assistant() {
     command sdk-assistant --non-interactive "$@"
 }
