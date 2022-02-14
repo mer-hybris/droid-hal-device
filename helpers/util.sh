@@ -94,6 +94,11 @@ LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
 PLUS_LOCAL_REPO="--plus-repo $LOCAL_REPO"
 
+mb2() {
+    # Avoid using snapshots at least until SFOS next version (after 4.3.0) is released
+    command mb2 --no-snapshot=force "$@"
+}
+
 sdk-assistant() {
     command sdk-assistant --non-interactive "$@"
 }
