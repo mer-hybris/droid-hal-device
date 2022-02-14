@@ -155,7 +155,6 @@ buildconfigs() {
     cd hybris/$PKG
     initlog $PKG $(dirname "$PWD")
     build rpm/droid-config-$DEVICE.spec
-    deploy $PKG do_not_install
     # installroot no longer exists since Platform SDK 2.2.0, let's put KS back
     rm -rf installroot
     mkdir installroot
@@ -172,7 +171,6 @@ builddhd() {
     else
         build rpm/droid-hal-$DEVICE.spec
     fi
-    deploy $PKG do_not_install
 }
 
 buildversion() {
@@ -181,7 +179,6 @@ buildversion() {
     cd $dir/..
     initlog $PKG $(dirname "$PWD")
     build rpm/$PKG.spec
-    deploy $PKG do_not_install
     cd ../../
 }
 
@@ -316,7 +313,15 @@ buildmw() {
 
         build "$MW_BUILDSPEC"
 
-        deploy $PKG $DO_NOT_INSTALL
+        if [ "$PKG" = "libhybris" ]; then
+            # If this is the first installation of libhybris simply remove mesa,
+            # assuming it's v19 or newer (introduced in Sailfish OS 3.1.0)
+            # TODO hook me
+            if sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH rpm -q mesa-llvmpipe |grep -q .; then
+                sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO in --force-resolution libhybris-libEGL libhybris-libGLESv2 libhybris-libEGL-devel libhybris-libGLESv2-devel >>$LOG 2>&1|| die "could not install libhybris-{libEGL,libGLESv2}"
+                sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n rm mesa-llvmpipe-libgbm mesa-llvmpipe-libglapi >>$LOG 2>&1
+            fi
+        fi
 
         popd > /dev/null
         popd > /dev/null
@@ -329,58 +334,22 @@ build() {
         minfo "No spec file for package building specified, building all I can find."
         SPECS="rpm/*.spec"
     fi
+
+    # The release number of these packages change each time the .spec is queried (contains
+    # timestamp), so mb2 would fail to preserve the latest (just built) packages. Use
+    # --package-timeline as a workaround.
+    local PACKAGE_TIMELINE=
+    [[ $PKG == droid-hal-* ]] || [[ $PKG == droid-configs ]] && PACKAGE_TIMELINE=--package-timeline
+
     for SPEC in $SPECS ; do
         minfo "Building $SPEC"
-        mb2 -s $SPEC -t $VENDOR-$DEVICE-$PORT_ARCH $NO_AUTO_VERSION \
+        mb2 \
+            -s $SPEC \
+            -t $VENDOR-$DEVICE-$PORT_ARCH \
+            $PACKAGE_TIMELINE $NO_AUTO_VERSION \
+            --output-dir "$LOCAL_REPO" \
             build >>$LOG 2>&1|| die "building of package failed"
-        # RPMS directory gets emptied when mb2 starts, so let's put packages
-        # to the side in case of multiple .spec file builds
-        mkdir RPMS.saved &>/dev/null
-        mv RPMS/*.rpm RPMS.saved/
     done
-}
-
-deploy() {
-    PKG=$1
-    if [ -z "$PKG" ]; then
-        die "Please provide a package name to build"
-    fi
-    minfo "Building successful, adding packages to repo"
-    mkdir -p "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die
-    if [ -z "$NODELETE" ]; then
-        rm -f "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/"*.rpm >>$LOG 2>&1|| die
-    fi
-    mv RPMS.saved/*.rpm "$ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG" >>$LOG 2>&1|| die "Failed to deploy the package"
-    rmdir RPMS.saved
-    $CREATEREPO "$ANDROID_ROOT/droid-local-repo/$DEVICE" >>$LOG 2>&1|| die "can't create repo"
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install ssu ar local-$DEVICE-hal file://$LOCAL_REPO >>$LOG 2>&1|| die "can't add repo to target"
-    if [ "$BUILDOFFLINE" = "1" ]; then
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref local-$DEVICE-hal || die "can't refresh local hal repo"
-    else
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref || die "can't refresh repositories"
-    fi
-    DO_NOT_INSTALL=$2
-    if [ "$PKG" = "libhybris" ]; then
-        # If this is the first installation of libhybris simply remove mesa,
-        # assuming it's v19 or newer (introduced in Sailfish OS 3.1.0)
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i mesa-llvmpipe > /dev/null
-        ret=$?
-        if [ $ret -eq 104 ]; then
-            DO_NOT_INSTALL=
-        else
-            DO_NOT_INSTALL=1
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n in --force-resolution libhybris-libEGL libhybris-libGLESv2 libhybris-libEGL-devel libhybris-libGLESv2-devel >>$LOG 2>&1|| die "could not install libhybris-{libEGL,libGLESv2}"
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n rm mesa-llvmpipe-libgbm mesa-llvmpipe-libglapi >>$LOG 2>&1
-        fi
-    fi
-    if [ -z $DO_NOT_INSTALL ]; then
-        # Force install due to Version unchanging in local builds,
-        # and dup wouldn't work either
-        # TODO: regexp match an RPM package filename to extract package name only,
-        # so then it becomes possible to zypper install --force elegantly
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper --non-interactive install --force $ALLOW_UNSIGNED_RPM $ANDROID_ROOT/droid-local-repo/$DEVICE/$PKG/*.rpm>>$LOG 2>&1|| die "can't install the package"
-    fi
-    minfo "Building of $PKG finished successfully"
 }
 
 buildpkg() {
@@ -392,7 +361,6 @@ buildpkg() {
     initlog $PKG $(dirname "$PWD")
     shift
     build "$@"
-    deploy $PKG "$DO_NOT_INSTALL"
     popd > /dev/null
 }
 

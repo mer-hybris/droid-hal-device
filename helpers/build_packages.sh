@@ -46,9 +46,6 @@ Usage: $0 [OPTION]..."
    -b, --build=PKG build one package (PKG can include path)
    -s, --spec=SPEC optionally used with -m or -b
                    can be supplied multiple times to build multiple .spec files at once
-   -D, --do-not-install
-                   useful when package is needed only in the final image
-                   especially when it conflicts in an SDK target
    -N  --no-auto-version
                    Tell mb2 to not fix the version inside a spec file
    -o, --offline   build offline after all repos have been cloned or refreshed
@@ -84,7 +81,8 @@ while true; do
       -h|--help) usage ;;
       -d|--droid-hal) BUILDDHD=1 ;;
       -c|--configs) BUILDCONFIGS=1 ;;
-      -D|--do-not-install) DO_NOT_INSTALL=1;;
+      -D|--do-not-install)
+          echo "The '$1' option is not needed anymore and is currently ignored" >&2;;
       -N|--no-auto-version) NO_AUTO_VERSION=--no-fix-version ;;
       -m|--mw) BUILDMW=1
           BUILDMW_ASK=1
@@ -364,16 +362,23 @@ if [ "$BUILDIMAGE" = "1" ]; then
     if sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu s 2>/dev/null | grep -q "Release (rnd): latest (devel)"; then
         bleeding_edge_build_by_sailors=1
     fi
+
+    # Use custom location so that `zypper --plus-repo` does not pick it up - we
+    # want zypper to always rescan the directory instead of forcing us to keep
+    # the repodata up to date.
+    mkdir -p $LOCAL_REPO/repo
+    $CREATEREPO --outputdir=$LOCAL_REPO/repo --location-prefix=../ $LOCAL_REPO || die "can't create repo"
+
     if [ "$bleeding_edge_build_by_sailors" == "1" ]; then
         ks="Jolla-@RNDRELEASE@-@RNDFLAVOUR@-$DEVICE-@ARCH@.ks"
         ha_repo="repo --name=adaptation0-$DEVICE-@RNDRELEASE@-@RNDFLAVOUR@"
         if grep -q "$ha_repo" "$srcks/$ks"; then
-            sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$ANDROID_ROOT/droid-local-repo/$DEVICE|" \
+            sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$LOCAL_REPO/repo|" \
                 "$srcks/$ks" > $ks
         else
             # Adaptation doesn't have its repo yet
             repo_marker="repo --name=apps-@RNDRELEASE@-@RNDFLAVOUR@"
-            sed "/$repo_marker/i$ha_repo --baseurl=file:\/\/$ANDROID_ROOT\/droid-local-repo\/$DEVICE" \
+            sed "/$repo_marker/i$ha_repo --baseurl=file://$LOCAL_REPO/repo" \
                 "$srcks/$ks" > "$ks"
         fi
     elif [ "$community_adaptation" == "1" ]; then
@@ -383,12 +388,12 @@ if [ "$BUILDIMAGE" = "1" ]; then
             # aarch64 ports have no community-common repo for now
             ha_repo="repo --name=apps-@RELEASE@"
         fi
-        sed "/$ha_repo/i$ha_dev --baseurl=file:\/\/$ANDROID_ROOT\/droid-local-repo\/$DEVICE" \
+        sed "/$ha_repo/i$ha_dev --baseurl=file://$LOCAL_REPO/repo" \
             "$srcks/$ks" > "$ks"
         community_build="community"
     else
         ha_repo="repo --name=adaptation0-$DEVICE-@RELEASE@"
-        sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$ANDROID_ROOT/droid-local-repo/$DEVICE|" \
+        sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$LOCAL_REPO/repo|" \
             "$srcks/$ks" > "$ks"
     fi
     if [ "$bleeding_edge_build_by_sailors" == "1" ]; then
