@@ -136,6 +136,8 @@ buildconfigs() {
     PKG=droid-configs
     cd hybris/$PKG
     initlog $PKG $(dirname "$PWD")
+    # Remove leftovers until SDK with a fix is publicly released
+    rm -f "$LOCAL_REPO"/{droid-config-*,patterns-sailfish-device-*}
     build $PKG rpm/droid-config-$DEVICE.spec
     # installroot no longer exists since Platform SDK 2.2.0, let's put KS back
     rm -rf installroot
@@ -149,8 +151,12 @@ builddhd() {
     PKG=droid-hal-$DEVICE
     initlog $PKG
     if [ -e "rpm/droid-hal-$HABUILD_DEVICE.spec" ]; then
+        # Remove leftovers until SDK with a fix is publicly released
+        rm -f "$LOCAL_REPO"/droid-hal-$HABUILD_DEVICE-[^i]*
         build $PKG rpm/droid-hal-$HABUILD_DEVICE.spec
     else
+        # Remove leftovers until SDK with a fix is publicly released
+        rm -f "$LOCAL_REPO"/droid-hal-$DEVICE-[^i]*
         build $PKG rpm/droid-hal-$DEVICE.spec
     fi
 }
@@ -160,6 +166,8 @@ buildversion() {
     dir=$(dirname $(find hybris -name $PKG.spec))
     cd $dir/..
     initlog $PKG $(dirname "$PWD")
+    # Remove leftovers until SDK with a fix is publicly released
+    rm -f "$LOCAL_REPO"/droid-hal-version-*
     build $PKG rpm/$PKG.spec
     cd ../../
 }
