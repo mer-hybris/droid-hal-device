@@ -366,7 +366,7 @@ if [ "$BUILDIMAGE" = "1" ]; then
     # want zypper to always rescan the directory instead of forcing us to keep
     # the repodata up to date.
     mkdir -p $LOCAL_REPO/repo
-    $CREATEREPO --outputdir=$LOCAL_REPO/repo --location-prefix=../ $LOCAL_REPO || die "can't create repo"
+    createrepo_c --outputdir=$LOCAL_REPO/repo --location-prefix=../ $LOCAL_REPO || die "can't create repo"
 
     if [ "$bleeding_edge_build_by_sailors" == "1" ]; then
         ks="Jolla-@RNDRELEASE@-@RNDFLAVOUR@-$DEVICE-@ARCH@.ks"

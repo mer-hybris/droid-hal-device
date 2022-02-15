@@ -34,7 +34,6 @@
 
 PORT_ARCH="${PORT_ARCH:-armv7hl}"
 LOG="/dev/null"
-CREATEREPO="createrepo_c"
 ALLOW_UNSIGNED_RPM=""
 PLUS_LOCAL_REPO=""
 
@@ -68,28 +67,6 @@ if [ -z $HABUILD_DEVICE ]; then
 fi
 
 mkdir -p $ANDROID_ROOT/hybris/mw
-# checking if a package is installed, no need to go through repos
-zypper --disable-repositories se -i createrepo_c > /dev/null
-ret=$?
-if [ $ret -eq 104 ]; then
-    ANDROID_TOOLS=""
-    zypper se createrepo_c > /dev/null
-    ret=$?
-    if [ $ret -eq 104 ]; then # SDK older than 2.2.0
-        CREATEREPO="createrepo"
-        zypper se -i createrepo > /dev/null
-        ret=$?
-        if [ $ret -eq 104 ]; then
-            ANDROID_TOOLS="android-tools"
-        fi
-    else
-        ANDROID_TOOLS="android-tools-hadk"
-    fi
-    if [ -n "$ANDROID_TOOLS" ]; then
-        minfo Installing required Platform SDK packages
-        sudo zypper -n in $ANDROID_TOOLS $CREATEREPO zip tar rpm-python
-    fi
-fi
 LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
 PLUS_LOCAL_REPO="--plus-repo $LOCAL_REPO"
