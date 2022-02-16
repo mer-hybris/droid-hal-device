@@ -34,7 +34,6 @@
 
 PORT_ARCH="${PORT_ARCH:-armv7hl}"
 LOG="/dev/null"
-ALLOW_UNSIGNED_RPM=""
 PLUS_LOCAL_REPO=""
 
 minfo() {
@@ -80,10 +79,6 @@ mb2() {
 sdk-assistant() {
     command sdk-assistant --non-interactive "$@"
 }
-
-# These lines can be reverted when everyone'll have jumped on at least 2.2.2 targets
-sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper in -h | \
-  grep -F -q -- --allow-unsigned-rpm && ALLOW_UNSIGNED_RPM="--allow-unsigned-rpm"
 
 initlog() {
     LOGPATH="$PWD"
@@ -287,10 +282,10 @@ buildmw() {
                 ret=$?
                 if [ $ret -eq 104 ]; then
                     minfo "Installing kernel and modules..."
-                    sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules &> /dev/null
+                    sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install --allow-unsigned-rpm droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules &> /dev/null
                     ret=$?
                     if [ $ret -eq 104 ]; then
-                        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-kernel droid-hal-$DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
+                        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install --allow-unsigned-rpm droid-hal-$DEVICE-kernel droid-hal-$DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
                     fi
                 fi
             fi
