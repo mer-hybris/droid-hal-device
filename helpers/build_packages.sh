@@ -272,8 +272,12 @@ if [ "$BUILDMW" = "1" ]; then
     else
         buildmw -u "https://github.com/mer-hybris/libhybris" || die
 
-        buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid.git" \
-                -s rpm/pulseaudio-modules-droid.spec || die
+        if [ $android_version_major -le 10 ]; then
+            buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-jb2q.git" \
+                    -s rpm/pulseaudio-modules-droid-jb2q.spec || die
+        else
+            buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid.git" || die
+        fi
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
         buildmw -u "https://github.com/mer-hybris/mce-plugin-libhybris" || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
