@@ -46,9 +46,6 @@ Usage: $0 [OPTION]..."
    -b, --build=PKG build one package (PKG can include path)
    -s, --spec=SPEC optionally used with -m or -b
                    can be supplied multiple times to build multiple .spec files at once
-   -D, --do-not-install
-                   useful when package is needed only in the final image
-                   especially when it conflicts in an SDK target
    -N  --no-auto-version
                    Tell mb2 to not fix the version inside a spec file
    -o, --offline   build offline after all repos have been cloned or refreshed
@@ -84,7 +81,8 @@ while true; do
       -h|--help) usage ;;
       -d|--droid-hal) BUILDDHD=1 ;;
       -c|--configs) BUILDCONFIGS=1 ;;
-      -D|--do-not-install) DO_NOT_INSTALL=1;;
+      -D|--do-not-install)
+          echo "The '$1' option is not needed anymore and is currently ignored" >&2;;
       -N|--no-auto-version) NO_AUTO_VERSION=--no-fix-version ;;
       -m|--mw) BUILDMW=1
           BUILDMW_ASK=1
@@ -150,11 +148,11 @@ if [ "$BUILDCONFIGS" = "1" ]; then
         else
             build_community="localbuild"
         fi
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se -i community-adaptation > /dev/null
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se -i community-adaptation > /dev/null
         ret=$?
         if [ $ret -eq 0 ]; then
             if [ "$build_community" == "localbuild-ota" ]; then
-                sb2 -t "$VENDOR-$DEVICE-$PORT_ARCH" -m sdk-install -R zypper se -i community-adaptation-localbuild > /dev/null
+                sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se -i community-adaptation-localbuild > /dev/null
                 ret=$?
                 if [ $ret -eq 104 ]; then
                     # Do nothing, because either localbuild-ota is already installed
@@ -178,43 +176,39 @@ if [ "$BUILDCONFIGS" = "1" ]; then
         fi
     fi
     # avoid a SIGSEGV on exit of libhybris client
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R ls /system/build.prop &> /dev/null
+    sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ls /system/build.prop &> /dev/null
     ret=$?
     if [ $ret -ne 0 ]; then
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R bash -c "mkdir -p /system; echo ro.build.version.sdk=99 > /system/build.prop"
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH bash -c "mkdir -p /system; echo ro.build.version.sdk=99 > /system/build.prop"
     fi
     buildconfigs
     if grep -qsE "^(-|Requires:) droid-config-$DEVICE-bluez5" hybris/droid-configs/patterns/*.inc; then
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper -n install droid-config-$DEVICE-bluez5
-        # If using the latest SDK with snapshots, remove it to avoid /etc/bluetooth as symlink failure later on
-        sdk-assistant remove --non-interactive --snapshots-of $VENDOR-$DEVICE-$PORT_ARCH >/dev/null || true
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install droid-config-$DEVICE-bluez5
     fi
 fi
 
 if [ "$BUILDMW" = "1" ]; then
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu domain sales
-    sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install ssu dr sdk
+    if ! sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu s 2>/dev/null | grep -q "Device registration status: registered"; then
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu domain sales
+    fi
+    sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu dr sdk
 
-    if [ "$BUILDOFFLINE" = "1" ]; then
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref local-$DEVICE-hal
-    else
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -m sdk-install zypper ref
+    if [ "$BUILDOFFLINE" != "1" ]; then
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper ref
     fi
 
     if [ "$FAMILY" == "" ]; then
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
     else
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R -msdk-install zypper -n install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
     fi
 
-    if [ "$(sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R ls -A /usr/include/droid-devel/droid-headers/android-version.h 2> /dev/null)" ]; then
+    if [ "$(sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ls -A /usr/include/droid-devel/droid-headers/android-version.h 2> /dev/null)" ]; then
         android_version_header=/usr/include/droid-devel/droid-headers/android-version.h
     else
         android_version_header=/usr/$_LIB/droid-devel/droid-headers/android-version.h
     fi
-    android_version_major=$(sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -R cat $android_version_header 2>/dev/null |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
-
-    pushd $ANDROID_ROOT/hybris/mw > /dev/null
+    android_version_major=$(sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH cat $android_version_header 2>/dev/null |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
 
     manifest_lookup=$ANDROID_ROOT
     while true; do
@@ -280,7 +274,6 @@ if [ "$BUILDMW" = "1" ]; then
 
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid.git" \
                 -s rpm/pulseaudio-modules-droid.spec || die
-        buildmw -u "https://github.com/mer-hybris/audiosystem-passthrough.git" || die
         buildmw -u "https://github.com/mer-hybris/pulseaudio-modules-droid-hidl.git" || die
         buildmw -u "https://github.com/mer-hybris/mce-plugin-libhybris" || die
         buildmw -u "https://github.com/mer-hybris/qt5-qpa-hwcomposer-plugin" || die
@@ -293,16 +286,15 @@ if [ "$BUILDMW" = "1" ]; then
                     -s rpm/geoclue-providers-hybris.spec || die
         fi
         # build kf5bluezqt-bluez4 if not yet provided by Sailfish OS itself
-        sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper se kf5bluezqt-bluez4 > /dev/null
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se kf5bluezqt-bluez4 > /dev/null
         ret=$?
         if [ $ret -eq 104 ]; then
             buildmw -u "https://github.com/sailfishos/kf5bluezqt.git" \
                     -s rpm/kf5bluezqt-bluez4.spec || die
             # pull device's bluez4 configs correctly
-            sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R zypper remove bluez-configs-mer
+            sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper remove bluez-configs-mer
         fi
     fi
-    popd > /dev/null
 fi
 
 if [ "$BUILDGG" = "1" ]; then
@@ -366,19 +358,26 @@ fi
 if [ "$BUILDIMAGE" = "1" ]; then
     srcks="$ANDROID_ROOT/hybris/droid-configs/installroot/usr/share/kickstarts"
     ks="Jolla-@RELEASE@-$DEVICE-@ARCH@.ks"
-    if sb2 -t $VENDOR-$DEVICE-$PORT_ARCH -m sdk-install -R ssu s 2>/dev/null | grep -q "Release (rnd): latest (devel)"; then
+    if sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu s 2>/dev/null | grep -q "Release (rnd): latest (devel)"; then
         bleeding_edge_build_by_sailors=1
     fi
+
+    # Use custom location so that `zypper --plus-repo` does not pick it up - we
+    # want zypper to always rescan the directory instead of forcing us to keep
+    # the repodata up to date.
+    mkdir -p $LOCAL_REPO/repo
+    createrepo_c --outputdir=$LOCAL_REPO/repo --location-prefix=../ $LOCAL_REPO || die "can't create repo"
+
     if [ "$bleeding_edge_build_by_sailors" == "1" ]; then
         ks="Jolla-@RNDRELEASE@-@RNDFLAVOUR@-$DEVICE-@ARCH@.ks"
         ha_repo="repo --name=adaptation0-$DEVICE-@RNDRELEASE@-@RNDFLAVOUR@"
         if grep -q "$ha_repo" "$srcks/$ks"; then
-            sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$ANDROID_ROOT/droid-local-repo/$DEVICE|" \
+            sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$LOCAL_REPO/repo|" \
                 "$srcks/$ks" > $ks
         else
             # Adaptation doesn't have its repo yet
             repo_marker="repo --name=apps-@RNDRELEASE@-@RNDFLAVOUR@"
-            sed "/$repo_marker/i$ha_repo --baseurl=file:\/\/$ANDROID_ROOT\/droid-local-repo\/$DEVICE" \
+            sed "/$repo_marker/i$ha_repo --baseurl=file://$LOCAL_REPO/repo" \
                 "$srcks/$ks" > "$ks"
         fi
     elif [ "$community_adaptation" == "1" ]; then
@@ -388,12 +387,12 @@ if [ "$BUILDIMAGE" = "1" ]; then
             # aarch64 ports have no community-common repo for now
             ha_repo="repo --name=apps-@RELEASE@"
         fi
-        sed "/$ha_repo/i$ha_dev --baseurl=file:\/\/$ANDROID_ROOT\/droid-local-repo\/$DEVICE" \
+        sed "/$ha_repo/i$ha_dev --baseurl=file://$LOCAL_REPO/repo" \
             "$srcks/$ks" > "$ks"
         community_build="community"
     else
         ha_repo="repo --name=adaptation0-$DEVICE-@RELEASE@"
-        sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$ANDROID_ROOT/droid-local-repo/$DEVICE|" \
+        sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$LOCAL_REPO/repo|" \
             "$srcks/$ks" > "$ks"
     fi
     if [ "$bleeding_edge_build_by_sailors" == "1" ]; then
