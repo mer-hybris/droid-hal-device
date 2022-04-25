@@ -70,6 +70,10 @@ LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
 mkdir -p $LOCAL_REPO
 PLUS_LOCAL_REPO="--plus-repo $LOCAL_REPO"
 
+if [ -z $HABUILD_TARGET ] ; then
+    HABUILD_TARGET=$VENDOR-$DEVICE-$PORT_ARCH
+fi
+
 mb2() {
     # Changes in this build script are done in the original build target
     # which subsequently redefines the device's clean build environment
@@ -270,30 +274,30 @@ buildmw() {
             sed "s/%{?qa_stage_devel:--enable-arm-tracing}/--enable-arm-tracing/g" -i rpm/libhybris.spec
         elif [[ "$PKG" == "droid-hal-img-boot"* ]]; then
             # Remove existing img-boot
-            sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n remove droid-hal-img-boot > /dev/null
+            sdk-assistant maintain $HABUILD_TARGET zypper -n remove droid-hal-img-boot > /dev/null
             # Both cases are possible:
             #   droid-hal-$DEVICE-* and droid-hal-$HABUILD_DEVICE-*
             # The latter is used when HW has variants, e.g.:
             #   DEVICE=i4113, HABUILD_DEVICE=kirin
-            sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se -i droid-hal-$HABUILD_DEVICE-kernel-modules > /dev/null
+            sdk-assistant maintain $HABUILD_TARGET zypper se -i droid-hal-$HABUILD_DEVICE-kernel-modules > /dev/null
             ret=$?
             if [ $ret -eq 104 ]; then
-                sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se -i droid-hal-$DEVICE-kernel-modules > /dev/null
+                sdk-assistant maintain $HABUILD_TARGET zypper se -i droid-hal-$DEVICE-kernel-modules > /dev/null
                 ret=$?
                 if [ $ret -eq 104 ]; then
                     minfo "Installing kernel and modules..."
-                    sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install --allow-unsigned-rpm droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules &> /dev/null
+                    sdk-assistant maintain $HABUILD_TARGET zypper -n $PLUS_LOCAL_REPO install --allow-unsigned-rpm droid-hal-$HABUILD_DEVICE-kernel droid-hal-$HABUILD_DEVICE-kernel-modules &> /dev/null
                     ret=$?
                     if [ $ret -eq 104 ]; then
-                        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install --allow-unsigned-rpm droid-hal-$DEVICE-kernel droid-hal-$DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
+                        sdk-assistant maintain $HABUILD_TARGET zypper -n $PLUS_LOCAL_REPO install --allow-unsigned-rpm droid-hal-$DEVICE-kernel droid-hal-$DEVICE-kernel-modules >>$LOG 2>&1|| die "can't install kernel or modules"
                     fi
                 fi
             fi
-            sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se -i busybox-symlinks-cpio > /dev/null
+            sdk-assistant maintain $HABUILD_TARGET zypper se -i busybox-symlinks-cpio > /dev/null
             ret=$?
             if [ ! $ret -eq 104 ]; then
                 minfo "Applying cpio fix..."
-                sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n install --force-resolution cpio>>$LOG 2>&1|| die "can't install cpio"
+                sdk-assistant maintain $HABUILD_TARGET zypper -n install --force-resolution cpio>>$LOG 2>&1|| die "can't install cpio"
             fi
         fi
 
@@ -303,9 +307,9 @@ buildmw() {
             # If this is the first installation of libhybris simply remove mesa,
             # assuming it's v19 or newer (introduced in Sailfish OS 3.1.0)
             # TODO hook me
-            if sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH rpm -q mesa-llvmpipe |grep -q .; then
-                sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO in --force-resolution libhybris-libEGL libhybris-libGLESv2 libhybris-libEGL-devel libhybris-libGLESv2-devel >>$LOG 2>&1|| die "could not install libhybris-{libEGL,libGLESv2}"
-                sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n rm mesa-llvmpipe-libgbm mesa-llvmpipe-libglapi >>$LOG 2>&1
+            if sdk-assistant maintain $HABUILD_TARGET rpm -q mesa-llvmpipe |grep -q .; then
+                sdk-assistant maintain $HABUILD_TARGET zypper -n $PLUS_LOCAL_REPO in --force-resolution libhybris-libEGL libhybris-libGLESv2 libhybris-libEGL-devel libhybris-libGLESv2-devel >>$LOG 2>&1|| die "could not install libhybris-{libEGL,libGLESv2}"
+                sdk-assistant maintain $HABUILD_TARGET zypper -n rm mesa-llvmpipe-libgbm mesa-llvmpipe-libglapi >>$LOG 2>&1
             fi
         fi
 
@@ -332,10 +336,10 @@ build() {
         minfo "Building $SPEC"
         mb2 \
             -s $SPEC \
-            -t $VENDOR-$DEVICE-$PORT_ARCH \
+            -t $HABUILD_TARGET \
             $PACKAGE_TIMELINE $NO_AUTO_VERSION \
             --output-dir "$LOCAL_REPO" \
-            build >>$LOG 2>&1|| die "building of package failed"
+            build --no-check >>$LOG 2>&1|| die "building of package failed"
     done
     minfo "Building of $PKG finished successfully"
 }
