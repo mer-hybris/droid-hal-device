@@ -66,7 +66,7 @@ if [ -z $HABUILD_DEVICE ]; then
 fi
 
 mkdir -p $ANDROID_ROOT/hybris/mw
-LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/$DEVICE
+LOCAL_REPO=$ANDROID_ROOT/droid-local-repo/${FAMILY:-$DEVICE}
 mkdir -p $LOCAL_REPO
 PLUS_LOCAL_REPO="--plus-repo $LOCAL_REPO"
 
