@@ -403,11 +403,11 @@ fi
 # We can check if we have new or old ubu-chroot by checking if it has the -V  option
 # added with this version.
 if ubu-chroot -V ; then
-   sh="sh -c"
+   bash="bash -c"
 fi
 
 echo Running droid build in HABUILD_SDK
-ubu-chroot -r /srv/mer/sdks/ubu ${sh} "set -o errexit; cd %android_root; %{?pre_actions}%{!?pre_actions:true}; source build/envsetup.sh; lunch %{?lunch_device}%{!?lunch_device:%{device}}%{?device_variant}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
+ubu-chroot -r /srv/mer/sdks/ubu ${bash} "set -o errexit; cd %android_root; %{?pre_actions}%{!?pre_actions:true}; source build/envsetup.sh; lunch %{?lunch_device}%{!?lunch_device:%{device}}%{?device_variant}; rm -f .repo/local_manifests/roomservice.xml; make %{?_smp_mflags} %{?hadk_make_target}%{!?hadk_make_target:hybris-hal}"
 %endif
 
 # Make a tmp location for built installables
