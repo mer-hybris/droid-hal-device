@@ -625,22 +625,24 @@ if [ $android_version_major -ge "10" ]; then
     # out/soong/.intermediates/bionic/lib*/lib*/android_arm<COMPILER>_core_shared/lib*.so
     # but that is not elegant.
     # So we have to build apex (make com.android.runtime.release) and then:
-    art_path=%{android_root}/out/soong/.intermediates/art/build
-    apex_path=apex/com.android.runtime.release/android_common_com.android.runtime.release/image.apex
-    if [ ! -f "$art_path/$apex_path/lib/bionic/libc.so" ]; then
-        art_path=%{android_root}/out/target/product/%{device}/system
-        apex_path=apex/com.android.runtime.release
+    art_module="com.android.runtime"
+    # APEX module (not flattened) libs are saved under ${product_out}/apex for
+    # having debug symbols purpose
+    apex_dir=%{android_root}/out/target/product/%{device}/apex
+    # .. and for flattened APEX is used..
+    fl_apex_dir=%{android_root}/out/target/product/%{device}/system/apex
+    if [ -d $apex_dir ]; then
+        apex_path=$(find $apex_dir -maxdepth 1 -type d -name "${art_module}*")
     fi
-    if [ ! -f "$art_path/$apex_path/lib/bionic/libc.so" ]; then
-        art_path=%{android_root}/out/target/product/%{device}
-        apex_path=apex/com.android.runtime
+    if [ -z "$apex_path" -a -d $fl_apex_dir ]; then
+        apex_path=$(find $fl_apex_dir -maxdepth 1 -type d -name "${art_module}*")
     fi
     cp -a \
-        $art_path/$apex_path/lib/bionic/lib{dl,c,m}.so \
+        $apex_path/lib/bionic/lib{dl,c,m}.so \
         $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib
 %if 0%{?droid_target_aarch64:1}
     cp -a \
-        $art_path/$apex_path/lib64/bionic/lib{dl,c,m}.so \
+        $apex_path/lib64/bionic/lib{dl,c,m}.so \
         $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib64
 %endif
 fi
