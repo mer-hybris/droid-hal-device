@@ -148,11 +148,11 @@ if [ "$BUILDCONFIGS" = "1" ]; then
         else
             build_community="localbuild"
         fi
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se -i community-adaptation > /dev/null
+        sdk-assistant maintain $HABUILD_TARGET zypper se -i community-adaptation > /dev/null
         ret=$?
         if [ $ret -eq 0 ]; then
             if [ "$build_community" == "localbuild-ota" ]; then
-                sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se -i community-adaptation-localbuild > /dev/null
+                sdk-assistant maintain $HABUILD_TARGET zypper se -i community-adaptation-localbuild > /dev/null
                 ret=$?
                 if [ $ret -eq 104 ]; then
                     # Do nothing, because either localbuild-ota is already installed
@@ -176,39 +176,39 @@ if [ "$BUILDCONFIGS" = "1" ]; then
         fi
     fi
     # avoid a SIGSEGV on exit of libhybris client
-    sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ls /system/build.prop &> /dev/null
+    sdk-assistant maintain $HABUILD_TARGET ls /system/build.prop &> /dev/null
     ret=$?
     if [ $ret -ne 0 ]; then
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH bash -c "mkdir -p /system; echo ro.build.version.sdk=99 > /system/build.prop"
+        sdk-assistant maintain $HABUILD_TARGET bash -c "mkdir -p /system; echo ro.build.version.sdk=99 > /system/build.prop"
     fi
     buildconfigs
     if grep -qsE "^(-|Requires:) droid-config-$DEVICE-bluez5" hybris/droid-configs/patterns/*.inc; then
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install droid-config-$DEVICE-bluez5
+        sdk-assistant maintain $HABUILD_TARGET zypper -n $PLUS_LOCAL_REPO install droid-config-$DEVICE-bluez5
     fi
 fi
 
 if [ "$BUILDMW" = "1" ]; then
-    if ! sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu s 2>/dev/null | grep -q "Device registration status: registered"; then
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu domain sales
+    if ! sdk-assistant maintain $HABUILD_TARGET ssu s 2>/dev/null | grep -q "Device registration status: registered"; then
+        sdk-assistant maintain $HABUILD_TARGET ssu domain sales
     fi
-    sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu dr sdk
+    sdk-assistant maintain $HABUILD_TARGET ssu dr sdk
 
     if [ "$BUILDOFFLINE" != "1" ]; then
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper ref
+        sdk-assistant maintain $HABUILD_TARGET zypper ref
     fi
 
     if [ "$FAMILY" == "" ]; then
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
+        sdk-assistant maintain $HABUILD_TARGET zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
     else
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
+        sdk-assistant maintain $HABUILD_TARGET zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
     fi
 
-    if [ "$(sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ls -A /usr/include/droid-devel/droid-headers/android-version.h 2> /dev/null)" ]; then
+    if [ "$(sdk-assistant maintain $HABUILD_TARGET ls -A /usr/include/droid-devel/droid-headers/android-version.h 2> /dev/null)" ]; then
         android_version_header=/usr/include/droid-devel/droid-headers/android-version.h
     else
         android_version_header=/usr/$_LIB/droid-devel/droid-headers/android-version.h
     fi
-    android_version_major=$(sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH cat $android_version_header 2>/dev/null |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
+    android_version_major=$(sdk-assistant maintain $HABUILD_TARGET cat $android_version_header 2>/dev/null |grep "#define.*ANDROID_VERSION_MAJOR" |sed -e "s/#define.*ANDROID_VERSION_MAJOR//g")
 
     manifest_lookup=$ANDROID_ROOT
     while true; do
@@ -290,13 +290,13 @@ if [ "$BUILDMW" = "1" ]; then
                     -s rpm/geoclue-providers-hybris.spec || die
         fi
         # build kf5bluezqt-bluez4 if not yet provided by Sailfish OS itself
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se kf5bluezqt-bluez4 > /dev/null
+        sdk-assistant maintain $HABUILD_TARGET zypper se kf5bluezqt-bluez4 > /dev/null
         ret=$?
         if [ $ret -eq 104 ]; then
             buildmw -u "https://github.com/sailfishos/kf5bluezqt.git" \
                     -s rpm/kf5bluezqt-bluez4.spec || die
             # pull device's bluez4 configs correctly
-            sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper remove bluez-configs-mer
+            sdk-assistant maintain $HABUILD_TARGET zypper remove bluez-configs-mer
         fi
     fi
 fi
@@ -362,7 +362,7 @@ fi
 if [ "$BUILDIMAGE" = "1" ]; then
     srcks="$ANDROID_ROOT/hybris/droid-configs/installroot/usr/share/kickstarts"
     ks="Jolla-@RELEASE@-$DEVICE-@ARCH@.ks"
-    if sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu s 2>/dev/null | grep -q "Release (rnd): latest (devel)"; then
+    if sdk-assistant maintain $HABUILD_TARGET ssu s 2>/dev/null | grep -q "Release (rnd): latest (devel)"; then
         bleeding_edge_build_by_sailors=1
     fi
 
