@@ -848,7 +848,7 @@ fi
 
 # Kernel and module installation; to
 # /boot and modules to /lib as normal
-kernel_release=$(cat out/target/product/%{device}/*/*/include/config/kernel.release)
+kernel_release=$(sort -u out/target/product/%{device}/*/*/include/config/kernel.release)
 cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$kernel_release
 cp out/target/product/%{device}/obj/ROOT/hybris-boot_intermediates/boot-initramfs.gz $RPM_BUILD_ROOT/boot/
 
