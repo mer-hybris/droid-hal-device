@@ -198,9 +198,9 @@ if [ "$BUILDMW" = "1" ]; then
     fi
 
     if [ "$FAMILY" == "" ]; then
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$DEVICE-devel
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install --allow-unsigned-rpm droid-hal-$DEVICE-devel
     else
-        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install $ALLOW_UNSIGNED_RPM droid-hal-$HABUILD_DEVICE-devel
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n $PLUS_LOCAL_REPO install --allow-unsigned-rpm droid-hal-$HABUILD_DEVICE-devel
     fi
 
     if [ "$(sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ls -A /usr/include/droid-devel/droid-headers/android-version.h 2> /dev/null)" ]; then
