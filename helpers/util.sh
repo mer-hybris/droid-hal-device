@@ -335,7 +335,7 @@ build() {
             -t $VENDOR-$DEVICE-$PORT_ARCH \
             $PACKAGE_TIMELINE $NO_AUTO_VERSION \
             --output-dir "$LOCAL_REPO" \
-            build >>$LOG 2>&1|| die "building of package failed"
+            build --no-check >>$LOG 2>&1|| die "building of package failed"
     done
     minfo "Building of $PKG finished successfully"
 }
