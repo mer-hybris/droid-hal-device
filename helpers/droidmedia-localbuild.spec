@@ -53,8 +53,6 @@ fi
 
 mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
-mkdir -p $RPM_BUILD_ROOT/%{_includedir}/droidmedia/
-mkdir -p $RPM_BUILD_ROOT/%{_datadir}/droidmedia/
 cp out/target/product/@DEVICE@/system/$DROIDLIB/libdroidmedia.so \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/$DROIDLIB/
 
@@ -67,9 +65,11 @@ cp out/target/product/@DEVICE@/system/bin/minimediaservice \
 cp out/target/product/@DEVICE@/system/bin/minisfservice \
     $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/bin/
 
+if [ -d external/droidmedia/init ]; then
 mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init/
 cp external/droidmedia/init/*.rc \
    $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init/
+fi
 
 popd
 
@@ -77,9 +77,12 @@ LIBDMSOLOC=file.list
 echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libdroidmedia.so >> ${LIBDMSOLOC}
 echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libminisf.so >> ${LIBDMSOLOC}
 
+if [ -d $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init ]; then
+echo %{_libexecdir}/droid-hybris/system/etc/init/*.rc >> ${LIBDMSOLOC}
+fi
+
 %files -f file.list
 %defattr(-,root,root,-)
-%{_libexecdir}/droid-hybris/system/etc/init/*.rc
 %{_libexecdir}/droid-hybris/system/bin/minimediaservice
 %{_libexecdir}/droid-hybris/system/bin/minisfservice
 
