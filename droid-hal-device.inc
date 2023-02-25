@@ -459,7 +459,14 @@ fi
 # files have changed in android >=8 so we need to supply different ones to the
 # makefile. we also need the cstring workaround thus handling both issues here
 # at once
-if [ $android_version_major -ge "8" ]; then
+if [ $android_version_major -ge "13" ]; then
+    # sparse_read.cpp doesn't include cstring and therefore fails for us
+    # workaround:
+    echo "#include <cstring>" > $ANDROID_ROOT/system/core/libsparse/sparse_read_fix.cpp
+    echo "#include \"sparse_read.cpp\"" >> $ANDROID_ROOT/system/core/libsparse/sparse_read_fix.cpp
+    IMG2SIMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read_fix.cpp img2simg.c ../../libbase/mapped_file.cpp ../../libbase/stringprintf.cpp"
+    SIMG2IMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read_fix.cpp simg2img.c ../../libbase/mapped_file.cpp ../../libbase/stringprintf.cpp"
+elif [ $android_version_major -ge "8" ]; then
     # sparse_read.cpp doesn't include cstring and therefore fails for us
     # workaround:
     echo "#include <cstring>" > $ANDROID_ROOT/system/core/libsparse/sparse_read_fix.cpp
@@ -560,6 +567,14 @@ fi
 install -m 755 \
     -D %{android_root}/system/$mkbootimg_dir/mkbootimg/${_mkbootimg:-mkbootimg} \
     %{buildroot}/%{_bindir}/mkbootimg
+if [ $android_version_major -ge "13" ]; then
+install -m 755 \
+    -D %{android_root}/system/$mkbootimg_dir/mkbootimg/gki/generate_gki_certificate.py \
+    %{buildroot}/%{_bindir}/gki/generate_gki_certificate.py
+echo "%{_bindir}/gki/generate_gki_certificate.py" > tools.files
+else
+echo "" > tools.files
+fi
 
 install -m 755 -D %{android_root}/system/core/libsparse/simg2img %{buildroot}/%{_bindir}/
 install -m 755 -D %{android_root}/system/core/libsparse/img2simg %{buildroot}/%{_bindir}/
@@ -612,6 +627,10 @@ else
 echo "" > tmp/droid-hal.files
 fi
 
+if [ $android_version_major -lt "13" ]; then
+echo "/default.prop" > tmp/droid-hal.files
+fi
+
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
 %if 0%{?droid_target_aarch64:1}
 cp -a %{android_root}/out/target/product/%{device}/system/lib64 $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
@@ -635,12 +654,15 @@ if [ $android_version_major -ge "10" ]; then
         art_path=%{android_root}/out/target/product/%{device}
         apex_path=apex/com.android.runtime
     fi
+
+    rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/lib{dl,dl_android,c,m}.so
     cp -a \
-        $art_path/$apex_path/lib/bionic/lib{dl,c,m}.so \
+        $art_path/$apex_path/lib/bionic/lib{dl,dl_android,c,m}.so \
         $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib
 %if 0%{?droid_target_aarch64:1}
+    rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib64/lib{dl,dl_android,c,m}.so
     cp -a \
-        $art_path/$apex_path/lib64/bionic/lib{dl,c,m}.so \
+        $art_path/$apex_path/lib64/bionic/lib{dl,dl_android,c,m}.so \
         $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib64
 %endif
 fi
@@ -694,6 +716,16 @@ if (grep -q '^TARGET_USES_QCOM_BSP := true' %{android_root}/device/%{vendor}/*/B
 /* Added by automatic QCOM_BSP detection */
 #define QCOM_BSP 1
 #define QTI_BSP 1
+EOF
+fi
+if [ $android_version_major -ge "13" ]; then
+    cat <<EOF >> $hdrs/android-config.h.new
+/* For Android 13+ */
+#define __BIONIC_VERSIONER
+#define _Nonnull
+#define _Nullable
+
+#include <android/versioning.h>
 EOF
 fi
 sed "1,$token_line d" $hdrs/android-config.h >> $hdrs/android-config.h.new
@@ -859,6 +891,10 @@ if cp out/target/product/%{device}/dt.img $RPM_BUILD_ROOT/boot/ &> /dev/null; th
     echo /boot/dt.img >> kernel.files
 fi
 
+if cp out/target/product/%{device}/dtb.img $RPM_BUILD_ROOT/boot/ &> /dev/null; then
+    echo /boot/dtb.img >> kernel.files
+fi
+
 touch dtbo.files
 
 if cp out/target/product/%{device}/%{dtbo_binary} $RPM_BUILD_ROOT/boot/dtbo.img &> /dev/null; then
@@ -1022,7 +1058,6 @@ done
 /lib/udev/rules.d/*
 # Droid config droppings
 /*.rc
-/default.prop
 # Disabling v4l.rules
 %{_sysconfdir}/udev/rules.d/60-persistent-v4l.rules
 
@@ -1042,7 +1077,7 @@ done
 %{dhdlibdir}/pkgconfig/*pc
 %endif
 
-%files tools
+%files tools -f tools.files
 %defattr(-,root,root,-)
 %{_bindir}/mkbootimg
 %{_bindir}/img2simg

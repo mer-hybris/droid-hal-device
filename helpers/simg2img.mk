@@ -2,10 +2,10 @@
 
 SIMG2IMG_SOURCES?= nosourcessupplied
 
-CXXFLAGS+= -std=gnu++11
+CXXFLAGS+= -std=gnu++14
 
 CPPFLAGS+= -Iinclude
-CPPFLAGS+= -I../base/include
+CPPFLAGS+= -I../base/include -I../../libbase/include
 
 TMP_OBJS=$(SIMG2IMG_SOURCES:.cpp=.o)
 OBJS=$(TMP_OBJS:.c=.o)

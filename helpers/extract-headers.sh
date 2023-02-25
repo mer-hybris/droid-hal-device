@@ -209,8 +209,17 @@ extract_headers_to hardware_legacy \
 extract_headers_to cutils \
     system/core/include/cutils
 
-extract_headers_to log \
-    system/core/include/log
+!(check_header_exists system/logging/liblog/include/log/log.h) && \
+    extract_headers_to log \
+        system/core/include/log
+
+check_header_exists system/logging/liblog/include/log/log.h && \
+    extract_headers_to log \
+        system/logging/liblog/include/log
+
+check_header_exists system/logging/liblog/include/android/log.h && \
+    extract_headers_to android \
+        system/logging/liblog/include/android
 
 extract_headers_to system \
     system/core/include/system
@@ -221,6 +230,10 @@ check_header_exists system/media/audio/include/system/audio.h && \
 
 extract_headers_to android \
     system/core/include/android
+
+check_header_exists bionic/libc/include/android/versioning.h && \
+    extract_headers_to android \
+        bionic/libc/include/android/versioning.h
 
 check_header_exists bionic/libc/kernel/common/linux/sync.h && \
     extract_headers_to linux \
