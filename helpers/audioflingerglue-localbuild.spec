@@ -11,7 +11,6 @@ Name:          audioflingerglue
 Summary:       Android AudioFlinger glue library
 Version:       0.0.0
 Release:       1
-Group:         System/Libraries
 License:       ASL 2.0
 BuildRequires: tar
 Source0:       %{name}-%{version}.tgz
@@ -22,7 +21,6 @@ AutoReqProv:   no
 
 %package       devel
 Summary:       audioflingerglue development headers
-Group:         System/Libraries
 Requires:      audioflingerglue = %{version}-%{release}
 BuildArch:     noarch
 

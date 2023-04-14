@@ -10,7 +10,6 @@ Name:          droidmedia
 Summary:       Android media wrapper library
 Version:       0.0.0
 Release:       1
-Group:         System/Libraries
 License:       ASL 2.0
 BuildRequires: tar
 #BuildRequires: ubu-trusty
