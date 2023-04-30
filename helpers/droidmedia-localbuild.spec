@@ -10,7 +10,6 @@ Name:          droidmedia
 Summary:       Android media wrapper library
 Version:       0.0.0
 Release:       1
-Group:         System/Libraries
 License:       ASL 2.0
 BuildRequires: tar
 #BuildRequires: ubu-trusty
@@ -78,7 +77,7 @@ echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libdroidmedia.so >> ${LIBDMSOL
 echo %{_libexecdir}/droid-hybris/system/$DROIDLIB/libminisf.so >> ${LIBDMSOLOC}
 
 if [ -d $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init ]; then
-echo %{_libexecdir}/droid-hybris/system/etc/init/*.rc >> ${LIBDMSOLOC}
+find $RPM_BUILD_ROOT/%{_libexecdir}/droid-hybris/system/etc/init -type f -name '*.rc' -exec sh -c 'echo %{_libexecdir}/droid-hybris/system/etc/init/$(basename {})' >> ${LIBDMSOLOC} \;
 fi
 
 %files -f file.list

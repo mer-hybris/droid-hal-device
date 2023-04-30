@@ -233,6 +233,13 @@ buildmw() {
             minfo "No git url specified, assuming $GIT_URL"
         fi
 
+        sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper se -i ccache > /dev/null
+        ret=$?
+        if [ $ret -eq 104 ]; then
+            minfo "Installing ccache..."
+            sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH zypper -n install ccache>>$LOG 2>&1|| die "can't install ccache"
+        fi
+
         if [ -d "$ANDROID_ROOT/external/$PKG" ]; then
             pushd "$ANDROID_ROOT/external" > /dev/null || die
 
