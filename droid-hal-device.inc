@@ -628,7 +628,7 @@ echo "" > tmp/droid-hal.files
 fi
 
 if [ $android_version_major -lt "13" ]; then
-echo "/default.prop" > tmp/droid-hal.files
+echo "/default.prop" >> tmp/droid-hal.files
 fi
 
 cp -a %{android_root}/out/target/product/%{device}/system/{bin,lib} $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/.
@@ -898,7 +898,7 @@ fi
 touch dtbo.files
 
 if cp out/target/product/%{device}/%{dtbo_binary} $RPM_BUILD_ROOT/boot/dtbo.img &> /dev/null; then
-    echo /boot/dtbo.img >> dtbo.files
+    echo /boot/dtbo.img > dtbo.files
 fi
 
 mod_dir=$RPM_BUILD_ROOT/lib/modules/$kernel_release
