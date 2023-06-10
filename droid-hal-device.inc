@@ -414,11 +414,22 @@ ubu-chroot -r /srv/mer/sdks/ubu ${bash} "set -o errexit; cd %android_root; %{?pr
 rm -rf tmp
 mkdir tmp
 
-echo Verifying kernel config
-# AOSP seems to use .../obj/kernel/.config not obj/KERNEL_OBJ/.config like CM : so wildcard it
-hybris/mer-kernel-check/mer_verify_kernel_config \
-    %{android_root}/out/target/product/%{device}/obj/*/.config
+# Find the kernel build directory.
+# AOSP seems to use .../obj/kernel/.config not obj/KERNEL_OBJ/.config like CM.
+# Sony AOSP 11 uses a separate storage area.
+if [[ -f %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config ]]; then
+    KERNEL_PATH=%{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/
+elif [[ -f %{android_root}/out/target/product/%{device}/obj/kernel/.config ]]; then
+    KERNEL_PATH=%{android_root}/out/target/product/%{device}/obj/kernel/
+elif [[ -f %{android_root}/out/clang.sh/kernel-tmp-%{device}/.config ]]; then
+    KERNEL_PATH=%{android_root}/out/clang.sh/kernel-tmp-%{device}/
+else
+    echo "Could not find the build path for the kernel."
+    exit 1
+fi
 
+echo Verifying kernel config
+hybris/mer-kernel-check/mer_verify_kernel_config $KERNEL_PATH/.config
 
 android_version_major=$(awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9.]+)/ { print $3; }' \
                           < %{android_root}/build/core/version_defaults.mk \
@@ -534,6 +545,20 @@ EOF
 android_version_major=$(awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9.]+)/ { print $3; }' \
                           < %{android_root}/build/core/version_defaults.mk \
                           | awk -F'.' '{print $1}')
+
+# Find the kernel build directory.
+# AOSP seems to use .../obj/kernel/.config not obj/KERNEL_OBJ/.config like CM.
+# Sony AOSP 11 uses a separate storage area.
+if [[ -f %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config ]]; then
+    KERNEL_PATH=%{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/
+elif [[ -f %{android_root}/out/target/product/%{device}/obj/kernel/.config ]]; then
+    KERNEL_PATH=%{android_root}/out/target/product/%{device}/obj/kernel/
+elif [[ -f %{android_root}/out/clang.sh/kernel-tmp-%{device}/.config ]]; then
+    KERNEL_PATH=%{android_root}/out/clang.sh/kernel-tmp-%{device}/
+else
+    echo "Could not find the build path for the kernel."
+    exit 1
+fi
 
 echo install $(cat tmp/units/all-units.txt)
 # Create dir structure
@@ -856,7 +881,7 @@ system
 EOF
 
 if [ $android_version_major -ge "5" ] && \
-   grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' %{android_root}/out/target/product/%{device}/obj/*/.config; then
+   grep -q '^CONFIG_ANDROID_PARANOID_NETWORK=y' $KERNEL_PATH/.config; then
     echo "inet" > %{buildroot}/%{_prefix}/lib/droid/hw-group.d/inet.list
 fi
 
@@ -880,7 +905,7 @@ fi
 
 # Kernel and module installation; to
 # /boot and modules to /lib as normal
-kernel_release=$(sort -u out/target/product/%{device}/*/*/include/config/kernel.release)
+kernel_release=$(sort -u $KERNEL_PATH/include/config/kernel.release)
 cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$kernel_release
 cp out/target/product/%{device}/obj/ROOT/hybris-boot_intermediates/boot-initramfs.gz $RPM_BUILD_ROOT/boot/
 
@@ -906,8 +931,8 @@ mkdir -p $mod_dir
 cp -a out/target/product/%{device}/system/lib/modules/. $mod_dir/. || true
 cp -a out/target/product/%{device}/system/vendor/lib/modules/. $mod_dir/. || true
 cp -a out/target/product/%{device}/vendor/lib/modules/. $mod_dir/. || true
-cp -a out/target/product/%{device}/obj/*/modules.builtin $mod_dir/. || true
-cp -a out/target/product/%{device}/obj/*/modules.order $mod_dir/. || true
+cp -a $KERNEL_PATH/modules.builtin $mod_dir/. || true
+cp -a $KERNEL_PATH/modules.order $mod_dir/. || true
 
 # on some systems modules are in /lib/modules for some reason, lets move them to right place
 mv $RPM_BUILD_ROOT/lib/modules/* $RPM_BUILD_ROOT/lib/modules/$kernel_release || true
