@@ -414,10 +414,19 @@ ubu-chroot -r /srv/mer/sdks/ubu ${bash} "set -o errexit; cd %android_root; %{?pr
 rm -rf tmp
 mkdir tmp
 
+echo Find kernel config
+kernel_config=$(find %{android_root}/out/target/product/%{device} -name .config -type f | \
+      while read -r kernel_config ; do
+            if grep -q -E 'Linux/.* Kernel Configuration' $kernel_config ; then
+               echo $kernel_config
+               break
+            fi
+      done)
+
 echo Verifying kernel config
-# AOSP seems to use .../obj/kernel/.config not obj/KERNEL_OBJ/.config like CM : so wildcard it
+
 hybris/mer-kernel-check/mer_verify_kernel_config \
-    %{android_root}/out/target/product/%{device}/obj/*/.config
+                          $kernel_config
 
 
 android_version_major=$(awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9.]+)/ { print $3; }' \
@@ -880,7 +889,8 @@ fi
 
 # Kernel and module installation; to
 # /boot and modules to /lib as normal
-kernel_release=$(sort -u out/target/product/%{device}/*/*/include/config/kernel.release)
+kernel_build_dir=$(dirname $kernel_config)
+kernel_release=$(sort -u $kernel_build_dir/include/config/kernel.release)
 cp out/target/product/%{device}/kernel $RPM_BUILD_ROOT/boot/kernel-$kernel_release
 cp out/target/product/%{device}/obj/ROOT/hybris-boot_intermediates/boot-initramfs.gz $RPM_BUILD_ROOT/boot/
 
@@ -906,8 +916,8 @@ mkdir -p $mod_dir
 cp -a out/target/product/%{device}/system/lib/modules/. $mod_dir/. || true
 cp -a out/target/product/%{device}/system/vendor/lib/modules/. $mod_dir/. || true
 cp -a out/target/product/%{device}/vendor/lib/modules/. $mod_dir/. || true
-cp -a out/target/product/%{device}/obj/*/modules.builtin $mod_dir/. || true
-cp -a out/target/product/%{device}/obj/*/modules.order $mod_dir/. || true
+cp -a $kernel_build_dir/modules.builtin $mod_dir/. || true
+cp -a $kernel_build_dir/modules.order $mod_dir/. || true
 
 # on some systems modules are in /lib/modules for some reason, lets move them to right place
 mv $RPM_BUILD_ROOT/lib/modules/* $RPM_BUILD_ROOT/lib/modules/$kernel_release || true
