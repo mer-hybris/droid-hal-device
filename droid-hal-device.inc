@@ -654,6 +654,11 @@ if [ $android_version_major -ge "10" ]; then
         art_path=%{android_root}/out/target/product/%{device}
         apex_path=apex/com.android.runtime
     fi
+    if [ ! -f "$art_path/$apex_path/lib/bionic/libc.so" ]; then
+        art_path=%{android_root}/out/target/product/%{device}/system
+        apex_path=apex/com.android.runtime
+    fi
+
 
     rm -f $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib/lib{dl,dl_android,c,m}.so
     cp -a \
