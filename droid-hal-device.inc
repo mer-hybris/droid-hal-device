@@ -34,6 +34,10 @@
 #                    ability to flash dtbo partition, inspect the usage of this
 #                      macro
 #
+# enable_vendor_boot_update:
+#                    ability to flash vendor_boot partition, inspect the usage of this
+#                      macro
+#
 # Miscellaneous:
 # hadk_make_target:  the target used when running make in the HABUILD_SDK on the
 #                      OBS. Defaults to "hybris-hal"
@@ -329,6 +333,18 @@ Requires(post): droid-config-flashing
 
 %description kernel-dtbo
 %{summary}. Will stay empty, if dtbo image is not needed.
+
+%if 0%{?enable_vendor_boot_update:1}
+%package vendor_boot
+Summary: Placeholder for %{device} flashable vendor_boot if applicable
+# The device flashing info and scripts are in droid-configs
+Requires: oneshot
+Requires(post): droid-config-flashing
+%{_oneshot_requires_post}
+
+%description vendor_boot
+%{summary}. Will stay empty, if vendor_boot image is not needed.
+%endif
 
 ################################################################
 # Begin prep/build section
@@ -901,6 +917,12 @@ if cp out/target/product/%{device}/%{dtbo_binary} $RPM_BUILD_ROOT/boot/dtbo.img 
     echo /boot/dtbo.img > dtbo.files
 fi
 
+%if 0%{?enable_vendor_boot_update:1}
+cp out/target/product/%{device}/vendor_boot.img $RPM_BUILD_ROOT/boot/
+%endif
+
+touch boot.files
+
 mod_dir=$RPM_BUILD_ROOT/lib/modules/$kernel_release
 mkdir -p $mod_dir
 cp -a out/target/product/%{device}/system/lib/modules/. $mod_dir/. || true
@@ -981,6 +1003,15 @@ fi
 # installation is done when we flash device.
 if [ $1 -ne 1 ] ; then
   add-preinit-oneshot /var/lib/platform-updates/flash-dtbo.sh || :
+fi
+%endif
+
+%if 0%{?enable_vendor_boot_update:1}
+%post vendor_boot
+# This oneshot is enabled only during package upgrades, as initial
+# installation is done when we flash device.
+if [ $1 -ne 1 ] ; then
+  add-preinit-oneshot /var/lib/platform-updates/flash-vendor_boot.sh || :
 fi
 %endif
 
@@ -1121,3 +1152,9 @@ done
 
 %files kernel-dtbo -f dtbo.files
 %defattr(644,root,root,-)
+
+%if 0%{?enable_vendor_boot_update:1}
+%files vendor_boot
+/boot/vendor_boot.img
+%defattr(644,root,root,-)
+%endif
