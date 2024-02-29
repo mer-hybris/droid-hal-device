@@ -192,7 +192,7 @@ BuildRequires:  pkgconfig(systemd)
 BuildRequires:  qt5-qttools-kmap2qmap >= 5.1.0+git5
 BuildRequires:  rsync
 # starting from Android 8
-BuildRequires:  python
+BuildRequires:  python3
 %{?custom_build_requires}
 Requires(pre):  droid-hal-%{rpm_device}-users
 Requires:       droid-hal-%{rpm_device}-users
