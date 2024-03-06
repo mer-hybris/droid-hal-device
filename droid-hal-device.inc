@@ -928,6 +928,7 @@ mkdir -p $mod_dir
 cp -a out/target/product/%{device}/system/lib/modules/. $mod_dir/. || true
 cp -a out/target/product/%{device}/system/vendor/lib/modules/. $mod_dir/. || true
 cp -a out/target/product/%{device}/vendor/lib/modules/. $mod_dir/. || true
+cp -a out/target/product/%{device}/vendor_dlkm/lib/modules/. $mod_dir/. || true
 cp -a out/target/product/%{device}/obj/*/modules.builtin $mod_dir/. || true
 cp -a out/target/product/%{device}/obj/*/modules.order $mod_dir/. || true
 
