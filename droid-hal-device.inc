@@ -166,6 +166,10 @@ such_macro supports spaces\
 # Android builds sometimes do not generate build ids
 %define _missing_build_ids_terminate_build 0
 
+# By default built with tools supplied by the device sources
+# can be change once android-tools has been updated
+%bcond_without dhd_tools
+
 Summary: 	Droid HAL package for %{rpm_device}
 License: 	BSD
 Name: 		droid-hal-%{rpm_device}
@@ -244,12 +248,13 @@ This package provides android users and groups which are
 required by droid-hal/hybris based adaptations.
 
 ################
+%if %{with dhd_tools}
 %package tools
 Provides: droid-hal-tools
 Summary: Some tools from android specific for %{device}
 License: ASL 2.0
 BuildRequires:  pkgconfig(zlib)
-
+Provides: android-tools-mkbootimg
 Obsoletes: droid-hal-tools <= 0.0.2
 
 %description tools
@@ -257,6 +262,7 @@ This package contains some tools that some hardware adaptations need for
 handling the android style content. This package is intended to be such
 that it can be installed on the device and is not meant to be used in host/sdk
 environment.
+%endif
 
 ################
 %package kernel
@@ -459,6 +465,21 @@ android_version_major=$(awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9
                           | awk -F'.' '{print $1}')
 fi
 
+ANDROID_ROOT=$(readlink -e %{android_root})
+echo Building local tools
+
+if [ $android_version_major -ge "8" ]; then
+    $ANDROID_ROOT/build/make/tools/fs_config/fs_config_generator.py aidarray \
+        $ANDROID_ROOT/system/core/libcutils/include/private/android_filesystem_config.h \
+        > generated_android_filesystem_config.h
+else
+    echo "#include <private/android_filesystem_config.h>" > generated_android_filesystem_config.h
+    if [ ! -z "$MKBOOTIMG_MK" ]; then
+        sed -i -e 's/CPPFLAGS+= -I..\/include/CPPFLAGS+= -I..\/include -std=gnu99/g' $MKBOOTIMG_MK
+    fi
+fi
+
+%if %{with dhd_tools}
 # Check if local overrides for tool mk files exist, otherwise dhd defaults are used
 if [ -f rpm/helpers/mkbootimg.mk ]; then
     export MKBOOTIMG_MK=$(pwd)/rpm/helpers/mkbootimg.mk
@@ -475,20 +496,6 @@ fi
 
 if [ -f rpm/helpers/img2simg.mk ]; then
     export IMG2SIMG_MK=$(pwd)/rpm/helpers/img2simg.mk
-fi
-
-echo Building local tools
-ANDROID_ROOT=$(readlink -e %{android_root})
-
-if [ $android_version_major -ge "8" ]; then
-    $ANDROID_ROOT/build/make/tools/fs_config/fs_config_generator.py aidarray \
-        $ANDROID_ROOT/system/core/libcutils/include/private/android_filesystem_config.h \
-        > generated_android_filesystem_config.h
-else
-    echo "#include <private/android_filesystem_config.h>" > generated_android_filesystem_config.h
-    if [ ! -z "$MKBOOTIMG_MK" ]; then
-        sed -i -e 's/CPPFLAGS+= -I..\/include/CPPFLAGS+= -I..\/include -std=gnu99/g' $MKBOOTIMG_MK
-    fi
 fi
 
 # files have changed in android >=8 so we need to supply different ones to the
@@ -513,8 +520,18 @@ else
     SIMG2IMG_SOURCES="backed_block.c output_file.c sparse.c sparse_crc32.c sparse_err.c sparse_read.c simg2img.c"
 fi
 
+%endif
+
 pushd %{dhd_path}/helpers
-make ANDROID_ROOT=$ANDROID_ROOT IMG2SIMG_SOURCES="$IMG2SIMG_SOURCES" SIMG2IMG_SOURCES="$SIMG2IMG_SOURCES"
+make \
+     ANDROID_ROOT=$ANDROID_ROOT \
+%if %{with dhd_tools}
+     IMG2SIMG_SOURCES="$IMG2SIMG_SOURCES" \
+     SIMG2IMG_SOURCES="$SIMG2IMG_SOURCES" \
+%else
+    usergroupgen \
+%endif
+    %{nil}
 popd
 
 echo Building uid scripts
@@ -1158,11 +1175,13 @@ done
 %{dhdlibdir}/pkgconfig/*pc
 %endif
 
+%if %{with dhd_tools}
 %files tools -f tools.files
 %defattr(-,root,root,-)
 %{_bindir}/mkbootimg
 %{_bindir}/img2simg
 %{_bindir}/simg2img
+%endif
 
 %files kernel -f kernel.files
 %defattr(644,root,root,-)
