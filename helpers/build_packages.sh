@@ -353,7 +353,7 @@ fi
 if [ "$BUILDIMAGE" = "1" ]; then
     srcks="$ANDROID_ROOT/hybris/droid-configs/installroot/usr/share/kickstarts"
     ks="Jolla-@RELEASE@-$DEVICE-@ARCH@.ks"
-    if sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu s 2>/dev/null | grep -q "Release (rnd): latest (devel)"; then
+    if sdk-assistant maintain $VENDOR-$DEVICE-$PORT_ARCH ssu s 2>/dev/null | grep -q "Release (rnd): live (devel)"; then
         bleeding_edge_build_by_sailors=1
     fi
 
@@ -364,14 +364,14 @@ if [ "$BUILDIMAGE" = "1" ]; then
     createrepo_c --outputdir=$LOCAL_REPO/repo --location-prefix=../ $LOCAL_REPO || die "can't create repo"
 
     if [ "$bleeding_edge_build_by_sailors" == "1" ]; then
-        ks="Jolla-@RNDRELEASE@-@RNDFLAVOUR@-$DEVICE-@ARCH@.ks"
-        ha_repo="repo --name=adaptation0-$DEVICE-@RNDRELEASE@-@RNDFLAVOUR@"
+        ks="Jolla-@RELEASE@-@FLAVOUR@-$DEVICE-@ARCH@.ks"
+        ha_repo="repo --name=adaptation0-$DEVICE-@RELEASE@-@FLAVOUR@"
         if grep -q "$ha_repo" "$srcks/$ks"; then
             sed -e "s|^$ha_repo.*$|$ha_repo --baseurl=file://$LOCAL_REPO/repo|" \
                 "$srcks/$ks" > $ks
         else
             # Adaptation doesn't have its repo yet
-            repo_marker="repo --name=apps-@RNDRELEASE@-@RNDFLAVOUR@"
+            repo_marker="repo --name=apps-@RELEASE@-@FLAVOUR@"
             sed "/$repo_marker/i$ha_repo --baseurl=file://$LOCAL_REPO/repo" \
                 "$srcks/$ks" > "$ks"
         fi
@@ -391,7 +391,7 @@ if [ "$BUILDIMAGE" = "1" ]; then
             "$srcks/$ks" > "$ks"
     fi
     if [ "$bleeding_edge_build_by_sailors" == "1" ]; then
-        tokenmap="ARCH:$PORT_ARCH,RELEASE:$RELEASE,RNDRELEASE:latest,EXTRA_NAME:$EXTRA_NAME,RNDFLAVOUR:devel,RELEASEPATTERN::/live:/,RNDPATTERN:devel"
+        tokenmap="ARCH:$PORT_ARCH,RELEASE:live,EXTRA_NAME:$EXTRA_NAME,FLAVOUR:devel"
         flavour=devel
     else
         tokenmap="ARCH:$PORT_ARCH,RELEASE:$RELEASE,EXTRA_NAME:$EXTRA_NAME"
