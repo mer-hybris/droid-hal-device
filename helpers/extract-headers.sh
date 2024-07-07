@@ -60,14 +60,24 @@ fi
 if [ x$MAJOR = x -o x$MINOR = x -o x$PATCH = x ]; then
     VERSION_DEFAULTS=$ANDROID_ROOT/build/core/version_defaults.mk
 
+    if [ ! -f $VERSION_DEFAULTS ]; then
+        VERSION_DEFAULTS=$ANDROID_ROOT/build/release/build_flags.scl
+    fi
+
     echo "not all version fields supplied:  trying to extract from $VERSION_DEFAULTS"
     if [ ! -f $VERSION_DEFAULTS ]; then
         error "$VERSION_DEFAULTS not found"
     fi
 
+    if [ $VERSION_DEFAULTS = $ANDROID_ROOT/build/core/version_defaults.mk ]; then
     IFS="." read MAJOR MINOR PATCH PATCH2 PATCH3 <<EOF
 $(IFS="." awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9.]+)/ { print $3; }' < $VERSION_DEFAULTS)
 EOF
+    else
+    IFS="." read MAJOR MINOR PATCH PATCH2 PATCH3 <<EOF
+$(IFS="." awk -F '"' '/PLATFORM_VERSION_LAST_STABLE.*([0-9.]+)\"/ { print $4; }' < $VERSION_DEFAULTS)
+EOF
+    fi
     if [ x$MINOR = x ]; then
          MINOR=0
     fi
@@ -190,6 +200,10 @@ EOF
 
 extract_headers_to hardware \
     hardware/libhardware/include/hardware
+
+check_header_exists hardware/libhardware/include_vendor/hardware/lights.h && \
+    extract_headers_to hardware \
+        hardware/libhardware/include_vendor/hardware
 
 check_header_exists hardware/libhardware_legacy/include/hardware_legacy/vibrator.h && \
     extract_headers_to hardware_legacy \
