@@ -436,9 +436,15 @@ hybris/mer-kernel-check/mer_verify_kernel_config \
     %{android_root}/out/target/product/%{device}/obj/*/.config
 
 
+if [ -f %{android_root}/build/release/build_flags.scl ]; then
+android_version_major=$(awk -F '"' '/PLATFORM_VERSION_LAST_STABLE.*([0-9.]+)\"/ { print $4; }' \
+                          < %{android_root}/build/release/build_flags.scl \
+                          | awk -F'.' '{print $1}')
+else
 android_version_major=$(awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9.]+)/ { print $3; }' \
                           < %{android_root}/build/core/version_defaults.mk \
                           | awk -F'.' '{print $1}')
+fi
 
 # Check if local overrides for tool mk files exist, otherwise dhd defaults are used
 if [ -f rpm/helpers/mkbootimg.mk ]; then
@@ -547,9 +553,15 @@ EOF
 ################
 %install
 
+if [ -f %{android_root}/build/release/build_flags.scl ]; then
+android_version_major=$(awk -F '"' '/PLATFORM_VERSION_LAST_STABLE.*([0-9.]+)\"/ { print $4; }' \
+                          < %{android_root}/build/release/build_flags.scl \
+                          | awk -F'.' '{print $1}')
+else
 android_version_major=$(awk '/PLATFORM_VERSION([A-Z0-9.]*|_LAST_STABLE) := ([0-9.]+)/ { print $3; }' \
                           < %{android_root}/build/core/version_defaults.mk \
                           | awk -F'.' '{print $1}')
+fi
 
 echo install $(cat tmp/units/all-units.txt)
 # Create dir structure
@@ -660,6 +672,11 @@ if [ $android_version_major -ge "10" ]; then
     # Create empty /apex, /system/bin/apexd will then mount namespaces therein
     mkdir -p $RPM_BUILD_ROOT/apex
     echo "%dir /apex" >> tmp/droid-hal.files
+    if [ $android_version_major -ge "14" ]; then
+        # Create empty /bootstrap-apex
+        mkdir -p $RPM_BUILD_ROOT/bootstrap-apex
+        echo "%dir /bootstrap-apex" >> tmp/droid-hal.files
+    fi
     # To avoid building apex (which in turn builds art),
     # we could take lib{dl,c,m}.so from:
     # out/soong/.intermediates/bionic/lib*/lib*/android_arm<COMPILER>_core_shared/lib*.so
