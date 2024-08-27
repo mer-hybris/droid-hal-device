@@ -846,7 +846,7 @@ _remove_cruft   "/fstab.*"          \
                 "/charger"          \
                 "/res"              \
                 "/data"             \
-                "/odm/*"            \
+                "/odm"              \
                 "/sbin/mkdosfs"
 if [ $android_version_major -lt "7" ]; then
     _remove_cruft "/property_contexts"
