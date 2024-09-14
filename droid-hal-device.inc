@@ -58,6 +58,9 @@
 # have_custom_img_recovery:
 #                    defined when img-recovery is packaged separately
 #                      from droid-hal-device
+# have_custom_vendor_boot:
+#                    defined when vendor_boot is packaged separately from
+#                      droid-hal-device
 # bootloader_binary: define bootloader binary name when aboot is packaged
 #                      separately from droid-hal-device
 # dtbo_binary:       override dtbo binary name. Defaults to dtbo.img
@@ -334,6 +337,7 @@ Requires(post): droid-config-flashing
 %description kernel-dtbo
 %{summary}. Will stay empty, if dtbo image is not needed.
 
+%if 0%{!?have_custom_vendor_boot:1}
 %if 0%{?enable_vendor_boot_update:1}
 %package vendor_boot
 Summary: Placeholder for %{device} flashable vendor_boot if applicable
@@ -344,6 +348,15 @@ Requires(post): droid-config-flashing
 
 %description vendor_boot
 %{summary}. Will stay empty, if vendor_boot image is not needed.
+%endif
+%else
+
+%package kernel-modules-vendor_boot
+Summary: vendor_boot kernel modules for droid-hal device: %{rpm_device}
+
+%description kernel-modules-vendor_boot
+Just the vendor_boot kernel modules
+
 %endif
 
 ################################################################
@@ -939,8 +952,10 @@ if cp out/target/product/%{device}/%{dtbo_binary} $RPM_BUILD_ROOT/boot/dtbo.img 
     echo /boot/dtbo.img > dtbo.files
 fi
 
+%if 0%{!?have_custom_vendor_boot:1}
 %if 0%{?enable_vendor_boot_update:1}
 cp out/target/product/%{device}/vendor_boot.img $RPM_BUILD_ROOT/boot/
+%endif
 %endif
 
 touch boot.files
@@ -953,6 +968,16 @@ cp -a out/target/product/%{device}/vendor/lib/modules/. $mod_dir/. || true
 cp -a out/target/product/%{device}/vendor_dlkm/lib/modules/. $mod_dir/. || true
 cp -a out/target/product/%{device}/obj/*/modules.builtin $mod_dir/. || true
 cp -a out/target/product/%{device}/obj/*/modules.order $mod_dir/. || true
+
+%if 0%{?have_custom_vendor_boot:1}
+echo "" > kernel-modules-vendor_boot.files
+if [ -d out/target/product/%{device}/vendor_ramdisk/lib/modules ]; then
+    vendor_boot_mod_dir=$RPM_BUILD_ROOT/lib/vendor_boot_modules
+    mkdir -p $vendor_boot_mod_dir
+    cp -a out/target/product/%{device}/vendor_ramdisk/lib/modules/. $vendor_boot_mod_dir/. || true
+    echo "/lib/vendor_boot_modules/*" > kernel-modules-vendor_boot.files
+fi
+%endif
 
 # on some systems modules are in /lib/modules for some reason, lets move them to right place
 mv $RPM_BUILD_ROOT/lib/modules/* $RPM_BUILD_ROOT/lib/modules/$kernel_release || true
@@ -1029,6 +1054,7 @@ if [ $1 -ne 1 ] ; then
 fi
 %endif
 
+%if 0%{!?have_custom_vendor_boot:1}
 %if 0%{?enable_vendor_boot_update:1}
 %post vendor_boot
 # This oneshot is enabled only during package upgrades, as initial
@@ -1036,6 +1062,7 @@ fi
 if [ $1 -ne 1 ] ; then
   add-preinit-oneshot /var/lib/platform-updates/flash-vendor_boot.sh || :
 fi
+%endif
 %endif
 
 %pre users
@@ -1176,8 +1203,13 @@ done
 %files kernel-dtbo -f dtbo.files
 %defattr(644,root,root,-)
 
+%if 0%{!?have_custom_vendor_boot:1}
 %if 0%{?enable_vendor_boot_update:1}
 %files vendor_boot
 /boot/vendor_boot.img
+%defattr(644,root,root,-)
+%endif
+%else
+%files kernel-modules-vendor_boot -f kernel-modules-vendor_boot.files
 %defattr(644,root,root,-)
 %endif
