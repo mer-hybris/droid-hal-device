@@ -273,6 +273,10 @@ check_header_exists bionic/libc/include/android/dlext.h && \
         bionic/libc/include/android/api-level.h \
         bionic/libc/include/android/set_abort_message.h
 
+check_header_exists bionic/libc/include/android/versioning.h && \
+    extract_headers_to android \
+        bionic/libc/include/android/versioning.h
+
 check_header_exists system/core/libsync/include/sync/sync.h && \
     extract_headers_to sync \
         system/core/libsync/include/sync
