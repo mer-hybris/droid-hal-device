@@ -699,9 +699,12 @@ sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device 
 echo "%{_libexecdir}/droid-hybris/system/etc/init/hw/*.rc" >> tmp/droid-hal.files
 fi
 
+if [ -f %{android_root}/out/target/product/%{device}/system/etc/init/android.system.suspend-service.rc ]; then
+cp -a %{android_root}/out/target/product/%{device}/system/etc/init/android.system.suspend-service.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
+fi
+
 if [ $android_version_major -ge "12" ]; then
 cp -a %{android_root}/out/target/product/%{device}/system/etc/init/apexd.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
-echo "%{_libexecdir}/droid-hybris/system/etc/init/apexd.rc" >> tmp/droid-hal.files
 fi
 
 if [ -f %{android_root}/out/target/product/%{device}/system/etc/init/hybris_extras.rc ]; then
