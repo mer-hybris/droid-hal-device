@@ -574,11 +574,11 @@ mkdir tmp/units
 # skip various mounts which are not wanted (This is just in case they creep in)
 # First handle stupid spec quoting rules to get some args for makefstab
 shopt -s nullglob
-fstab_files="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{android_root}/out/target/product/%{device}/system/etc/init/hw/*.rc %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab* %{android_root}/out/target/product/%{device}/system/vendor/etc/fstab*)"
+fstab_files="$(echo %{android_root}/out/target/product/%{device}/root/fstab* %{android_root}/out/target/product/%{device}/system/etc/init/hw/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/init/hw/*.rc %{android_root}/out/target/product/%{device}/root/*.rc %{android_root}/out/target/product/%{device}/vendor/etc/fstab* %{android_root}/out/target/product/%{device}/system/vendor/etc/fstab*)"
 shopt -u nullglob
 
 
-%{dhd_path}/helpers/makefstab --files $fstab_files  --skip auto none /acct /boot /cache /data /data/user/0 /data_mirror /data_mirror/data_ce/null /data_mirror/data_de/null /data_mirror/cur_profiles /misc /recovery /staging /storage /storage/sdcard1 /storage/usbdisk /storage/usbotg /sys/fs/bpf /sys/fs/cgroup /sys/fs/cgroup/memory /sys/fs/fuse/connections /sys/fs/pstore /sys/kernel/debug /sys/kernel/config /sys/kernel/tracing /dev/cpuctl /dev/cpuset /dev/stune /dev/usb-ffs/adb /tmp %{?makefstab_skip_entries} --outputdir tmp/units
+%{dhd_path}/helpers/makefstab --files $fstab_files  --skip auto none /acct /boot /cache /data /data/user/0 /data_mirror /data_mirror/data_ce/null /data_mirror/data_de/null /data_mirror/cur_profiles /data_mirror/misc_ce/null /data_mirror/misc_de/null /data_mirror/ref_profiles /data_mirror/storage_area /misc /recovery /staging /storage /storage/sdcard1 /storage/usbdisk /storage/usbotg /sys/fs/bpf /sys/fs/cgroup /sys/fs/cgroup/memory /sys/fs/fuse/connections /sys/fs/pstore /sys/kernel/debug /sys/kernel/config /sys/kernel/tracing /dev/cpuctl /dev/cpuset /dev/stune /dev/usb-ffs/adb /dev/usb-ffs/mtp /dev/usb-ffs/ptp /mnt/cd-rom /tmp %{?makefstab_skip_entries} --outputdir tmp/units
 
 echo Fixing up mount points
 hybris/hybris-boot/fixup-mountpoints %{device} tmp/units/*
@@ -699,9 +699,12 @@ sed -i -e '/^[[:space:]]*mount[[:space:]]/s/^/# Removed during droid-hal-device 
 echo "%{_libexecdir}/droid-hybris/system/etc/init/hw/*.rc" >> tmp/droid-hal.files
 fi
 
+if [ -f %{android_root}/out/target/product/%{device}/system/etc/init/android.system.suspend-service.rc ]; then
+cp -a %{android_root}/out/target/product/%{device}/system/etc/init/android.system.suspend-service.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
+fi
+
 if [ $android_version_major -ge "12" ]; then
 cp -a %{android_root}/out/target/product/%{device}/system/etc/init/apexd.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
-echo "%{_libexecdir}/droid-hybris/system/etc/init/apexd.rc" >> tmp/droid-hal.files
 fi
 
 if [ -f %{android_root}/out/target/product/%{device}/system/etc/init/hybris_extras.rc ]; then
