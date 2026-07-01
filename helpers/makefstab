@@ -155,6 +155,9 @@ for my $file (@files) {
       exit 1;
     }
 
+    # Convert */by-name source to /dev\/disk\/by-partlabel
+    $src =~ s/.*by-name/\/dev\/disk\/by-partlabel/;
+
     write_unit($outputdir, $unitname, $secontext, $mnt_flagsandoptions, $type, $src, $mnt_point, $file, $_);
 
     # in case of an Android 8 root partition, bind mount /system_root/system
