@@ -703,7 +703,7 @@ if [ -f %{android_root}/out/target/product/%{device}/system/etc/init/android.sys
 cp -a %{android_root}/out/target/product/%{device}/system/etc/init/android.system.suspend-service.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
 fi
 
-if [ $android_version_major -ge "12" ]; then
+if [ -f %{android_root}/out/target/product/%{device}/system/etc/init/apexd.rc ]; then
 cp -a %{android_root}/out/target/product/%{device}/system/etc/init/apexd.rc $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/etc/init/
 fi
 
