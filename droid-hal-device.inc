@@ -785,6 +785,12 @@ if [ $android_version_major -ge "15" ]; then
         $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/lib64
 %endif
 fi
+
+if [ -f %{android_root}/out/target/product/%{device}/obj/EXECUTABLES/linkerconfig.com.android.runtime_intermediates/linkerconfig ]; then
+    cp -af \
+        %{android_root}/out/target/product/%{device}/obj/EXECUTABLES/linkerconfig.com.android.runtime_intermediates/linkerconfig \
+        $RPM_BUILD_ROOT%{_libexecdir}/droid-hybris/system/bin/
+fi
 if [ -f %{android_root}/out/target/product/%{device}/apex/com.android.runtime/bin/linkerconfig ]; then
     cp -af \
         %{android_root}/out/target/product/%{device}/apex/com.android.runtime/bin/linkerconfig \
