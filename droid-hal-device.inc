@@ -470,7 +470,7 @@ mkdir tmp
 echo Verifying kernel config
 # AOSP seems to use .../obj/kernel/.config not obj/KERNEL_OBJ/.config like CM : so wildcard it
 hybris/mer-kernel-check/mer_verify_kernel_config \
-    %{android_root}/out/target/product/%{device}/obj/*/.config
+    %{android_root}/out/target/product/%{device}/obj/KERNEL_OBJ/.config
 
 
 if (grep -q string_value build/release/flag_values/*/RELEASE_PLATFORM_VERSION_LAST_STABLE.textproto); then
