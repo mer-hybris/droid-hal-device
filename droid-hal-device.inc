@@ -660,7 +660,7 @@ install -m 755 -D %{android_root}/system/core/libsparse/simg2img %{buildroot}/%{
 install -m 755 -D %{android_root}/system/core/libsparse/img2simg %{buildroot}/%{_bindir}/
 
 # Install
-%if 0%{?installable_zip:1}
+%if "%{?installable_zip}" != "0"
 cp -a %{android_root}/out/target/product/%{device}/system/bin/updater $RPM_BUILD_ROOT/boot/update-binary
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-script $RPM_BUILD_ROOT/boot
 cp -a %{android_root}/out/target/product/%{device}/hybris-updater-unpack.sh $RPM_BUILD_ROOT/boot
@@ -1287,7 +1287,7 @@ done
 %files img-boot
 %defattr(644,root,root,-)
 /boot/hybris-boot.img
-%if 0%{?installable_zip:1}
+%if "%{?installable_zip}" != "0"
 /boot/update-binary
 /boot/hybris-updater-script
 /boot/hybris-updater-unpack.sh
